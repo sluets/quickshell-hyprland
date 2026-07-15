@@ -1,0 +1,2 @@
+Icons — drop your six SVGs into a new assets/icons/power/ folder, named exactly:
+restarthyprland-black.svg, restarthyprland-white.svg, restart-black.svg, restart-white.svg, shutdown-black.svg, shutdown-white.svg. Until they're there, it falls back to the same ⟳ ↻ ⏻ glyphs the old dropdown used, so nothing's broken in the meantime — just drop the files in later and they'll pick up automatically (no code change needed).

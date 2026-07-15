@@ -1,0 +1,9 @@
+sddm script updates
+
+Sidebar nav replacing the tab row, with grouped section headers like the reference
+Right pane gets its own scroll
+Decide which current sections stay merged vs. split into their own sidebar rows
+Fold in the tab→sidebar visual styling from the start (the card work translates: active row highlight instead of active tab)
+Same discipline as tonight's fix: build incrementally, grep -c undefined after each step, test against a known-good backup
+
+1 picture added as reference. since claude built this i might as well copy your settings menu, at least visually.
