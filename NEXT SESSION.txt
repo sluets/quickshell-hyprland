@@ -1,9 +1,41 @@
-sddm script updates
+QUICKSHELL — NEXT SESSION HANDOFF
+Updated 2026-07-15 by GPT
 
-Sidebar nav replacing the tab row, with grouped section headers like the reference
-Right pane gets its own scroll
-Decide which current sections stay merged vs. split into their own sidebar rows
-Fold in the tab→sidebar visual styling from the start (the card work translates: active row highlight instead of active tab)
-Same discipline as tonight's fix: build incrementally, grep -c undefined after each step, test against a known-good backup
+KNOWN-GOOD BASELINE
+- Git setup is complete and pushed.
+- Canonical repo: https://github.com/sluets/quickshell-hyprland
+- Rev 2 is live-tested and approved.
+- Rev 2 extracted the Hyprland settings UI into:
+  widgets/Settings/pages/HyprlandPage.qml
+- Use Rev 2 as the parent for the next Settings work.
 
-1 picture added as reference. since claude built this i might as well copy your settings menu, at least visually.
+NEXT TASK
+Continue splitting the Settings menu one page at a time.
+
+WORKFLOW
+1. Change only one page/component.
+2. Preserve behavior.
+3. Hand off only the changed files with exact destination paths.
+4. Test live before proceeding.
+5. Commit and push each approved task separately.
+
+AFTER THE SETTINGS SPLIT
+- Make requested Settings adjustments.
+- Fix known bugs one at a time, prioritizing border-color coupling.
+- Replace the permanent Hyprland setup warning with a machine-specific
+  one-time readiness check.
+- Keep backup pruning silent.
+- Then begin the controlled structural cleanup/renaming pass before adding
+  substantial new features.
+
+KNOWN DEFERRED ITEMS
+- Appearance border color and Hyprland active-border color coupling.
+- Desktop clock center-position X/Y offsets.
+- Weather icon on/off toggle.
+- SDDM next phase.
+- Hyprland animation presets plan.
+- Automated smoke checks and QML tooling.
+- MPD local-library music client plan.
+
+DOCUMENTATION RULE
+GPT signs documentation and in-file comments it adds or changes.

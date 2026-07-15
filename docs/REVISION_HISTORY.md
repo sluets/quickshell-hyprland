@@ -1,5 +1,14 @@
 # Revision History
 
+## 2026-07-15 — Hyprland settings page extraction (GPT)
+
+- Extracted the active Hyprland settings UI from `widgets/Settings/SettingsWindow.qml` into `widgets/Settings/pages/HyprlandPage.qml`.
+- Preserved staged values, validation, Apply/Cancel behavior, generated Hyprland writes, and existing setup-warning behavior.
+- Reduced `SettingsWindow.qml` from 2,276 lines to 2,182 lines.
+- Live-tested and approved on the user's Arch/Hyprland system.
+- This revision is the approved parent for the next Settings-menu split.
+- No unrelated behavior changes were included.
+
 ## 2026-07-15 — Desktop settings page extraction and live clock-position repair
 
 - Extracted the Desktop settings UI from `SettingsWindow.qml` into `widgets/Settings/pages/DesktopPage.qml` while retaining staged values and Apply/Cancel ownership in the parent window.

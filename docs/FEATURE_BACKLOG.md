@@ -1,4 +1,60 @@
 =================================================================
+CURRENT PRIORITY ORDER — 2026-07-15 (GPT)
+=================================================================
+
+1. Continue splitting the Settings menu one page/component at a time.
+   - Rev 2 HyprlandPage extraction is live-tested and approved.
+   - Preserve behavior during each extraction.
+   - Test each page before continuing.
+
+2. Make requested Settings adjustments and fix known bugs one at a time.
+   - Border-color coupling is the first major bug.
+   - Desktop clock center-position X/Y offsets remain deferred.
+   - Replace the permanent Hyprland setup warning with a machine-specific
+     one-time readiness check.
+   - Backup pruning should run silently in the background.
+
+3. Before adding major features, perform a controlled structural cleanup.
+   - Rename vague or inconsistent files/components.
+   - Split oversized files by responsibility.
+   - Establish predictable folders and naming.
+   - Add small folder README maps where useful.
+   - Do not refactor everything at once.
+
+4. Add automated smoke checks and QML tooling.
+   - `.qmlls.ini` setup instructions and `.gitignore`.
+   - QML parse/import checks.
+   - Missing-file checks.
+   - Theme-contract validation.
+   - Optional runtime log scanning.
+
+5. Reduce duplicated settings plumbing with a central schema/model where
+   practical, then move staging/diff/apply orchestration toward a
+   `SettingsStore`-style component.
+
+6. Split `ConfigManager.qml` responsibilities, externalize long shell
+   scripts, add managed-path allowlisting, and improve explicit service
+   state handling.
+
+7. Resume deferred feature work only after the structure is safer.
+   - SDDM next phase.
+   - Hyprland animation presets, beginning with Phase 0 ownership decisions.
+   - Weather icon on/off toggle.
+   - MPD local-library music client plan.
+
+8. Continue documentation cleanup.
+   - Remove or archive stale one-time migration/session documents.
+   - Consolidate overlapping docs.
+   - GPT signs documentation and in-file comments it adds or changes.
+
+Git setup is complete. Canonical repository:
+https://github.com/sluets/quickshell-hyprland
+
+=================================================================
+HISTORICAL / EARLIER BACKLOG CONTENT
+=================================================================
+
+=================================================================
 FILE
 =================================================================
 
