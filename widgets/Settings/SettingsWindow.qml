@@ -119,6 +119,10 @@
 // REVISION HISTORY
 //=============================================================================
 //
+// 2026-07-15  (GPT) Rev 5 settings split: extracted only the Hyprland
+//             page into pages/HyprlandPage.qml. Staged state, config
+//             generation, Apply/Cancel behavior, and setup-warning
+//             behavior remain owned by SettingsWindow.qml.
 // 2026-07-14  (GPT) Rev 4 settings split: extracted only the Notifications
 //             page into pages/NotificationsPage.qml. All staged state,
 //             Apply/Cancel behavior, and window/page geometry remain here.
@@ -1356,108 +1360,10 @@ FloatingWindow {
             }
 
             // ================ HYPRLAND PAGE ================
-            // Phase 3: these four values write user-prefs.json AND
-            // regenerate ~/.config/hypr/generated/appearance.lua on
-            // Apply (Hyprland auto-reloads it). Until the
-            // generated/user restructure is done
-            // (docs/HYPR_RESTRUCTURE.md), Apply persists the prefs
-            // and the status line reports generation was skipped.
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: Theme.spacingMedium
-
-                SettingsComponents.StepperRow {
-                    label: "Gaps In"
-                    valueText: root.shownHyprGapsIn + " px"
-                    staged: root.stagedHyprGapsIn !== null
-                    onMinus: root.stagedHyprGapsIn = Math.max(0, root.shownHyprGapsIn - 1)
-                    onPlus: root.stagedHyprGapsIn = Math.min(30, root.shownHyprGapsIn + 1)
-                }
-
-                SettingsComponents.StepperRow {
-                    label: "Gaps Out"
-                    valueText: root.shownHyprGapsOut + " px"
-                    staged: root.stagedHyprGapsOut !== null
-                    onMinus: root.stagedHyprGapsOut = Math.max(0, root.shownHyprGapsOut - 2)
-                    onPlus: root.stagedHyprGapsOut = Math.min(60, root.shownHyprGapsOut + 2)
-                }
-
-                SettingsComponents.StepperRow {
-                    label: "Border Size"
-                    valueText: root.shownHyprBorderSize + " px"
-                    staged: root.stagedHyprBorderSize !== null
-                    onMinus: root.stagedHyprBorderSize = Math.max(0, root.shownHyprBorderSize - 1)
-                    onPlus: root.stagedHyprBorderSize = Math.min(10, root.shownHyprBorderSize + 1)
-                }
-
-                SettingsComponents.StepperRow {
-                    label: "Rounding"
-                    valueText: root.shownHyprRounding + " px"
-                    staged: root.stagedHyprRounding !== null
-                    onMinus: root.stagedHyprRounding = Math.max(0, root.shownHyprRounding - 1)
-                    onPlus: root.stagedHyprRounding = Math.min(30, root.shownHyprRounding + 1)
-                }
-
-                // ---------------- Active border color ----------------
-                // Same theme-or-custom-hex pattern as the Appearance
-                // page's Bar Border section. "Theme" here is this
-                // shell's Theme.colorAccent — Hyprland has no concept
-                // of "the shell's theme" of its own, so the accent
-                // color stands in for it. Unlike every other control
-                // on this page, this one ALSO requires a one-time
-                // manual edit outside the shell (see the note below)
-                // before it does anything.
-                Text {
-                    text: "Active Border Color"
-                    color: Theme.colorForeground
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                    font.bold: true
-                }
-
-                SettingsComponents.ToggleSettingRow {
-                    label: "Use theme color"
-                    value: root.shownHyprActiveBorderUseThemeColor
-                    staged: root.stagedHyprActiveBorderUseThemeColor !== null
-                    onToggled: root.stagedHyprActiveBorderUseThemeColor =
-                        !root.shownHyprActiveBorderUseThemeColor
-                }
-
-                SettingsComponents.HexColorRow {
-                    colorPickerHost: root
-                    visible: !root.shownHyprActiveBorderUseThemeColor
-                    shownValue: root.shownHyprActiveBorderCustomColor
-                    staged: root.stagedHyprActiveBorderCustomColor !== null
-                    onHexStaged: t => root.stagedHyprActiveBorderCustomColor = t
-                }
-
-                Text {
-                    visible: !root.shownHyprActiveBorderUseThemeColor
-                    text: "#RRGGBB (8 digits = Qt #AARRGGBB, alpha first)"
-                    color: Theme.colorMuted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Math.round(Theme.fontSize * 0.8)
-                }
-
-                Text {
-                    text: "One-time setup required: remove the 'active_border' line "
-                        + "from user/look.lua's col table (keep inactive_border) so it "
-                        + "stops fighting with the generated file over the same key. "
-                        + "See ConfigManager.qml's 2026-07-12 revision note."
-                    Layout.fillWidth: true
-                    wrapMode: Text.WordWrap
-                    color: Theme.colorUrgent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Math.round(Theme.fontSize * 0.8)
-                }
-
-                Text {
-                    text: "Writes hypr/generated/appearance.lua — Hyprland reloads it live.\nRequires the one-time restructure: docs/HYPR_RESTRUCTURE.md"
-                    color: Theme.colorMuted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Math.round(Theme.fontSize * 0.8)
-                }
-            } // ================ end Hyprland ================
+            SettingsPages.HyprlandPage {
+                id: hyprlandPage
+                settingsRoot: root
+            }
 
                     } // ---- end page stack ----
                 } // ---- end page flickable ----
