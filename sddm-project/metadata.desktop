@@ -1,0 +1,15 @@
+[SddmGreeterTheme]
+Name=Quickshell SDDM Rev 1
+Description=Phase 1 static Honeycomb-derived Quickshell login theme
+Author=you
+Copyright=(c) 2026
+License=MIT
+Type=sddm-theme
+Version=1.0
+Website=
+MainScript=Main.qml
+ConfigFile=theme.conf
+TranslationsDirectory=translations
+Theme-Id=quickshell-sddm-rev1
+Theme-API=2.0
+QtVersion=6

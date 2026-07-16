@@ -1,0 +1,20 @@
+[General]
+# Generated file. Edit snapshot/snapshot-input.json instead.
+Background=assets/background.png
+Greeting=Welcome back
+ClockFormat=h:mm AP
+DateFormat=dddd, MMMM d
+ColorBackground=#282828
+ColorForeground=#EBDBB2
+ColorAccent=#FE8019
+ColorUrgent=#FB4934
+ColorMuted=#928374
+ColorSurface=#1D2021
+ColorHover=#3C3836
+ColorBorder=#FE8019
+FontFamily=JetBrainsMonoNL Nerd Font
+Radius=6
+ClockXOffset=0
+ClockYOffset=0
+LoginXOffset=0
+LoginYOffset=0

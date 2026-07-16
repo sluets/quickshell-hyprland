@@ -1,0 +1,24 @@
+{
+  "background": "assets/background.png",
+  "greeting": "Welcome back",
+  "clockFormat": "h:mm AP",
+  "dateFormat": "dddd, MMMM d",
+  "colors": {
+    "background": "#282828",
+    "foreground": "#EBDBB2",
+    "accent": "#FE8019",
+    "urgent": "#FB4934",
+    "muted": "#928374",
+    "surface": "#1D2021",
+    "hover": "#3C3836",
+    "border": "#FE8019"
+  },
+  "fontFamily": "JetBrainsMonoNL Nerd Font",
+  "radius": 6,
+  "layout": {
+    "clockXOffset": 0,
+    "clockYOffset": 0,
+    "loginXOffset": 0,
+    "loginYOffset": 0
+  }
+}
