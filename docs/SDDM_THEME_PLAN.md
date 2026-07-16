@@ -175,3 +175,18 @@ REVISION HISTORY
 =================================================================
 
 2026-07-13  Initial plan. Nothing built yet — start at Phase 0.
+
+## Phase 4 implementation — manual Settings integration (2026-07-16)
+
+The Quickshell Settings window now has a dedicated **SDDM** page. This page is
+intentionally separate from the global staged Apply transaction.
+
+- Theme and wallpaper changes never trigger SDDM writes automatically.
+- The user explicitly selects **Include current theme**, **Include current
+  wallpaper**, or both, then presses **Apply to SDDM**.
+- The user-space bridge updates `~/.config/sddm-project/snapshot/`, queries the
+  current awww wallpaper, converts non-PNG images when ImageMagick or ffmpeg is
+  available, and calls the already-tested SDDM apply script.
+- The privileged helper remains the only writer to the installed theme.
+- Its digest comparison still skips all writes when the installed snapshot is
+  identical.

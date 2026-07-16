@@ -425,7 +425,7 @@ FloatingWindow {
     // thrown ReferenceErrors at runtime. Page body + supporting
     // functions are still below, block-commented rather than
     // deleted — re-add "Displays" here once DisplayManager exists.
-    readonly property var pages: ["Appearance", "Notifications", "Desktop", "Hyprland"]
+    readonly property var pages: ["Appearance", "Notifications", "Desktop", "Hyprland", "SDDM"]
 
     // ---- Shared preset-color-picker overlay state (2026-07-11, Opus) ----
     // The swatch popup can't live inside its HexColorRow: the popup is
@@ -1362,6 +1362,12 @@ FloatingWindow {
             // ================ HYPRLAND PAGE ================
             SettingsPages.HyprlandPage {
                 id: hyprlandPage
+                settingsRoot: root
+            }
+
+            // ================ SDDM PAGE ================
+            SettingsPages.SddmPage {
+                id: sddmPage
                 settingsRoot: root
             }
 
