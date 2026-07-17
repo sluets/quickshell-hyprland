@@ -407,6 +407,52 @@ Claude Project (or similar) and asking for help:
 
 ---
 
+## Optional custom SDDM login theme
+
+The custom SDDM theme source is stored inside this repository at:
+
+```text
+~/.config/quickshell/sddm-project/
+```
+
+Create the compatibility path expected by its scripts:
+
+```bash
+ln -s ~/.config/quickshell/sddm-project ~/.config/sddm-project
+```
+
+Install the helper and deploy the theme:
+
+```bash
+cd ~/.config/sddm-project
+./scripts/install-system-helper.sh
+./scripts/apply-sddm-theme.sh
+```
+
+Test the exact root-installed copy before activation:
+
+```bash
+sddm-greeter-qt6 --test-mode \
+  --theme /usr/share/sddm/themes/quickshell-custom
+```
+
+Activate it only after that succeeds:
+
+```bash
+./scripts/activate-sddm-theme.sh
+```
+
+Emergency rollback from a terminal or TTY:
+
+```bash
+sudo rm -f /etc/sddm.conf.d/quickshell-theme.conf
+sudo systemctl restart sddm
+```
+
+After installation, use **Settings -> SDDM -> Apply to SDDM** to manually copy the selected current theme and wallpaper. Desktop theme/wallpaper changes do not automatically write root-owned files.
+
+See `docs/SDDM_BACKUP_AND_TRANSFER.md` for the complete transfer and recovery procedure.
+
 ## Quick reference — the whole install in one block
 
 ```bash

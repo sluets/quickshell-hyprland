@@ -117,3 +117,27 @@ for each line.
   returns `busy`. Ops finish in well under a second.
 - Snapshot labels get slugified into the name (lowercase, dashes,
   max 40 chars) — that's normal.
+
+## SDDM source backup and transfer
+
+The Quickshell snapshot engine described above does **not** capture the custom SDDM project or its root-owned deployment outputs.
+
+The editable SDDM source should be stored inside the Git repository:
+
+```text
+~/.config/quickshell/sddm-project/
+```
+
+with this compatibility symlink:
+
+```text
+~/.config/sddm-project -> ~/.config/quickshell/sddm-project
+```
+
+Commit and push that directory with the rest of Quickshell. Do not commit copies from `/usr/share/sddm/themes`, `/usr/local/libexec`, or `/etc/sddm.conf.d`; those are generated deployment files.
+
+Full migration, installation, verification, and rollback commands are in:
+
+```text
+docs/SDDM_BACKUP_AND_TRANSFER.md
+```

@@ -1,5 +1,35 @@
 # Revision History
 
+## 2026-07-16 — Custom SDDM theme completed and integrated
+
+**Context:** The stock SDDM greeter did not match the Quickshell desktop. A custom login theme was built incrementally, tested in SDDM test mode, safely deployed through a narrow privileged helper, activated, and then connected to a manual Settings workflow.
+
+**What was built / changed:**
+
+- Added a custom Qt 6 SDDM theme with a wallpaper background, upper-left 12-hour clock/date, centered login panel, session selector, authentication handling, and power controls.
+- Added generated `theme.conf.user` snapshots and deterministic digest comparison.
+- Added dry-run and fake-root installer tests, a root-owned installed theme at `/usr/share/sddm/themes/quickshell-custom`, and the helper at `/usr/local/libexec/quickshell-sddm-installer`.
+- Added explicit activation through `/etc/sddm.conf.d/quickshell-theme.conf` and a simple TTY rollback procedure.
+- Added `widgets/Settings/pages/SddmPage.qml` and `scripts/apply-sddm-current.py` for manual **Apply to SDDM** behavior.
+- Confirmed the installed theme in test mode and through repeated real logout/login cycles.
+- Moved the editable SDDM project into the Quickshell Git repository and documented transfer to another machine.
+- Updated the Hyprland `SUPER+M` logout binding to native Lua syntax: `hl.bind(mainMod .. " + M", hl.dsp.exit())`.
+
+**Design decisions:**
+
+- Theme and wallpaper changes never automatically write SDDM files. The user may change wallpapers repeatedly and explicitly applies a chosen state later.
+- The installer skips every write when the staged and installed digests match.
+- Root-owned files are deployment outputs; `quickshell/sddm-project/` is the Git-backed source of truth.
+
+**Recovery:**
+
+```bash
+sudo rm -f /etc/sddm.conf.d/quickshell-theme.conf
+sudo systemctl restart sddm
+```
+
+---
+
 ## 2026-07-15 — Hyprland settings page extraction (GPT)
 
 - Extracted the active Hyprland settings UI from `widgets/Settings/SettingsWindow.qml` into `widgets/Settings/pages/HyprlandPage.qml`.
