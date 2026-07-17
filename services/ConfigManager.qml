@@ -329,14 +329,22 @@ Singleton {
     // JsonAdapter behavior). The check earns its place in Phase 3
     // when generated Hyprland config joins the managed set.
     property var _stagedApply: null
+    // Immutable active-border appearance captured by SettingsWindow at the
+    // moment Apply is pressed. The snapshot/write transaction is asynchronous,
+    // so the UI clears its staged state before _performStagedWrites() runs.
+    // Carrying this object with the transaction prevents an empty/stale rgba()
+    // value from being generated during that gap.  // GPT
+    property var _stagedHyprBorderSnapshot: null
 
-    function applyChanges(changes: var, summary: string): bool {
+    function applyChanges(changes: var, summary: string,
+                          finalBorderSnapshot: var): bool {
         if (busy !== "") { lastError = "busy: " + busy; return false; }
         if (!changes || changes.length === 0) {
             lastError = "nothing to apply";
             return false;
         }
         _stagedApply = changes;
+        _stagedHyprBorderSnapshot = finalBorderSnapshot || null;
         return createSnapshot("before " + (summary || "apply"), "auto");
     }
 
@@ -438,7 +446,9 @@ Singleton {
 
     function _performStagedWrites(): void {
         const staged = _stagedApply;
+        const borderSnapshot = _stagedHyprBorderSnapshot;
         _stagedApply = null;
+        _stagedHyprBorderSnapshot = null;
         let n = 0;
         for (let i = 0; i < staged.length; i++) {
             const ch = staged[i];
@@ -518,13 +528,32 @@ Singleton {
             // hyprActiveBorderThemeHex / hyprActiveBorderThemeHex2 /
             // hyprActiveBorderThemeGrad; when using a custom color, we
             // convert the stored hex ourselves (no Theme needed).
-            const useTheme = UserPrefs.hyprActiveBorderUseThemeColor;
-            const activeBorderHex = useTheme
-                ? hyprActiveBorderThemeHex
-                : _hexToHyprHex(UserPrefs.hyprActiveBorderCustomColor);
-            const hasGradient = useTheme && hyprActiveBorderThemeGrad
-                && hyprActiveBorderThemeHex2 !== "";
-            const activeBorderHex2 = hasGradient ? hyprActiveBorderThemeHex2 : "";
+            // Prefer the immutable value captured when Apply was pressed.
+            // Legacy property fallbacks remain for any non-Settings caller that
+            // does not provide the third applyChanges() argument.  // GPT
+            const useTheme = borderSnapshot !== null
+                ? Boolean(borderSnapshot.useTheme)
+                : UserPrefs.hyprActiveBorderUseThemeColor;
+            const activeBorderHex = borderSnapshot !== null
+                ? (useTheme
+                    ? String(borderSnapshot.primaryHex || "")
+                    : _hexToHyprHex(String(borderSnapshot.customHex || "")))
+                : (useTheme
+                    ? hyprActiveBorderThemeHex
+                    : _hexToHyprHex(UserPrefs.hyprActiveBorderCustomColor));
+            const hasGradient = borderSnapshot !== null
+                ? (useTheme && Boolean(borderSnapshot.gradient)
+                    && String(borderSnapshot.secondaryHex || "") !== "")
+                : (useTheme && hyprActiveBorderThemeGrad
+                    && hyprActiveBorderThemeHex2 !== "");
+            const activeBorderHex2 = hasGradient
+                ? (borderSnapshot !== null
+                    ? String(borderSnapshot.secondaryHex)
+                    : hyprActiveBorderThemeHex2)
+                : "";
+            const activeBorderAngle = borderSnapshot !== null
+                ? Number(borderSnapshot.angle || 0)
+                : hyprActiveBorderThemeAngle;
             // Chain the Lua regeneration as its own engine op (busy
             // was just released by onExited). Hyprland auto-reloads
             // when the file lands; a syntax error would make it keep
@@ -539,7 +568,7 @@ Singleton {
                 String(UserPrefs.hyprRounding),
                 activeBorderHex,
                 activeBorderHex2,
-                String(hyprActiveBorderThemeAngle),
+                String(activeBorderAngle),
                 hasGradient ? "1" : "0"
             ]);
         }
@@ -692,6 +721,7 @@ echo "generated appearance.lua (gaps $gin/$gout, border $bs, rounding $rnd, acti
                     root._performStagedWrites();
                 else {
                     root._stagedApply = null;
+                    root._stagedHyprBorderSnapshot = null;
                     root.lastError = "apply aborted: snapshot failed — nothing was written";
                 }
             }
