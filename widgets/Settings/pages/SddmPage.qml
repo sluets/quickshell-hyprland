@@ -24,10 +24,12 @@ ColumnLayout {
     property bool includeTheme: true
     property bool includeWallpaper: true
     property bool applying: false
+    property bool testing: false
     property string statusText: "Ready — nothing is copied until you press Apply to SDDM."
     property bool lastSucceeded: false
     property string processOutput: ""
     property string processError: ""
+    property string testProcessError: ""
 
     function chanHex(v) {
         const n = Math.round(Math.max(0, Math.min(1, v)) * 255);
@@ -37,6 +39,18 @@ ColumnLayout {
 
     function colorHex(c) {
         return "#" + chanHex(c.r) + chanHex(c.g) + chanHex(c.b);
+    }
+
+    function beginTest() {
+        if (testing)
+            return;
+
+        processError = "";
+        testProcessError = "";
+        lastSucceeded = false;
+        statusText = "Launching SDDM test window…";
+        testing = true;
+        testProcess.running = true;
     }
 
     function beginApply() {
@@ -135,6 +149,36 @@ ColumnLayout {
 
     Rectangle {
         Layout.fillWidth: true
+        implicitHeight: testLabel.implicitHeight + Theme.spacingMedium * 2
+        radius: Theme.radiusMedium
+        color: testMouse.containsMouse && testMouse.enabled
+               ? Theme.colorHover : Theme.colorSurface
+        border.width: 1
+        border.color: Theme.colorAccent
+        opacity: testMouse.enabled ? 1.0 : 0.45
+
+        Text {
+            id: testLabel
+            anchors.centerIn: parent
+            text: page.testing ? "SDDM Test Running…" : "Test SDDM Theme"
+            color: Theme.colorForeground
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+            font.bold: true
+        }
+
+        MouseArea {
+            id: testMouse
+            anchors.fill: parent
+            enabled: !page.testing && !page.applying
+            hoverEnabled: true
+            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onClicked: page.beginTest()
+        }
+    }
+
+    Rectangle {
+        Layout.fillWidth: true
         implicitHeight: statusColumn.implicitHeight + Theme.spacingMedium * 2
         radius: Theme.radiusMedium
         color: Theme.colorSurface
@@ -175,6 +219,41 @@ ColumnLayout {
         color: Theme.colorMuted
         font.family: Theme.fontFamily
         font.pixelSize: Math.round(Theme.fontSize * 0.78)
+    }
+
+    Process {
+        id: testProcess
+        command: [
+            "bash", "-lc",
+            "theme=/usr/share/sddm/themes/quickshell-custom; " +
+            "if [[ ! -d \"$theme\" ]]; then " +
+            "echo 'Installed SDDM theme not found. Apply it first.' >&2; exit 2; " +
+            "fi; " +
+            "if command -v sddm-greeter-qt6 >/dev/null 2>&1; then " +
+            "exec sddm-greeter-qt6 --test-mode --theme \"$theme\"; " +
+            "elif command -v sddm-greeter >/dev/null 2>&1; then " +
+            "exec sddm-greeter --test-mode --theme \"$theme\"; " +
+            "else echo 'No SDDM greeter executable was found.' >&2; exit 127; fi"
+        ]
+
+        stderr: StdioCollector {
+            // SDDM test mode writes normal diagnostic chatter to stderr,
+            // including a harmless QLocalSocket warning because no real
+            // display-manager daemon is attached. Keep it hidden unless the
+            // process actually fails.
+            onStreamFinished: page.testProcessError = text.trim()
+        }
+
+        onExited: code => { // qmllint disable signal-handler-parameters
+            page.testing = false;
+            if (code === 0) {
+                page.processError = "";
+                page.statusText = "SDDM test window closed normally.";
+            } else {
+                page.processError = page.testProcessError;
+                page.statusText = "SDDM test failed (exit " + code + ").";
+            }
+        }
     }
 
     Process {

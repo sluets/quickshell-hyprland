@@ -28,6 +28,12 @@
 //             card. Added config-backed X/Y offsets for future Settings UI.
 // 2026-07-16  Rev 5. Removed the decorative clock accent bar and strengthened
 //             the clock shadow for readability over bright wallpapers.
+// 2026-07-17  Rev 6. Added a Caps Lock warning, keyboard-layout selector,
+//             explicit session label, and hibernate power control.
+// 2026-07-17  Rev 7. Added a two-second suspend delay so the click release
+//             and immediate mouse movement finish before suspend begins.
+// 2026-07-17  Rev 8. Reset the pending power state immediately before the
+//             suspend call so controls are usable again after resume.
 //
 //=============================================================================
 
@@ -62,6 +68,7 @@ Rectangle {
     color: colorBackground
 
     property bool loginBusy: false
+    property bool powerActionPending: false
     property string statusText: ""
     property bool statusIsError: false
 
@@ -83,6 +90,27 @@ Rectangle {
         if (statusIsError) {
             statusText = ""
             statusIsError = false
+        }
+    }
+
+    function beginSuspend() {
+        if (powerActionPending)
+            return
+
+        powerActionPending = true
+        suspendDelay.restart()
+    }
+
+    Timer {
+        id: suspendDelay
+        interval: 2000
+        repeat: false
+        onTriggered: {
+            // Clear the UI lock just before entering suspend. The suspend call
+            // follows immediately, so there is no practical window for another
+            // power action, and the greeter returns unlocked after resume.
+            root.powerActionPending = false
+            sddm.suspend()
         }
     }
 
@@ -347,6 +375,27 @@ Rectangle {
                 Component.onCompleted: forceActiveFocus()
             }
 
+            Text {
+                Layout.fillWidth: true
+                visible: keyboard.capsLock
+                text: "CAPS LOCK IS ON"
+                color: root.colorUrgent
+                font.family: root.fontFamily
+                font.pixelSize: 11
+                font.bold: true
+                font.letterSpacing: 1.1
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            Text {
+                text: "SESSION"
+                color: root.colorMuted
+                font.family: root.fontFamily
+                font.pixelSize: 11
+                font.bold: true
+                font.letterSpacing: 1.2
+            }
+
             ComboBox {
                 id: sessionBox
                 Layout.fillWidth: true
@@ -427,6 +476,98 @@ Rectangle {
             }
 
             Text {
+                visible: keyboard.enabled && keyboard.layouts.length > 1
+                text: "KEYBOARD LAYOUT"
+                color: root.colorMuted
+                font.family: root.fontFamily
+                font.pixelSize: 11
+                font.bold: true
+                font.letterSpacing: 1.2
+            }
+
+            ComboBox {
+                id: layoutBox
+                Layout.fillWidth: true
+                Layout.preferredHeight: 42
+                visible: keyboard.enabled && keyboard.layouts.length > 1
+                model: keyboard.layouts
+                textRole: "longName"
+                currentIndex: keyboard.currentLayout
+                font.family: root.fontFamily
+                font.pixelSize: 13
+
+                onActivated: index => keyboard.currentLayout = index
+
+                background: Rectangle {
+                    radius: root.radius
+                    color: layoutBox.hovered ? root.colorHover : root.colorBackground
+                    border.width: layoutBox.activeFocus ? 2 : 1
+                    border.color: layoutBox.activeFocus ? root.colorBorder : root.colorHover
+                }
+
+                contentItem: Text {
+                    leftPadding: 13
+                    rightPadding: 34
+                    text: layoutBox.displayText
+                    color: root.colorForeground
+                    font: layoutBox.font
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
+
+                indicator: Text {
+                    x: layoutBox.width - width - 13
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "⌄"
+                    color: root.colorMuted
+                    font.family: root.fontFamily
+                    font.pixelSize: 19
+                }
+
+                popup: Popup {
+                    y: layoutBox.height + 4
+                    width: layoutBox.width
+                    implicitHeight: Math.min(contentItem.implicitHeight + 8, 230)
+                    padding: 4
+
+                    background: Rectangle {
+                        color: root.colorSurface
+                        radius: root.radius
+                        border.width: 1
+                        border.color: root.colorBorder
+                    }
+
+                    contentItem: ListView {
+                        clip: true
+                        implicitHeight: contentHeight
+                        model: layoutBox.popup.visible ? layoutBox.delegateModel : null
+                        currentIndex: layoutBox.highlightedIndex
+                        ScrollIndicator.vertical: ScrollIndicator {}
+                    }
+                }
+
+                delegate: ItemDelegate {
+                    width: layoutBox.width - 8
+                    height: 40
+                    highlighted: layoutBox.highlightedIndex === index
+
+                    background: Rectangle {
+                        color: parent.highlighted ? root.colorHover : "transparent"
+                        radius: Math.max(2, root.radius - 2)
+                    }
+
+                    contentItem: Text {
+                        text: model.longName + " (" + model.shortName + ")"
+                        color: root.colorForeground
+                        font.family: root.fontFamily
+                        font.pixelSize: 13
+                        verticalAlignment: Text.AlignVCenter
+                        elide: Text.ElideRight
+                    }
+                }
+            }
+
+            Text {
                 Layout.fillWidth: true
                 Layout.minimumHeight: 18
                 text: root.statusText
@@ -481,20 +622,30 @@ Rectangle {
         spacing: 8
 
         PowerButton {
-            text: "SUSPEND"
+            text: root.powerActionPending ? "SUSPENDING…" : "SUSPEND"
             visible: sddm.canSuspend
-            onClicked: sddm.suspend()
+            enabled: !root.powerActionPending
+            onClicked: root.beginSuspend()
+        }
+
+        PowerButton {
+            text: "HIBERNATE"
+            visible: sddm.canHibernate
+            enabled: !root.powerActionPending
+            onClicked: sddm.hibernate()
         }
 
         PowerButton {
             text: "REBOOT"
             visible: sddm.canReboot
+            enabled: !root.powerActionPending
             onClicked: sddm.reboot()
         }
 
         PowerButton {
             text: "SHUT DOWN"
             visible: sddm.canPowerOff
+            enabled: !root.powerActionPending
             urgent: true
             onClicked: sddm.powerOff()
         }
