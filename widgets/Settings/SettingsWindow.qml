@@ -397,8 +397,10 @@ FloatingWindow {
     // a second inner frame when the compositor border is made very thick.
     color: Theme.colorBackground
     implicitWidth: Math.round(Theme.fontSize * 74)
-    implicitHeight: Math.round(Theme.fontSize * 54)
-    minimumSize: Qt.size(Math.round(Theme.fontSize * 58), Math.round(Theme.fontSize * 42))
+    implicitHeight: Math.round(Theme.fontSize * 44)
+    // Small enough for 1080p laptop panels and scaled displays while
+    // preserving the larger default/implicit desktop size.
+    minimumSize: Qt.size(Math.round(Theme.fontSize * 48), Math.round(Theme.fontSize * 34))
     maximumSize: Qt.size(Math.round(Theme.fontSize * 96), Math.round(Theme.fontSize * 70))
 
     property bool shown: false
@@ -425,7 +427,7 @@ FloatingWindow {
     // thrown ReferenceErrors at runtime. Page body + supporting
     // functions are still below, block-commented rather than
     // deleted — re-add "Displays" here once DisplayManager exists.
-    readonly property var pages: ["Appearance", "Notifications", "Desktop", "Hyprland", "SDDM"]
+    readonly property var pages: ["Appearance", "Notifications", "Desktop", "Hyprland"]
 
     // ---- Shared preset-color-picker overlay state (2026-07-11, Opus) ----
     // The swatch popup can't live inside its HexColorRow: the popup is
@@ -523,6 +525,12 @@ FloatingWindow {
     property var stagedDesktopClockShadowEnabled: null
     property var stagedDesktopClockShadowUseThemeColor: null
     property var stagedDesktopClockShadowCustomColor: null
+    property var stagedDesktopClockShowWeatherIcon: null
+    property var stagedDesktopClockShowTemperature: null
+    property var stagedDesktopClockScale: null
+    property var stagedDesktopClockShadowStrength: null
+    property var stagedDesktopClockShadowOffsetX: null
+    property var stagedDesktopClockShadowOffsetY: null
 
     // Effective values the UI highlights: staged if present, else live.
     readonly property string shownTheme: stagedTheme !== null ? stagedTheme : UserPrefs.themeName
@@ -562,6 +570,12 @@ FloatingWindow {
     readonly property bool shownDesktopClockShadowEnabled: stagedDesktopClockShadowEnabled !== null ? stagedDesktopClockShadowEnabled : UserPrefs.desktopClockShadowEnabled
     readonly property bool shownDesktopClockShadowUseThemeColor: stagedDesktopClockShadowUseThemeColor !== null ? stagedDesktopClockShadowUseThemeColor : UserPrefs.desktopClockShadowUseThemeColor
     readonly property string shownDesktopClockShadowCustomColor: stagedDesktopClockShadowCustomColor !== null ? stagedDesktopClockShadowCustomColor : UserPrefs.desktopClockShadowCustomColor
+    readonly property bool shownDesktopClockShowWeatherIcon: stagedDesktopClockShowWeatherIcon !== null ? stagedDesktopClockShowWeatherIcon : UserPrefs.desktopClockShowWeatherIcon
+    readonly property bool shownDesktopClockShowTemperature: stagedDesktopClockShowTemperature !== null ? stagedDesktopClockShowTemperature : UserPrefs.desktopClockShowTemperature
+    readonly property real shownDesktopClockScale: stagedDesktopClockScale !== null ? stagedDesktopClockScale : UserPrefs.desktopClockScale
+    readonly property int shownDesktopClockShadowStrength: stagedDesktopClockShadowStrength !== null ? stagedDesktopClockShadowStrength : UserPrefs.desktopClockShadowStrength
+    readonly property int shownDesktopClockShadowOffsetX: stagedDesktopClockShadowOffsetX !== null ? stagedDesktopClockShadowOffsetX : UserPrefs.desktopClockShadowOffsetX
+    readonly property int shownDesktopClockShadowOffsetY: stagedDesktopClockShadowOffsetY !== null ? stagedDesktopClockShadowOffsetY : UserPrefs.desktopClockShadowOffsetY
 
     // Segmented-picker option lists. Corners are plain-unicode arrows
     // (project convention: plain unicode over Nerd glyphs where
@@ -784,6 +798,12 @@ FloatingWindow {
             ["desktopClockShadowEnabled", "Clock Shadow", UserPrefs.desktopClockShadowEnabled, stagedDesktopClockShadowEnabled, fmtOnOff],
             ["desktopClockShadowUseThemeColor", "Shadow Color", UserPrefs.desktopClockShadowUseThemeColor, stagedDesktopClockShadowUseThemeColor, fmtThemeCustom],
             ["desktopClockShadowCustomColor", "Shadow Hex", UserPrefs.desktopClockShadowCustomColor, stagedDesktopClockShadowCustomColor, fmtRaw],
+            ["desktopClockShowWeatherIcon", "Weather Icon", UserPrefs.desktopClockShowWeatherIcon, stagedDesktopClockShowWeatherIcon, fmtOnOff],
+            ["desktopClockShowTemperature", "Temperature", UserPrefs.desktopClockShowTemperature, stagedDesktopClockShowTemperature, fmtOnOff],
+            ["desktopClockScale", "Clock Scale", UserPrefs.desktopClockScale, stagedDesktopClockScale, v => v.toFixed(2) + "x"],
+            ["desktopClockShadowStrength", "Shadow Strength", UserPrefs.desktopClockShadowStrength, stagedDesktopClockShadowStrength, v => v + "%"],
+            ["desktopClockShadowOffsetX", "Shadow X Offset", UserPrefs.desktopClockShadowOffsetX, stagedDesktopClockShadowOffsetX, v => v + " px"],
+            ["desktopClockShadowOffsetY", "Shadow Y Offset", UserPrefs.desktopClockShadowOffsetY, stagedDesktopClockShadowOffsetY, v => v + " px"],
             ["wallpaperTransitionType", "Transition Type", UserPrefs.wallpaperTransitionType, stagedWallpaperTransitionType, fmtRaw],
             ["wallpaperTransitionDuration", "Transition Duration", UserPrefs.wallpaperTransitionDuration, stagedWallpaperTransitionDuration, fmtSecs],
             ["wallpaperTransitionFps", "Transition FPS", UserPrefs.wallpaperTransitionFps, stagedWallpaperTransitionFps, fmtFps],
@@ -837,6 +857,12 @@ FloatingWindow {
         stagedDesktopClockShadowEnabled = null;
         stagedDesktopClockShadowUseThemeColor = null;
         stagedDesktopClockShadowCustomColor = null;
+        stagedDesktopClockShowWeatherIcon = null;
+        stagedDesktopClockShowTemperature = null;
+        stagedDesktopClockScale = null;
+        stagedDesktopClockShadowStrength = null;
+        stagedDesktopClockShadowOffsetX = null;
+        stagedDesktopClockShadowOffsetY = null;
         stagedWallpaperTransitionType = null;
         stagedWallpaperTransitionDuration = null;
         stagedWallpaperTransitionFps = null;
@@ -963,12 +989,36 @@ FloatingWindow {
     }
     function toggle(): void { if (shown) close(); else open(); }
 
+    // Capture the FINAL border appearance before the async Apply transaction
+    // starts. Apply takes a snapshot first, so staged values are cleared long
+    // before ConfigManager performs the writes. Passing this immutable object
+    // prevents the Hyprland generator from falling back to the old saved
+    // Appearance values during that gap.
+    function resolvedHyprBorderForApply(): var {
+        const selectedTheme = Theme.themes[shownTheme] || Theme.active;
+        const followsAppearance = shownHyprActiveBorderUseThemeColor;
+        const secondary = selectedTheme.barBorderColor2;
+        const gradient = followsAppearance && shownBarBorderUseThemeColor
+            && secondary.a > 0.001;
+        return {
+            useTheme: followsAppearance,
+            primaryHex: shownBarBorderUseThemeColor
+                ? _qColorToHyprHex(selectedTheme.barBorderColor)
+                : _settingsHexToHyprHex(shownBarBorderCustomColor),
+            secondaryHex: gradient ? _qColorToHyprHex(secondary) : "",
+            gradient: gradient,
+            angle: selectedTheme.barBorderGradientAngle,
+            customHex: shownHyprActiveBorderCustomColor
+        };
+    }
+
     function apply(): void {
         if (changes.length === 0 || ConfigManager.busy !== "")
             return;
-        ConfigManager.applyChanges(changes, "settings apply");
-        // Staged values clear immediately; once the writes land,
-        // UserPrefs updates and the UI highlights follow it.
+        ConfigManager.applyChanges(changes, "settings apply",
+                                   resolvedHyprBorderForApply());
+        // Staged values clear immediately; the resolved border object above
+        // remains attached to the transaction until its writes complete.
         discardStaged();
     }
 
@@ -977,20 +1027,11 @@ FloatingWindow {
         function onToggleSettingsWindow(): void { root.toggle(); }
     }
 
-    // ---- Theme-color bridge to ConfigManager (2026-07-12) ----
-    // ConfigManager regenerates hypr/generated/appearance.lua and needs
-    // the theme's accent (+ the bar border's 2nd gradient color/angle)
-    // as Hyprland-format hex, but it must NOT read Theme itself — that
-    // ConfigManager->Theme dependency broke cold-start singleton init
-    // (see ConfigManager's DESIGN NOTES / PROBLEMS_AND_FIXES.md). This
-    // window DOES safely depend on Theme, so it computes those values
-    // and pushes them into ConfigManager via LIVE Bindings. Bindings
-    // (not a one-shot assign in apply()) are what make theme SWITCHING
-    // correct: the regen runs asynchronously after the snapshot Process
-    // exits, by which point Theme.colorAccent already reflects the new
-    // theme and the Binding has propagated it — so the border bakes the
-    // NEW color, not the old one. These bindings live regardless of
-    // whether the window is open; they're cheap and always current.
+    // ---- Hyprland border conversion helpers ----
+    // Theme selection and Appearance overrides are resolved synchronously by
+    // resolvedHyprBorderForApply() and travel with the Apply transaction. Do
+    // not restore page-local/live Bindings here: staged values are deliberately
+    // discarded while ConfigManager is still taking its pre-write snapshot.
     function _chanHex(v) {
         const n = Math.round(Math.max(0, Math.min(1, v)) * 255);
         const h = n.toString(16);
@@ -999,44 +1040,10 @@ FloatingWindow {
     function _qColorToHyprHex(c) {
         return _chanHex(c.r) + _chanHex(c.g) + _chanHex(c.b) + _chanHex(c.a);
     }
-    // IMPORTANT: use the *shown* Appearance values here, not only Theme's
-    // persisted values. Otherwise a bar-border change and a Hyprland apply in
-    // the same transaction race each other: ConfigManager can regenerate
-    // appearance.lua with the old border, and the two only match after a later
-    // unrelated change/revert. Staged values are the source of truth while the
-    // window is open; after Apply clears them, UserPrefs supplies the same data.
-    readonly property color shownEffectiveBarBorderColor:
-        shownBarBorderUseThemeColor
-            ? Theme.active.barBorderColor
-            : shownBarBorderCustomColor
-    readonly property color shownEffectiveBarBorderColor2:
-        shownBarBorderUseThemeColor
-            ? Theme.active.barBorderColor2
-            : "transparent"
-    readonly property bool shownEffectiveBarBorderGradient:
-        shownBarBorderUseThemeColor
-            && shownEffectiveBarBorderColor2.a > 0.001
-
-    Binding {
-        target: ConfigManager
-        property: "hyprActiveBorderThemeHex"
-        value: root._qColorToHyprHex(root.shownEffectiveBarBorderColor)
-    }
-    Binding {
-        target: ConfigManager
-        property: "hyprActiveBorderThemeGrad"
-        value: root.shownEffectiveBarBorderGradient
-    }
-    Binding {
-        target: ConfigManager
-        property: "hyprActiveBorderThemeHex2"
-        value: root.shownEffectiveBarBorderGradient
-            ? root._qColorToHyprHex(root.shownEffectiveBarBorderColor2) : ""
-    }
-    Binding {
-        target: ConfigManager
-        property: "hyprActiveBorderThemeAngle"
-        value: Theme.active.barBorderGradientAngle
+    function _settingsHexToHyprHex(hex) {
+        return hex.length === 9
+            ? hex.slice(3) + hex.slice(1, 3)   // #AARRGGBB -> RRGGBBAA
+            : hex.slice(1) + "ff";             // #RRGGBB -> RRGGBBff
     }
 
     visible: shown
@@ -1362,12 +1369,6 @@ FloatingWindow {
             // ================ HYPRLAND PAGE ================
             SettingsPages.HyprlandPage {
                 id: hyprlandPage
-                settingsRoot: root
-            }
-
-            // ================ SDDM PAGE ================
-            SettingsPages.SddmPage {
-                id: sddmPage
                 settingsRoot: root
             }
 

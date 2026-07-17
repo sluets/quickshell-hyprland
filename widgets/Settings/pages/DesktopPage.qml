@@ -72,6 +72,37 @@ ColumnLayout {
     }
 
     Text {
+        text: "Display"
+        Layout.topMargin: Theme.spacingLarge
+        color: Theme.colorForeground
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        font.bold: true
+    }
+
+    SettingsComponents.StepperRow {
+        label: "Overall scale"
+        valueText: settingsRoot.shownDesktopClockScale.toFixed(2) + "x"
+        staged: settingsRoot.stagedDesktopClockScale !== null
+        onMinus: settingsRoot.stagedDesktopClockScale = Math.max(0.5, Math.round((settingsRoot.shownDesktopClockScale - 0.05) * 100) / 100)
+        onPlus: settingsRoot.stagedDesktopClockScale = Math.min(2.5, Math.round((settingsRoot.shownDesktopClockScale + 0.05) * 100) / 100)
+    }
+
+    SettingsComponents.ToggleSettingRow {
+        label: "Show weather icon"
+        value: settingsRoot.shownDesktopClockShowWeatherIcon
+        staged: settingsRoot.stagedDesktopClockShowWeatherIcon !== null
+        onToggled: settingsRoot.stagedDesktopClockShowWeatherIcon = !settingsRoot.shownDesktopClockShowWeatherIcon
+    }
+
+    SettingsComponents.ToggleSettingRow {
+        label: "Show temperature"
+        value: settingsRoot.shownDesktopClockShowTemperature
+        staged: settingsRoot.stagedDesktopClockShowTemperature !== null
+        onToggled: settingsRoot.stagedDesktopClockShowTemperature = !settingsRoot.shownDesktopClockShowTemperature
+    }
+
+    Text {
         text: "Colors"
         Layout.topMargin: Theme.spacingLarge
         color: Theme.colorForeground
@@ -103,6 +134,39 @@ ColumnLayout {
         staged: settingsRoot.stagedDesktopClockShadowEnabled !== null
         onToggled: settingsRoot.stagedDesktopClockShadowEnabled =
             !settingsRoot.shownDesktopClockShadowEnabled
+    }
+
+    SettingsComponents.StepperRow {
+        visible: settingsRoot.shownDesktopClockShadowEnabled
+        label: "Shadow strength"
+        valueText: settingsRoot.shownDesktopClockShadowStrength + "%"
+        staged: settingsRoot.stagedDesktopClockShadowStrength !== null
+        onMinus: settingsRoot.stagedDesktopClockShadowStrength =
+            Math.max(0, settingsRoot.shownDesktopClockShadowStrength - 5)
+        onPlus: settingsRoot.stagedDesktopClockShadowStrength =
+            Math.min(100, settingsRoot.shownDesktopClockShadowStrength + 5)
+    }
+
+    SettingsComponents.StepperRow {
+        visible: settingsRoot.shownDesktopClockShadowEnabled
+        label: "Shadow X offset"
+        valueText: settingsRoot.shownDesktopClockShadowOffsetX + " px"
+        staged: settingsRoot.stagedDesktopClockShadowOffsetX !== null
+        onMinus: settingsRoot.stagedDesktopClockShadowOffsetX =
+            Math.max(-20, settingsRoot.shownDesktopClockShadowOffsetX - 1)
+        onPlus: settingsRoot.stagedDesktopClockShadowOffsetX =
+            Math.min(20, settingsRoot.shownDesktopClockShadowOffsetX + 1)
+    }
+
+    SettingsComponents.StepperRow {
+        visible: settingsRoot.shownDesktopClockShadowEnabled
+        label: "Shadow Y offset"
+        valueText: settingsRoot.shownDesktopClockShadowOffsetY + " px"
+        staged: settingsRoot.stagedDesktopClockShadowOffsetY !== null
+        onMinus: settingsRoot.stagedDesktopClockShadowOffsetY =
+            Math.max(-20, settingsRoot.shownDesktopClockShadowOffsetY - 1)
+        onPlus: settingsRoot.stagedDesktopClockShadowOffsetY =
+            Math.min(20, settingsRoot.shownDesktopClockShadowOffsetY + 1)
     }
 
     SettingsComponents.ToggleSettingRow {

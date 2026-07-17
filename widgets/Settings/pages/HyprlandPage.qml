@@ -8,6 +8,8 @@
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
+import Quickshell.Io
 import qs.core
 import "../components" as SettingsComponents
 
@@ -18,6 +20,28 @@ ColumnLayout {
 
     Layout.fillWidth: true
     spacing: Theme.spacingMedium
+
+    property bool setupCheckComplete: false
+    property bool setupReady: false
+    property bool setupFileMissing: false
+
+    Process {
+        id: setupCheck
+        command: ["sh", "-c",
+            "file=\"$1/.config/hypr/user/look.lua\"; "
+            + "[ -f \"$file\" ] || exit 2; "
+            + "grep -Eq '^[[:space:]]*active_border[[:space:]]*=' \"$file\" && exit 1; "
+            + "exit 0",
+            "hyprland-setup-check", Quickshell.env("HOME")]
+
+        onExited: (exitCode, exitStatus) => {
+            page.setupCheckComplete = true;
+            page.setupReady = (exitCode === 0);
+            page.setupFileMissing = (exitCode === 2);
+        }
+    }
+
+    Component.onCompleted: setupCheck.running = true
 
     SettingsComponents.StepperRow {
         label: "Gaps In"
@@ -95,10 +119,12 @@ ColumnLayout {
     }
 
     Text {
-        text: "One-time setup required: remove the 'active_border' line "
-            + "from user/look.lua's col table (keep inactive_border) so it "
-            + "stops fighting with the generated file over the same key. "
-            + "See ConfigManager.qml's 2026-07-12 revision note."
+        visible: page.setupCheckComplete && !page.setupReady
+        text: page.setupFileMissing
+            ? "Hyprland setup check could not find ~/.config/hypr/user/look.lua."
+            : "One-time setup required: remove the active_border assignment "
+              + "from user/look.lua (keep inactive_border) so it does not "
+              + "fight with generated/appearance.lua."
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         color: Theme.colorUrgent

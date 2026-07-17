@@ -1625,3 +1625,44 @@ values that are being silently ignored.
 **Don't try this instead (looks right, isn't):**
 
 -->
+
+## 2026-07-17 — Settings window size appeared inconsistent because Hyprland alternated between floating and tiling it
+
+**Symptoms:** Changing `SettingsWindow.qml` `implicitHeight` had no visible effect in some launches. On an empty workspace the window expanded beneath the top bar and clipped near the bottom. With one existing client it appeared centered and floating. With multiple tiled clients it joined the tiling layout and could hide the Cancel/Apply footer until manually resized.
+
+**Diagnosis:** `hyprctl clients` showed identical stable metadata in both states (`class: org.quickshell`, `title: Quickshell Settings`). The only meaningful difference was `floating: 1` versus `floating: 0`. QML implicit dimensions are size requests; Hyprland owns geometry once the surface is tiled.
+
+**Fix:** Add an exact compositor rule in Hyprland `rules.lua`:
+
+```lua
+hl.window_rule({
+    name = "quickshell-settings",
+    match = {
+        class = "org.quickshell",
+        title = "Quickshell Settings",
+    },
+    float = true,
+    center = true,
+    size = "1440 820",
+})
+```
+
+The final size was selected to fit a 1920x1080 laptop at 1.5x font scale while remaining comfortable on a 2560x1440 desktop.
+
+**Lesson:** Do not keep tuning QML `implicitWidth`/`implicitHeight` when a window sometimes tiles. Compare `hyprctl clients` output first and fix compositor state with a precise window rule.
+
+## 2026-07-17 — Hyprland Lua exit keybind broke after an update
+
+**Symptoms:** `Super+M` stopped exiting the compositor. `hyprshutdown` was missing, and `hyprctl dispatch exit` returned a Lua dispatcher syntax error.
+
+**Fix:** Replace the shell fallback with the native Lua dispatcher:
+
+```lua
+hl.bind(mainMod .. " + M", hl.dsp.exit())
+```
+
+Terminal test:
+
+```bash
+hyprctl dispatch 'hl.dsp.exit()'
+```

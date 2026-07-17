@@ -219,11 +219,15 @@ Scope {
             readonly property color _textColor:
                 UserPrefs.desktopClockUseThemeColor
                 ? Theme.colorForeground : UserPrefs.desktopClockCustomColor
-            readonly property int _textStyle:
-                UserPrefs.desktopClockShadowEnabled ? Text.Raised : Text.Normal
-            readonly property color _shadowColor:
+            readonly property real _shadowStrength:
+                Math.max(0.0, Math.min(1.0, UserPrefs.desktopClockShadowStrength / 100.0))
+            readonly property bool _shadowVisible:
+                UserPrefs.desktopClockShadowEnabled && _shadowStrength > 0
+            readonly property color _shadowBaseColor:
                 UserPrefs.desktopClockShadowUseThemeColor
                 ? Theme.colorBackground : UserPrefs.desktopClockShadowCustomColor
+            readonly property color _shadowColor:
+                Qt.rgba(_shadowBaseColor.r, _shadowBaseColor.g, _shadowBaseColor.b, _shadowStrength)
 
             // ---- Corner positioning (see DESIGN NOTES, "POSITIONING") ----
             // Keep the layer-shell surface full-screen in every mode and move
@@ -239,7 +243,9 @@ Scope {
 
             Column {
                 id: content
-                spacing: Theme.spacingSmall
+                readonly property real _scale: UserPrefs.desktopClockScale
+                readonly property int _baseFontSize: Math.max(1, Math.round(Settings.desktopClockFontSize * _scale))
+                spacing: Math.max(1, Math.round(Theme.spacingSmall * _scale))
 
                 // Do not switch anchors dynamically here. Qt can retain an old
                 // anchor relationship until the item/window is recreated, which
@@ -255,7 +261,7 @@ Scope {
                 x: {
                     const screenWidth = win.modelData.width
                     if (win._corner === "centered")
-                        return Math.max(0, Math.round((screenWidth - width) / 2))
+                        return Math.max(0, Math.min(screenWidth - width, Math.round((screenWidth - width) / 2 + UserPrefs.desktopClockOffsetX)))
                     if (win._corner === "top-right" || win._corner === "bottom-right")
                         return Math.max(0, Math.round(screenWidth - width - UserPrefs.desktopClockOffsetX))
                     return Math.max(0, Math.round(UserPrefs.desktopClockOffsetX))
@@ -263,43 +269,68 @@ Scope {
                 y: {
                     const screenHeight = win.modelData.height
                     if (win._corner === "centered")
-                        return Math.max(0, Math.round((screenHeight - height) / 2))
+                        return Math.max(0, Math.min(screenHeight - height, Math.round((screenHeight - height) / 2 + UserPrefs.desktopClockOffsetY)))
                     if (win._corner === "bottom-left" || win._corner === "bottom-right")
                         return Math.max(0, Math.round(screenHeight - height - UserPrefs.desktopClockOffsetY))
                     return Math.max(0, Math.round(UserPrefs.desktopClockOffsetY))
                 }
 
-                Text {
-                    text: Qt.formatTime(clock.date, UserPrefs.clockUse24Hour ? "HH:mm" : "h:mm AP")
-                    color: win._textColor
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Settings.desktopClockFontSize
-                    font.bold: true
-                    style: win._textStyle
-                    styleColor: win._shadowColor
+                Item {
+                    implicitWidth: timeText.implicitWidth
+                    implicitHeight: timeText.implicitHeight
+
+                    Text {
+                        visible: win._shadowVisible
+                        x: UserPrefs.desktopClockShadowOffsetX
+                        y: UserPrefs.desktopClockShadowOffsetY
+                        text: timeText.text
+                        color: win._shadowColor
+                        font: timeText.font
+                    }
+                    Text {
+                        id: timeText
+                        text: Qt.formatTime(clock.date, UserPrefs.clockUse24Hour ? "HH:mm" : "h:mm AP")
+                        color: win._textColor
+                        font.family: Theme.fontFamily
+                        font.pixelSize: content._baseFontSize
+                        font.bold: true
+                    }
                 }
 
-                Text {
-                    text: Qt.formatDate(clock.date, "dddd, MMMM d")
-                    color: win._textColor
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Math.round(Settings.desktopClockFontSize * 0.32)
-                    style: win._textStyle
-                    styleColor: win._shadowColor
+                Item {
+                    implicitWidth: dateText.implicitWidth
+                    implicitHeight: dateText.implicitHeight
+
+                    Text {
+                        visible: win._shadowVisible
+                        x: UserPrefs.desktopClockShadowOffsetX
+                        y: UserPrefs.desktopClockShadowOffsetY
+                        text: dateText.text
+                        color: win._shadowColor
+                        font: dateText.font
+                    }
+                    Text {
+                        id: dateText
+                        text: Qt.formatDate(clock.date, "dddd, MMMM d")
+                        color: win._textColor
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Math.round(content._baseFontSize * 0.32)
+                    }
                 }
 
                 // ---- Weather (optional — see DESIGN NOTES) ----
                 Row {
                     visible: Weather.available
-                    spacing: Theme.spacingSmall
+                             && (UserPrefs.desktopClockShowWeatherIcon || UserPrefs.desktopClockShowTemperature)
+                    spacing: Math.max(1, Math.round(Theme.spacingSmall * content._scale))
 
                     Item {
                         id: weatherIconContainer
                         anchors.verticalCenter: parent.verticalCenter
-                        readonly property int size: Math.round(Settings.desktopClockFontSize * 0.4)
+                        readonly property int size: Math.round(content._baseFontSize * 0.4)
                         width: size
                         height: size
-                        visible: weatherIcon.status === Image.Ready
+                        visible: UserPrefs.desktopClockShowWeatherIcon && weatherIcon.status === Image.Ready
 
                         // Keep the SVG as the alpha mask, then colorize the
                         // rendered pixels with the same effective color as the
@@ -325,15 +356,28 @@ Scope {
                         }
                     }
 
-                    Text {
+                    Item {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: Math.round(Weather.temperature) + "°" +
-                              (Settings.weatherUnits === "celsius" ? "C" : "F")
-                        color: win._textColor
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Math.round(Settings.desktopClockFontSize * 0.32)
-                        style: win._textStyle
-                        styleColor: win._shadowColor
+                        visible: UserPrefs.desktopClockShowTemperature
+                        implicitWidth: temperatureText.implicitWidth
+                        implicitHeight: temperatureText.implicitHeight
+
+                        Text {
+                            visible: win._shadowVisible
+                            x: UserPrefs.desktopClockShadowOffsetX
+                            y: UserPrefs.desktopClockShadowOffsetY
+                            text: temperatureText.text
+                            color: win._shadowColor
+                            font: temperatureText.font
+                        }
+                        Text {
+                            id: temperatureText
+                            text: Math.round(Weather.temperature) + "°" +
+                                  (Settings.weatherUnits === "celsius" ? "C" : "F")
+                            color: win._textColor
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Math.round(content._baseFontSize * 0.32)
+                        }
                     }
                 }
             }

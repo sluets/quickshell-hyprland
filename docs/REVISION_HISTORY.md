@@ -1,34 +1,45 @@
+
+## 2026-07-17 — Desktop clock shadow strength
+
+## 2026-07-17 — SDDM completion, Settings fixes, desktop-clock controls, and Hyprland window behavior (GPT-5.6 Thinking)
+
+**Completed and live-tested:**
+
+- SDDM Phases 0–4: approved theme, generated snapshot contract, hash-aware privileged installer, activation/rollback, and manual Settings apply for the current theme and wallpaper.
+- Appearance/Hyprland border-color linkage race fixed by carrying an immutable final border snapshot through Apply.
+- Hyprland readiness warning changed to a machine-specific `look.lua` check.
+- Automatic backup pruning moved to a silent background process.
+- Desktop clock center X/Y offsets fixed.
+- Added independent weather-icon and temperature toggles, whole-clock scale, shadow strength, and shadow X/Y offsets.
+- Reduced the Settings QML minimum size, while preserving all newer staged clock properties after an older-parent regression was caught.
+- Determined that inconsistent Settings spawn geometry was Hyprland tiling behavior, not a QML implicit-size bug. Added an exact float/center/size rule (`1440 820`) for `org.quickshell` / `Quickshell Settings`.
+- Replaced the broken shell-based `Super+M` exit command with `hl.dsp.exit()`.
+
+**Important maintenance lesson:**
+
+- When several revisions touch the same large file quickly, always rebuild from the newest approved parent. An older `SettingsWindow.qml` briefly removed newer staged properties and produced `undefined` errors. Refresh the project archive/repository before starting the next work session.
+
+**Machine-transfer requirement:**
+
+- The Quickshell Git repository does not automatically install the Hyprland Settings window rule. Apply the rule separately to each machine's `rules.lua`; see `docs/HYPRLAND_WINDOW_RULES.md`.
+
+
+- Added a 0–100% **Shadow strength** control to Desktop settings.
+- The control adjusts the desktop clock/date/temperature shadow opacity as one simple setting.
+- A value of 0% disables the visible shadow while preserving the existing Shadow toggle and color controls.
+
+
+## 2026-07-16 — Hyprland readiness warning and silent backup pruning (GPT-5.6 Thinking)
+
+- Replaced the permanent Hyprland setup warning with a machine-specific
+  check of `~/.config/hypr/user/look.lua`. The warning is hidden when no
+  uncommented `active_border = ...` assignment remains and reports a missing
+  setup file separately.
+- Moved automatic retention sweeps onto a dedicated background Process.
+  Routine pruning no longer changes `ConfigManager.busy`, `lastOutput`, or
+  the Settings status line. Manual IPC pruning remains visible and unchanged.
+
 # Revision History
-
-## 2026-07-16 — Custom SDDM theme completed and integrated
-
-**Context:** The stock SDDM greeter did not match the Quickshell desktop. A custom login theme was built incrementally, tested in SDDM test mode, safely deployed through a narrow privileged helper, activated, and then connected to a manual Settings workflow.
-
-**What was built / changed:**
-
-- Added a custom Qt 6 SDDM theme with a wallpaper background, upper-left 12-hour clock/date, centered login panel, session selector, authentication handling, and power controls.
-- Added generated `theme.conf.user` snapshots and deterministic digest comparison.
-- Added dry-run and fake-root installer tests, a root-owned installed theme at `/usr/share/sddm/themes/quickshell-custom`, and the helper at `/usr/local/libexec/quickshell-sddm-installer`.
-- Added explicit activation through `/etc/sddm.conf.d/quickshell-theme.conf` and a simple TTY rollback procedure.
-- Added `widgets/Settings/pages/SddmPage.qml` and `scripts/apply-sddm-current.py` for manual **Apply to SDDM** behavior.
-- Confirmed the installed theme in test mode and through repeated real logout/login cycles.
-- Moved the editable SDDM project into the Quickshell Git repository and documented transfer to another machine.
-- Updated the Hyprland `SUPER+M` logout binding to native Lua syntax: `hl.bind(mainMod .. " + M", hl.dsp.exit())`.
-
-**Design decisions:**
-
-- Theme and wallpaper changes never automatically write SDDM files. The user may change wallpapers repeatedly and explicitly applies a chosen state later.
-- The installer skips every write when the staged and installed digests match.
-- Root-owned files are deployment outputs; `quickshell/sddm-project/` is the Git-backed source of truth.
-
-**Recovery:**
-
-```bash
-sudo rm -f /etc/sddm.conf.d/quickshell-theme.conf
-sudo systemctl restart sddm
-```
-
----
 
 ## 2026-07-15 — Hyprland settings page extraction (GPT)
 
@@ -2345,6 +2356,17 @@ conversation for the full debugging story on each):
 
 ---
 
+## 2026-07-16 — Desktop clock center offsets + display controls (GPT-5.6 Thinking)
+
+**Context:** Center-position X/Y offsets were ignored, and the desktop clock needed independent weather-icon/temperature visibility plus whole-widget scaling.
+
+**What changed:**
+
+- Centered placement now adds configured X/Y offsets and clamps the result to monitor bounds.
+- Added persisted weather-icon, temperature, and 0.50x–2.50x overall-scale preferences.
+- Added matching controls to the split Desktop Settings page.
+- Time, date, weather icon, temperature, and spacing scale together.
+
 <!--
   TEMPLATE FOR NEW ENTRIES — copy this below the line above when adding
   a new entry. Keep entries in reverse-chronological order (newest at
@@ -2366,3 +2388,8 @@ conversation for the full debugging story on each):
 
 - ...
 -->
+
+## Desktop Clock Shadow Offset Rev 1 — 2026-07-16
+- Added independent X/Y shadow offsets for desktop clock time, date, and temperature.
+- Replaced fixed `Text.Raised` rendering with explicit shadow layers so offsets are controllable.
+- Preserved the approved look with default offsets of 2px / 2px.

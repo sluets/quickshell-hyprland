@@ -479,3 +479,36 @@ qs
 
 Then set your weather ZIP in `core/Settings.qml`, and open the settings
 window (`qs ipc call settings toggle`) to pick a theme and font.
+
+## Quickshell Settings window rule (required on each Hyprland machine)
+
+The Settings window must be forced to float. Without a compositor rule, Hyprland may float it when one client is open but tile it when several clients are present. QML default dimensions do not override tiled geometry.
+
+Add this to the machine's Hyprland `rules.lua`:
+
+```lua
+hl.window_rule({
+    name = "quickshell-settings",
+    match = {
+        class = "org.quickshell",
+        title = "Quickshell Settings",
+    },
+    float = true,
+    center = true,
+    size = "1440 820",
+})
+```
+
+Then reload:
+
+```bash
+hyprctl reload
+```
+
+Also use the native Lua exit binding:
+
+```lua
+hl.bind(mainMod .. " + M", hl.dsp.exit())
+```
+
+See `docs/HYPRLAND_WINDOW_RULES.md` for the behavior discovered, verification steps, and laptop-transfer checklist.

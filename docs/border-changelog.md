@@ -56,17 +56,15 @@
 - Live-confirmed on Launcher, Wallpaper Picker, Volume, Wi-Fi, Bluetooth,
   Calendar, and Settings popouts.
 
-## 2026-07-14 known issue — staged bar/Hyprland border colors are not fully synchronized
+## 2026-07-16 fix — staged bar/Hyprland border colors synchronized
 
-- The Appearance page controls the top-bar border source/color.
-- The Hyprland page controls the compositor active-window border source/color.
-- During the current Settings page split, changing one does not reliably update
-  the other in the same Apply transaction. Changing/reverting the other control
-  can make them match afterward because the saved values are regenerated in a
-  later pass.
-- Intended final behavior: when Hyprland “Use theme color” is enabled, Hyprland
-  follows the effective Appearance border (theme gradient or custom solid). When
-  disabled, Hyprland keeps its own independent custom value.
-- Deferred fix: resolve both staged values together in `SettingsStore.qml` or
-  the centralized Apply transaction. Do not add another page-local binding as a
-  temporary fix.
+- The previous bug was an asynchronous Apply race, not a page-splitting issue.
+  Settings cleared staged values while ConfigManager was still taking its
+  safety snapshot, so the later Hyprland regeneration could see old saved data.
+- Settings now resolves the final Appearance border and selected theme before
+  Apply begins, then passes an immutable border snapshot through ConfigManager's
+  transaction.
+- When Hyprland “Use theme color” is enabled, it follows the effective Appearance
+  border in the same Apply, including theme gradients, custom solid colors, and
+  theme changes. When disabled, its independent custom value remains untouched
+  by Appearance changes.

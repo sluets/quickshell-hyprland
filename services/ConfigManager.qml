@@ -294,6 +294,17 @@ Singleton {
         return true;
     }
 
+    // Background retention sweep. Uses its own Process so routine pruning
+    // never replaces the Settings status line with "Working (prune)" or
+    // "pruned ..." output. Manual IPC pruning still uses pruneAutos().
+    function _pruneAutosSilent(): void {
+        if (silentPruneProc.running)
+            return;
+        silentPruneProc.command = ["sh", "-c", pruneScript, "configmanager-prune",
+            snapshotsDir, String(Math.max(1, Settings.configAutoSnapshotKeep))];
+        silentPruneProc.running = true;
+    }
+
     // Takes today's daily snapshot if none exists yet, then prunes.
     // Phase 2's settings window calls this on open; harmless to call
     // any time. (Implemented in sh so "does today's exist" needs no
@@ -472,6 +483,12 @@ Singleton {
             case "desktopClockShadowEnabled": UserPrefs.setDesktopClockShadowEnabled(ch.value); n++; break;
             case "desktopClockShadowUseThemeColor": UserPrefs.setDesktopClockShadowUseThemeColor(ch.value); n++; break;
             case "desktopClockShadowCustomColor": UserPrefs.setDesktopClockShadowCustomColor(ch.value); n++; break;
+            case "desktopClockShowWeatherIcon": UserPrefs.setDesktopClockShowWeatherIcon(ch.value); n++; break;
+            case "desktopClockShowTemperature": UserPrefs.setDesktopClockShowTemperature(ch.value); n++; break;
+            case "desktopClockScale": UserPrefs.setDesktopClockScale(ch.value); n++; break;
+            case "desktopClockShadowStrength": UserPrefs.setDesktopClockShadowStrength(ch.value); n++; break;
+            case "desktopClockShadowOffsetX": UserPrefs.setDesktopClockShadowOffsetX(ch.value); n++; break;
+            case "desktopClockShadowOffsetY": UserPrefs.setDesktopClockShadowOffsetY(ch.value); n++; break;
             case "barBorderWidthOverride": UserPrefs.setBarBorderWidthOverride(ch.value); n++; break;
             case "barBorderUseThemeColor": UserPrefs.setBarBorderUseThemeColor(ch.value); n++; break;
             case "barBorderCustomColor": UserPrefs.setBarBorderCustomColor(ch.value); n++; break;
@@ -635,6 +652,12 @@ echo "generated appearance.lua (gaps $gin/$gout, border $bs, rounding $rnd, acti
     property var _lines: []
 
     Process {
+        id: silentPruneProc
+        stdout: StdioCollector {}
+        stderr: StdioCollector {}
+    }
+
+    Process {
         id: proc
 
         stdout: SplitParser {
@@ -716,7 +739,7 @@ echo "generated appearance.lua (gaps $gin/$gout, border $bs, rounding $rnd, acti
             // sweep, it doesn't make manual snapshots prunable.
             if (what === "snapshot" && exitCode === 0
                     && !wasStagedApplySnapshot && !wasFileApplySnapshot) {
-                root.pruneAutos();
+                root._pruneAutosSilent();
             }
 
             // Startup chain: after the Original Backup check, sweep a

@@ -240,6 +240,12 @@ Singleton {
     readonly property bool desktopClockShadowEnabled: adapter.desktopClockShadowEnabled
     readonly property bool desktopClockShadowUseThemeColor: adapter.desktopClockShadowUseThemeColor
     readonly property string desktopClockShadowCustomColor: adapter.desktopClockShadowCustomColor
+    readonly property bool desktopClockShowWeatherIcon: adapter.desktopClockShowWeatherIcon
+    readonly property bool desktopClockShowTemperature: adapter.desktopClockShowTemperature
+    readonly property real desktopClockScale: adapter.desktopClockScale
+    readonly property int desktopClockShadowStrength: adapter.desktopClockShadowStrength
+    readonly property int desktopClockShadowOffsetX: adapter.desktopClockShadowOffsetX
+    readonly property int desktopClockShadowOffsetY: adapter.desktopClockShadowOffsetY
     readonly property int hyprGapsIn: adapter.hyprGapsIn
     readonly property int hyprGapsOut: adapter.hyprGapsOut
     readonly property int hyprBorderSize: adapter.hyprBorderSize
@@ -494,6 +500,13 @@ Singleton {
             adapter.desktopClockShadowCustomColor = v;
     }
 
+    function setDesktopClockShowWeatherIcon(v: bool): void { adapter.desktopClockShowWeatherIcon = v; }
+    function setDesktopClockShowTemperature(v: bool): void { adapter.desktopClockShowTemperature = v; }
+    function setDesktopClockScale(v: real): void { adapter.desktopClockScale = Math.min(2.5, Math.max(0.5, v)); }
+    function setDesktopClockShadowStrength(v: int): void { adapter.desktopClockShadowStrength = Math.min(100, Math.max(0, v)); }
+    function setDesktopClockShadowOffsetX(v: int): void { adapter.desktopClockShadowOffsetX = Math.min(20, Math.max(-20, v)); }
+    function setDesktopClockShadowOffsetY(v: int): void { adapter.desktopClockShadowOffsetY = Math.min(20, Math.max(-20, v)); }
+
     function setFontScale(v: real): void {
         // Clamp to sane bounds — a fat-fingered 14.0 would make the
         // bar unusable, and this file is the shell's own write path.
@@ -577,6 +590,12 @@ Singleton {
         property bool desktopClockShadowEnabled: true
         property bool desktopClockShadowUseThemeColor: true
         property string desktopClockShadowCustomColor: "#000000"
+        property bool desktopClockShowWeatherIcon: true
+        property bool desktopClockShowTemperature: true
+        property real desktopClockScale: 1.0
+        property int desktopClockShadowStrength: 100
+        property int desktopClockShadowOffsetX: 2
+        property int desktopClockShadowOffsetY: 2
         // Hyprland look values (settings window, Hyprland page,
         // 2026-07-09). Defaults MATCH the live hyprland.lua at the
         // time of the generated/user split — so the first generated

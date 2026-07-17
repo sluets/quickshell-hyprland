@@ -8,11 +8,12 @@ CURRENT PRIORITY ORDER — 2026-07-15 (GPT)
    - Test each page before continuing.
 
 2. Make requested Settings adjustments and fix known bugs one at a time.
-   - Border-color coupling is the first major bug.
-   - Desktop clock center-position X/Y offsets remain deferred.
-   - Replace the permanent Hyprland setup warning with a machine-specific
-     one-time readiness check.
-   - Backup pruning should run silently in the background.
+   - Border-color coupling fixed and live-tested.
+   - Desktop clock anchor/disappearing and center-offset bugs fixed and live-tested.
+   - Desktop clock weather icon, temperature, scale, shadow strength, and shadow X/Y controls completed.
+   - Hyprland setup warning now uses a machine-specific readiness check.
+   - Automatic backup pruning now runs silently in the background.
+   - Settings window now requires a documented Hyprland float/center rule on every machine.
 
 3. Before adding major features, perform a controlled structural cleanup.
    - Rename vague or inconsistent files/components.
@@ -37,9 +38,7 @@ CURRENT PRIORITY ORDER — 2026-07-15 (GPT)
    state handling.
 
 7. Resume deferred feature work only after the structure is safer.
-   - SDDM next phase.
    - Hyprland animation presets, beginning with Phase 0 ownership decisions.
-   - Weather icon on/off toggle.
    - MPD local-library music client plan.
 
 8. Continue documentation cleanup.
@@ -82,9 +81,12 @@ DONE THIS SESSION — no action needed
   Theme/Font/Wallpaper-Transition-Type dropdowns "connect" to their
   open list instead of floating separately, extra spacing between
   control groups, pending-changes panel boxed.
-- ConfigManager auto-prune: old auto/daily snapshots now actually get
-  swept automatically (they weren't before — pruneAutos() existed but
-  nothing called it), retention lowered 30 -> 10.
+- ConfigManager auto-prune: old auto/daily snapshots are swept
+  automatically, retention lowered 30 -> 10. Routine sweeps now use a
+  separate silent Process so they do not replace the Settings status line.
+- Hyprland setup warning: the Hyprland page now checks this machine's
+  ~/.config/hypr/user/look.lua and only shows the warning when an active
+  active_border assignment still conflicts with generated/appearance.lua.
 - Wallpaper Transition section (Appearance page): type picker
   (14 real awww/swww values incl. random), position picker
   (grow/outer only), duration/fps/angle steppers.
@@ -172,3 +174,7 @@ REVISION HISTORY
 
 2026-07-13  Initial list, consolidating everything discussed this
             session plus the still-open items from SONNET_QUEUE.md.
+
+- [x] Add desktop clock shadow-strength control (0–100%).
+
+- [x] Desktop clock: configurable shadow X/Y offsets (-20px to +20px).

@@ -1,41 +1,26 @@
-QUICKSHELL — NEXT SESSION HANDOFF
-Updated 2026-07-15 by GPT
+NEXT SESSION — 2026-07-17
 
-KNOWN-GOOD BASELINE
-- Git setup is complete and pushed.
-- Canonical repo: https://github.com/sluets/quickshell-hyprland
-- Rev 2 is live-tested and approved.
-- Rev 2 extracted the Hyprland settings UI into:
-  widgets/Settings/pages/HyprlandPage.qml
-- Use Rev 2 as the parent for the next Settings work.
+The current project should be refreshed from Git before making more edits.
 
-NEXT TASK
-Continue splitting the Settings menu one page at a time.
+Approved tonight:
+- SDDM Phases 0–4 and manual Settings apply pipeline.
+- Border-color linkage fix.
+- Machine-specific Hyprland setup warning.
+- Silent automatic backup pruning.
+- Desktop clock center offsets, weather/temperature toggles, overall scale, shadow strength, and shadow X/Y offsets.
+- Settings QML minimum size reduction.
+- Hyprland rule forcing Quickshell Settings to float, center, and size at 1440x820.
+- Native Super+M exit binding: hl.dsp.exit().
 
-WORKFLOW
-1. Change only one page/component.
-2. Preserve behavior.
-3. Hand off only the changed files with exact destination paths.
-4. Test live before proceeding.
-5. Commit and push each approved task separately.
+Important:
+- Apply the Settings window rule separately on the laptop's rules.lua. See docs/HYPRLAND_WINDOW_RULES.md.
+- Use the newest Git checkout as the parent. Do not reuse any earlier SettingsWindow.qml revision ZIP.
+- The final tested Settings rule is:
 
-AFTER THE SETTINGS SPLIT
-- Make requested Settings adjustments.
-- Fix known bugs one at a time, prioritizing border-color coupling.
-- Replace the permanent Hyprland setup warning with a machine-specific
-  one-time readiness check.
-- Keep backup pruning silent.
-- Then begin the controlled structural cleanup/renaming pass before adding
-  substantial new features.
-
-KNOWN DEFERRED ITEMS
-- Appearance border color and Hyprland active-border color coupling.
-- Desktop clock center-position X/Y offsets.
-- Weather icon on/off toggle.
-- SDDM next phase.
-- Hyprland animation presets plan.
-- Automated smoke checks and QML tooling.
-- MPD local-library music client plan.
-
-DOCUMENTATION RULE
-GPT signs documentation and in-file comments it adds or changes.
+hl.window_rule({
+    name = "quickshell-settings",
+    match = { class = "org.quickshell", title = "Quickshell Settings" },
+    float = true,
+    center = true,
+    size = "1440 820",
+})
