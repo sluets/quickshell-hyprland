@@ -1,6 +1,14 @@
 =================================================================
-CURRENT PRIORITY ORDER — 2026-07-15 (GPT)
+CURRENT PRIORITY ORDER — 2026-07-18 (GPT)
 =================================================================
+
+SDDM current status:
+- Phases 0–4 complete.
+- Temporary unsaved preview, clock/login offsets, Reset buttons, aligned controls, and manual hash-aware Apply complete.
+- Clock scale (50–200%) is built and under live test.
+- Real X11 greeter monitor order and 144 Hz modes are fixed through the machine-specific Xsetup script.
+- Next optional SDDM controls: login-panel width/scale and SDDM-only typography.
+
 
 1. Continue splitting the Settings menu one page/component at a time.
    - Rev 2 HyprlandPage extraction is live-tested and approved.
@@ -126,9 +134,7 @@ BIGGER — HAS ITS OWN PLAN DOC, START THERE
 - Hyprland animation control — docs/HYPR_ANIMATIONS_PLAN.md. Phase 0
   is a conversation (confirm ownership-transfer + preset names), not
   code — can happen anytime, doesn't need the machine.
-- SDDM theme, Phases 1+ (real wallpaper, hand-copied palette, the
-  standalone settings tool, live wallpaper sync, weather, real color
-  sync from core/Theme.qml) — docs/SDDM_THEME_PLAN.md.
+- SDDM follow-up controls and polish — login-panel sizing, optional typography, installed-status display, and rollback UI. See docs/SDDM_THEME_PLAN.md. Automatic live wallpaper sync remains intentionally rejected.
 
 =================================================================
 NEEDS A SYSTEM PACKAGE, NOT CODE

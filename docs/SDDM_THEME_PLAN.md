@@ -1,54 +1,81 @@
 # SDDM theme project — current design and status
 
+<!-- GPT: updated 2026-07-18 -->
+
 ## Purpose
 
 The project provides a custom Qt 6 SDDM login theme that visually matches the Quickshell desktop while remaining independent from the Quickshell runtime. SDDM runs before login as the `sddm` user, so it cannot import Quickshell singletons or directly consume the live desktop state.
 
-The editable SDDM source is stored at:
+The editable source lives at:
 
 ```text
 ~/.config/quickshell/sddm-project/
 ```
 
-A compatibility symlink keeps the established script path working:
+Compatibility symlink used by the scripts:
 
 ```text
 ~/.config/sddm-project -> ~/.config/quickshell/sddm-project
 ```
 
-See `docs/SDDM_BACKUP_AND_TRANSFER.md` for backup, migration, deployment, and rollback instructions.
+See `docs/SDDM_BACKUP_AND_TRANSFER.md` for installation, migration, recovery, and machine-specific monitor setup.
 
 ## Approved visual design
 
-The current approved login screen has:
+The current login screen has:
 
-- the active wallpaper filling the screen
-- a 12-hour clock and date in the upper-left corner
+- the selected wallpaper filling each screen
+- a 12-hour clock and date in the upper-left
 - a centered login panel
-- a subtle clock shadow for readability
-- no decorative accent line under the clock
+- a soft clock shadow
+- no accent line below the clock
 - Honeycomb-derived colors and restrained surfaces
-- session selection, password authentication, suspend, reboot, and shutdown controls
+- session selection, password authentication, suspend, reboot, and shutdown
 
-Clock and login positions include X/Y offset values so a later Settings revision can expose positioning controls without restructuring `Main.qml`.
+## Settings controls
 
-## Synchronization policy
-
-SDDM synchronization is deliberately manual.
-
-Changing the live desktop theme or wallpaper does not write anything under `/usr/share` or `/etc`. The user may change wallpapers repeatedly without invoking privilege escalation or touching root-owned files.
-
-The Settings page provides:
+The SDDM page currently supports:
 
 - **Include current theme**
 - **Include current wallpaper**
+- clock scale from 50% to 200% in 10% steps
+- clock horizontal and vertical offsets in 10 px steps
+- login-panel horizontal and vertical offsets in 10 px steps
+- individual Reset buttons for scale and every offset
+- **Test SDDM Theme**
 - **Apply to SDDM**
 
-The apply operation builds a user-owned staged snapshot, compares it with the installed snapshot, and invokes the privileged helper only when installation work is required. An identical snapshot results in no root-owned files being rewritten.
+Positive X moves right. Positive Y moves down. Offsets are clamped to `-4096` through `4096`; clock scale is clamped to `50` through `200` percent.
+
+The offset controls use fixed label/value columns so all rows remain aligned.
+
+## Preview versus Apply
+
+### Test SDDM Theme
+
+The Test button previews the current unsaved SDDM controls without touching root-owned files:
+
+1. Copies the user-owned SDDM project to a temporary directory under `/tmp`.
+2. Applies the currently selected theme, wallpaper, offsets, and clock scale to that temporary copy.
+3. Regenerates its `theme.conf.user` and digest.
+4. Launches `sddm-greeter-qt6 --test-mode` (or `sddm-greeter` as a fallback).
+5. Deletes the temporary copy after the greeter exits.
+
+The preview does not run `pkexec`, does not write to `/usr/share`, and does not alter the source snapshot contract.
+
+The test window runs inside the current Hyprland session, so its monitor arrangement follows Hyprland rather than the real pre-login X11 arrangement.
+
+### Apply to SDDM
+
+Apply is deliberately manual. It updates the user-owned snapshot and invokes the narrow privileged installer only when needed.
+
+Changing the desktop theme, wallpaper, or SDDM controls does not write anything under `/usr/share` until Apply is pressed. The installer compares deterministic digests and skips installation when the root-owned copy is already identical.
+
+Layout-only changes can be applied with both theme and wallpaper unchecked.
 
 ## Architecture
 
-### User-owned source and staging
+### User-owned source and integration
 
 ```text
 ~/.config/quickshell/sddm-project/
@@ -59,12 +86,9 @@ The apply operation builds a user-owned staged snapshot, compares it with the in
 ├── assets/
 ├── snapshot/
 └── scripts/
-```
 
-Quickshell integration:
-
-```text
 ~/.config/quickshell/widgets/Settings/pages/SddmPage.qml
+~/.config/quickshell/widgets/Settings/components/StepperRow.qml
 ~/.config/quickshell/scripts/apply-sddm-current.py
 ```
 
@@ -76,84 +100,96 @@ Quickshell integration:
 /etc/sddm.conf.d/quickshell-theme.conf
 ```
 
-Only the narrow installer helper writes the installed theme directory. Activation is a separate explicit operation.
+The project source is authoritative. Root-owned files are generated deployment outputs and should not be committed back into Git.
 
 ### Snapshot flow
 
 ```text
 Quickshell Settings
-    -> user selects theme/wallpaper inputs
-    -> apply-sddm-current.py updates the staged snapshot
-    -> snapshot generator validates and hashes output
-    -> privileged installer compares source and installed digests
-    -> identical: skip every write
-    -> changed: back up previous installed snapshot and install new copy
+    -> build user-owned snapshot contract
+    -> validate and generate theme.conf.user
+    -> calculate deterministic digest
+    -> privileged installer compares installed digest
+    -> identical: skip writes
+    -> changed: back up prior installed snapshot and install new copy
 ```
 
-Wallpaper files are copied into the SDDM theme rather than referenced from the user's wallpaper directory. This avoids greeter-time home-directory permissions and availability problems.
+Wallpaper files are copied into the theme rather than referenced from the user's wallpaper directory. This avoids greeter-time home-directory access problems.
 
 ## Completed phases
 
 ### Phase 0 — test-mode scaffolding: complete
 
-- Confirmed Qt 6 SDDM test mode works.
+- Confirmed Qt 6 SDDM test mode.
 - Established the standalone development loop.
 
 ### Phase 1 — static visual theme: complete
 
-- Built and iterated the approved login screen.
-- Replaced the initial procedural SVG with a local PNG wallpaper.
-- Changed the clock to 12-hour time.
-- Moved clock to upper-left and login panel to center.
-- Added configurable position offsets.
-- Removed the unwanted accent bar and retained a stronger soft shadow.
-- Confirmed successful real logout/login cycles.
+- Built and approved the login screen.
+- Added a local wallpaper, 12-hour clock, upper-left clock, centered login panel, and soft shadow.
+- Confirmed real logout/login cycles.
 
 ### Phase 2 — generated snapshot contract: complete
 
 - Kept `theme.conf` as safe defaults.
-- Added generated override data through `theme.conf.user`.
-- Added user-space generation, validation, and deterministic hashing.
-- Proved appearance can be regenerated without rewriting `Main.qml`.
+- Added generated overrides through `theme.conf.user`.
+- Added validation and deterministic hashing.
 
 ### Phase 3 — safe installation and activation: complete
 
-- Added dry-run support and fake-root testing under `/tmp`.
-- Verified first install and identical-snapshot write skipping.
-- Installed the helper under `/usr/local/libexec`.
-- Installed and tested the exact root-owned theme copy.
-- Added explicit activation/deactivation scripts.
-- Activated the theme and confirmed repeated real logins.
-
-Emergency rollback:
-
-```bash
-sudo rm -f /etc/sddm.conf.d/quickshell-theme.conf
-sudo systemctl restart sddm
-```
+- Added fake-root and dry-run testing.
+- Added hash-aware installation and write skipping.
+- Added explicit activation, deactivation, and rollback scripts.
+- Confirmed the root-installed theme through repeated real logins.
 
 ### Phase 4 — Quickshell Settings integration: complete
 
-- Added a dedicated SDDM Settings page.
-- Added manual theme/wallpaper selection and Apply behavior.
-- Added status and error reporting.
-- Confirmed the Settings-generated root-installed theme renders successfully.
+- Added the dedicated Settings page.
+- Added manual theme/wallpaper selection and status reporting.
+- Added temporary non-root preview.
+- Added clock/login offsets and Reset controls.
+- Added clock scaling.
+
+## Real SDDM monitor layout
+
+The real greeter runs under X11 on the current machine and executes:
+
+```text
+/usr/share/sddm/scripts/Xsetup
+```
+
+Its connector names are not the same as Hyprland/Xwayland names. The confirmed SDDM/Xorg connectors are:
+
+```text
+DisplayPort-1 = physical left monitor
+DisplayPort-0 = physical right/main monitor
+```
+
+The working machine-specific layout is:
+
+```sh
+#!/bin/sh
+
+/usr/bin/xrandr \
+    --output DisplayPort-1 --mode 2560x1440 --rate 143.97 --pos 0x0 \
+    --output DisplayPort-0 --primary --mode 2560x1440 --rate 143.97 --pos 2560x0
+```
+
+This belongs to system display configuration, not the portable theme. Do not hard-code this machine's connector names into the general SDDM theme installer.
 
 ## Remaining optional work
 
-These are enhancements, not requirements for the working system:
+- login-panel width and scale controls
+- additional SDDM-only typography controls
+- display of the last installed digest and wallpaper
+- clearly labeled deactivate/rollback controls in Settings
+- optional machine-specific monitor-layout UI only if it can be made safe
+- greeter weather only as an experiment
 
-- expose clock and login X/Y offsets in Settings
-- expose clock format despite the current preference for 12-hour time
-- expose additional SDDM-only typography and panel sizing controls
-- add a preview/status display for the last installed digest and wallpaper
-- add a clearly labeled deactivate/rollback button to Settings
-- improve multi-monitor behavior if real use reveals a problem
-- investigate greeter weather only as an experimental feature
-
-Automatic live wallpaper synchronization remains intentionally rejected unless the user explicitly changes the design decision. Manual Apply prevents unnecessary privileged writes during frequent wallpaper changes.
+Automatic live wallpaper synchronization remains intentionally rejected. Manual Apply prevents repeated privileged writes while cycling wallpapers.
 
 ## Revision history
 
 - **2026-07-13:** Initial planning document.
-- **2026-07-16:** Phases 0-4 completed; custom theme activated and tested through real login cycles; manual Quickshell Settings integration approved; Git-backed source and transfer workflow documented.
+- **2026-07-16:** Phases 0–4 completed and activated.
+- **2026-07-18:** Documented temporary unsaved preview, resettable clock/login offsets, clock scaling, aligned controls, and the confirmed X11 dual-monitor setup. (GPT)

@@ -19,6 +19,7 @@
     "clockXOffset": 0,
     "clockYOffset": 0,
     "loginXOffset": 0,
-    "loginYOffset": 0
+    "loginYOffset": 0,
+    "clockScalePercent": 100
   }
 }

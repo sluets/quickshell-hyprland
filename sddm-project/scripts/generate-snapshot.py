@@ -73,6 +73,7 @@ def validate(data: dict, theme_dir: Path) -> dict[str, str | int | Path]:
         "ClockYOffset": integer(layout.get("clockYOffset"), "clockYOffset", -4096, 4096),
         "LoginXOffset": integer(layout.get("loginXOffset"), "loginXOffset", -4096, 4096),
         "LoginYOffset": integer(layout.get("loginYOffset"), "loginYOffset", -4096, 4096),
+        "ClockScalePercent": integer(layout.get("clockScalePercent"), "clockScalePercent", 50, 200),
     }
 
     for key in REQUIRED_COLORS:
@@ -104,7 +105,7 @@ def render_config(values: dict[str, str | int | Path]) -> bytes:
         "ColorBackground", "ColorForeground", "ColorAccent", "ColorUrgent",
         "ColorMuted", "ColorSurface", "ColorHover", "ColorBorder",
         "FontFamily", "Radius", "ClockXOffset", "ClockYOffset",
-        "LoginXOffset", "LoginYOffset",
+        "LoginXOffset", "LoginYOffset", "ClockScalePercent",
     )
     lines = [
         "[General]",

@@ -60,6 +60,8 @@ Test the source theme before committing:
 sddm-greeter-qt6 --test-mode --theme ~/.config/sddm-project
 ```
 
+For unsaved values from the Quickshell SDDM page, use **Test SDDM Theme** instead. It builds a temporary copy under `/tmp`, includes the current theme/wallpaper/layout controls, and writes no root-owned files.
+
 Then commit it:
 
 ```bash
@@ -158,7 +160,9 @@ To push the current Quickshell theme and wallpaper to SDDM, use:
 Settings -> SDDM -> Apply to SDDM
 ```
 
-The Apply action is manual by design. Changing desktop themes or cycling wallpapers does not write root-owned files. The installer compares digests and skips all writes when the installed snapshot is already identical.
+The Apply action is manual by design. Changing desktop themes, cycling wallpapers, or adjusting SDDM offsets/clock scale does not write root-owned files until Apply is pressed. The installer compares digests and skips all writes when the installed snapshot is already identical. Layout-only changes may be applied with both theme and wallpaper unchecked.
+
+The **Test SDDM Theme** button previews unsaved values from a temporary user-owned copy and does not invoke `pkexec`.
 
 ## What Git protects and what it does not
 
@@ -178,3 +182,31 @@ Git does not capture:
 - unrelated files elsewhere in the home directory
 
 Commit and push after meaningful SDDM changes. The root deployment can always be recreated from the committed source.
+
+
+## Machine-specific X11 monitor layout
+
+The custom theme does not own monitor ordering or refresh rates. On the current machine, the real SDDM greeter runs under X11 and calls:
+
+```text
+/usr/share/sddm/scripts/Xsetup
+```
+
+Confirmed connector mapping:
+
+```text
+DisplayPort-1 = physical left monitor
+DisplayPort-0 = physical right/main monitor
+```
+
+Working layout:
+
+```sh
+#!/bin/sh
+
+/usr/bin/xrandr \
+    --output DisplayPort-1 --mode 2560x1440 --rate 143.97 --pos 0x0 \
+    --output DisplayPort-0 --primary --mode 2560x1440 --rate 143.97 --pos 2560x0
+```
+
+This file is machine-specific and is outside the portable theme deployment. Before reusing it elsewhere, obtain the real SDDM/Xorg connector names from an `Xsetup` diagnostic log; Hyprland/Xwayland names may differ. (GPT, 2026-07-18)

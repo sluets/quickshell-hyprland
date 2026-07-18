@@ -1,3 +1,24 @@
+## 2026-07-18 — SDDM preview, layout controls, clock scaling, and X11 monitor setup (GPT)
+
+**Live-tested before clock-scale revision:**
+
+- Added clock and login-panel horizontal/vertical offsets in 10 px steps.
+- Added Reset buttons for every offset.
+- Added a temporary Test SDDM path that previews unsaved controls from `/tmp` without `pkexec` or writes to `/usr/share`.
+- Confirmed layout-only Apply works with theme and wallpaper unchecked.
+- Aligned SDDM stepper labels and values using fixed columns.
+
+**Built and under live test:**
+
+- Added clock scale from 50% to 200% in 10% steps; Reset returns to 100%.
+- Clock scale affects both time and date and is included in preview and installed snapshot generation.
+
+**Machine-specific SDDM display fix:**
+
+- Confirmed the real SDDM greeter uses X11 and executes `/usr/share/sddm/scripts/Xsetup`.
+- Confirmed SDDM/Xorg connector names differ from Hyprland/Xwayland names.
+- Set `DisplayPort-1` left and `DisplayPort-0` right/primary, both at `2560x1440 @ 143.97 Hz`.
+- Kept this monitor layout outside the portable theme because connector names and physical ordering are machine-specific.
 
 ## 2026-07-17 — Desktop clock shadow strength
 

@@ -9,6 +9,8 @@ RowLayout {
     property string valueText: ""
     property bool staged: false
     property bool showReset: false
+    property int labelColumnWidth: 140
+    property int valueColumnWidth: 64
 
     signal minus()
     signal plus()
@@ -22,7 +24,8 @@ RowLayout {
         color: Theme.colorForeground
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSize
-        Layout.minimumWidth: 140
+        Layout.minimumWidth: stepper.labelColumnWidth
+        Layout.preferredWidth: stepper.labelColumnWidth
     }
 
     Rectangle {
@@ -55,7 +58,8 @@ RowLayout {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSize
         horizontalAlignment: Text.AlignHCenter
-        Layout.minimumWidth: 64
+        Layout.minimumWidth: stepper.valueColumnWidth
+        Layout.preferredWidth: stepper.valueColumnWidth
     }
 
     Rectangle {

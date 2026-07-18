@@ -31,6 +31,7 @@ ColumnLayout {
     property int clockYOffset: 0
     property int loginXOffset: 0
     property int loginYOffset: 0
+    property int clockScalePercent: 100
     property string statusText: "Ready — nothing is copied until you press Apply to SDDM."
     property bool lastSucceeded: false
     property string processOutput: ""
@@ -45,6 +46,10 @@ ColumnLayout {
 
     function colorHex(c) {
         return "#" + chanHex(c.r) + chanHex(c.g) + chanHex(c.b);
+    }
+
+    function clampClockScale(value) {
+        return Math.max(50, Math.min(200, value));
     }
 
     function clampOffset(value) {
@@ -83,9 +88,22 @@ ColumnLayout {
             "--clock-x-offset", String(clockXOffset),
             "--clock-y-offset", String(clockYOffset),
             "--login-x-offset", String(loginXOffset),
-            "--login-y-offset", String(loginYOffset)
+            "--login-y-offset", String(loginYOffset),
+            "--clock-scale-percent", String(clockScalePercent)
         );
         return command;
+    }
+
+    function changeClockScale(amount) {
+        clockScalePercent = clampClockScale(clockScalePercent + amount);
+        layoutDirty = true;
+    }
+
+    function resetClockScale() {
+        if (clockScalePercent === 100)
+            return;
+        clockScalePercent = 100;
+        layoutDirty = true;
     }
 
     function resetOffset(propertyName) {
@@ -173,10 +191,24 @@ ColumnLayout {
     }
 
     SettingsComponents.StepperRow {
+        label: "Clock scale"
+        valueText: page.clockScalePercent + "%"
+        staged: page.layoutDirty
+        showReset: true
+        labelColumnWidth: 220
+        valueColumnWidth: 78
+        onMinus: page.changeClockScale(-10)
+        onPlus: page.changeClockScale(10)
+        onReset: page.resetClockScale()
+    }
+
+    SettingsComponents.StepperRow {
         label: "Clock horizontal"
         valueText: (page.clockXOffset > 0 ? "+" : "") + page.clockXOffset + " px"
         staged: page.layoutDirty
         showReset: true
+        labelColumnWidth: 220
+        valueColumnWidth: 78
         onMinus: page.changeOffset("clockXOffset", -10)
         onPlus: page.changeOffset("clockXOffset", 10)
         onReset: page.resetOffset("clockXOffset")
@@ -187,6 +219,8 @@ ColumnLayout {
         valueText: (page.clockYOffset > 0 ? "+" : "") + page.clockYOffset + " px"
         staged: page.layoutDirty
         showReset: true
+        labelColumnWidth: 220
+        valueColumnWidth: 78
         onMinus: page.changeOffset("clockYOffset", -10)
         onPlus: page.changeOffset("clockYOffset", 10)
         onReset: page.resetOffset("clockYOffset")
@@ -197,6 +231,8 @@ ColumnLayout {
         valueText: (page.loginXOffset > 0 ? "+" : "") + page.loginXOffset + " px"
         staged: page.layoutDirty
         showReset: true
+        labelColumnWidth: 220
+        valueColumnWidth: 78
         onMinus: page.changeOffset("loginXOffset", -10)
         onPlus: page.changeOffset("loginXOffset", 10)
         onReset: page.resetOffset("loginXOffset")
@@ -207,6 +243,8 @@ ColumnLayout {
         valueText: (page.loginYOffset > 0 ? "+" : "") + page.loginYOffset + " px"
         staged: page.layoutDirty
         showReset: true
+        labelColumnWidth: 220
+        valueColumnWidth: 78
         onMinus: page.changeOffset("loginYOffset", -10)
         onPlus: page.changeOffset("loginYOffset", 10)
         onReset: page.resetOffset("loginYOffset")
@@ -331,10 +369,11 @@ ColumnLayout {
                     page.clockYOffset = page.clampOffset(Number(layout.clockYOffset || 0));
                     page.loginXOffset = page.clampOffset(Number(layout.loginXOffset || 0));
                     page.loginYOffset = page.clampOffset(Number(layout.loginYOffset || 0));
+                    page.clockScalePercent = page.clampClockScale(Number(layout.clockScalePercent || 100));
                     page.layoutDirty = false;
                     page.layoutLoaded = true;
                 } catch (error) {
-                    page.processError = "Could not read saved SDDM offsets: " + error;
+                    page.processError = "Could not read saved SDDM layout: " + error;
                 }
             }
         }
@@ -342,7 +381,7 @@ ColumnLayout {
         stderr: StdioCollector {
             onStreamFinished: {
                 if (text.trim() !== "")
-                    page.processError = "Could not read saved SDDM offsets: " + text.trim();
+                    page.processError = "Could not read saved SDDM layout: " + text.trim();
             }
         }
     }

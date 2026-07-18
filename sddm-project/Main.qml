@@ -64,6 +64,7 @@ Rectangle {
     readonly property int clockYOffset: config.intValue("ClockYOffset")
     readonly property int loginXOffset: config.intValue("LoginXOffset")
     readonly property int loginYOffset: config.intValue("LoginYOffset")
+    readonly property real clockScale: config.intValue("ClockScalePercent") / 100.0
 
     color: colorBackground
 
@@ -184,7 +185,7 @@ Rectangle {
             text: Qt.formatTime(now, config.stringValue("ClockFormat"))
             color: root.colorForeground
             font.family: root.fontFamily
-            font.pixelSize: Math.max(62, Math.min(116, Math.round(root.width * 0.074)))
+            font.pixelSize: Math.round(Math.max(62, Math.min(116, root.width * 0.074)) * root.clockScale)
             font.bold: true
             style: Text.Raised
             styleColor: "#90000000"
@@ -195,7 +196,7 @@ Rectangle {
             color: root.colorForeground
             opacity: 0.92
             font.family: root.fontFamily
-            font.pixelSize: Math.max(18, Math.min(28, Math.round(root.width * 0.017)))
+            font.pixelSize: Math.round(Math.max(18, Math.min(28, root.width * 0.017)) * root.clockScale)
             font.weight: Font.Medium
         }
     }

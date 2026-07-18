@@ -1,70 +1,117 @@
-# SDDM Phase 3 — Rev 2: Activation and Recovery
+# Quickshell custom SDDM theme
 
-This revision adds explicit activation/deactivation and fixes helper installation
-on systems where `/usr/local/libexec` does not yet exist.
+<!-- GPT: updated 2026-07-18 -->
+
+This directory is the editable, Git-backed source for the custom Qt 6 SDDM login theme.
 
 It does **not** restart SDDM or reboot the machine automatically.
 
-## 1. Update the installed helper
+## Normal use from Quickshell
 
-After extracting this ZIP over `~/.config/sddm-project/`:
+Open:
+
+```text
+Settings -> SDDM
+```
+
+Available controls:
+
+- include current Quickshell theme
+- include current wallpaper
+- clock scale, 50–200%
+- clock X/Y offsets
+- login-panel X/Y offsets
+- Reset buttons for each layout control
+- temporary **Test SDDM Theme** preview
+- manual **Apply to SDDM** deployment
+
+The Test button uses a temporary copy under `/tmp` and writes no root-owned files. Apply performs the real hash-aware installation.
+
+## First installation
+
+Create the compatibility link if needed:
+
+```bash
+ln -s ~/.config/quickshell/sddm-project ~/.config/sddm-project
+```
+
+Install or refresh the privileged helper:
 
 ```bash
 cd ~/.config/sddm-project
 ./scripts/install-system-helper.sh
 ```
 
-The script now creates `/usr/local/libexec` when needed.
+Install the current snapshot:
 
-## 2. Activate the tested theme
+```bash
+./scripts/apply-sddm-theme.sh
+```
+
+Activate the theme:
 
 ```bash
 ./scripts/activate-sddm-theme.sh
 ```
 
-The helper first verifies that the installed theme under
-`/usr/share/sddm/themes/quickshell-custom/` still matches its manifest. It then
-writes only:
+Activation writes only:
 
 ```text
 /etc/sddm.conf.d/quickshell-theme.conf
 ```
 
-with:
+It does not restart SDDM. The change appears at the next logout or reboot.
 
-```ini
-[Theme]
-Current=quickshell-custom
+## Command-line testing
+
+Test the source tree directly:
+
+```bash
+sddm-greeter-qt6 --test-mode --theme ~/.config/sddm-project
 ```
 
-No service restart is performed. The theme takes effect the next time SDDM
-starts, normally after logout or reboot.
+Test the exact root-installed copy:
 
-## 3. Normal deactivation
+```bash
+sddm-greeter-qt6 --test-mode \
+  --theme /usr/share/sddm/themes/quickshell-custom
+```
+
+The Quickshell Test button is preferred when previewing unsaved Settings controls because it first builds a temporary snapshot containing those values.
+
+## Safety behavior
+
+- Preview never invokes `pkexec` and never writes under `/usr/share`.
+- Apply is manual only.
+- Generated inputs are validated before installation.
+- Installed and staged snapshots are compared by digest.
+- Identical snapshots cause no root-owned rewrite.
+- Existing installed content is backed up before replacement.
+- Activation and deactivation do not restart SDDM.
+
+## Deactivation and emergency recovery
+
+Normal deactivation:
 
 ```bash
 ./scripts/deactivate-sddm-theme.sh
 ```
 
-This removes our override, or restores a prior file if one existed at the same
-path. It also does not restart SDDM.
-
-## Emergency recovery from a broken graphical login
-
-Open a TTY with `Ctrl+Alt+F3`, log in, then run:
+Emergency recovery from a TTY:
 
 ```bash
 sudo rm -f /etc/sddm.conf.d/quickshell-theme.conf
 sudo systemctl restart sddm
 ```
 
-That exact fallback does not depend on the project scripts or helper.
+`Ctrl+Alt+F3` normally opens a TTY. Restarting SDDM terminates the active graphical session.
 
-## Safety behavior
+## Monitor layout
 
-- Activation is manual only.
-- The installed theme is validated before the config is written.
-- Re-running activation when already active performs no write.
-- The active config has a fixed path and fixed contents.
-- Existing content at that exact path is backed up before replacement.
-- Neither activation nor deactivation restarts SDDM.
+The test greeter runs inside the current desktop session and follows Hyprland's monitor arrangement. The real greeter may use a separate X11 layout configured in:
+
+```text
+/usr/share/sddm/scripts/Xsetup
+```
+
+Connector names can differ between Hyprland and SDDM/Xorg. See `docs/SDDM_BACKUP_AND_TRANSFER.md` before copying a monitor setup to another machine.

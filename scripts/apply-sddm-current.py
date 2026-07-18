@@ -87,6 +87,7 @@ def main() -> int:
     parser.add_argument("--clock-y-offset", required=True, type=int)
     parser.add_argument("--login-x-offset", required=True, type=int)
     parser.add_argument("--login-y-offset", required=True, type=int)
+    parser.add_argument("--clock-scale-percent", required=True, type=int)
     args = parser.parse_args()
 
     if not args.theme and not args.wallpaper and not args.layout:
@@ -139,6 +140,7 @@ def main() -> int:
             "clockYOffset": max(-4096, min(4096, args.clock_y_offset)),
             "loginXOffset": max(-4096, min(4096, args.login_x_offset)),
             "loginYOffset": max(-4096, min(4096, args.login_y_offset)),
+            "clockScalePercent": max(50, min(200, args.clock_scale_percent)),
         }
 
     if args.wallpaper:

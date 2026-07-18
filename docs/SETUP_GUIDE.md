@@ -449,7 +449,9 @@ sudo rm -f /etc/sddm.conf.d/quickshell-theme.conf
 sudo systemctl restart sddm
 ```
 
-After installation, use **Settings -> SDDM -> Apply to SDDM** to manually copy the selected current theme and wallpaper. Desktop theme/wallpaper changes do not automatically write root-owned files.
+After installation, use **Settings -> SDDM** to preview and deploy changes. The page can copy the selected theme and wallpaper, adjust clock/login X/Y offsets, and scale the clock from 50% to 200%. **Test SDDM Theme** previews current unsaved values from a temporary copy without root writes; **Apply to SDDM** performs the real hash-aware installation. Desktop changes do not automatically write root-owned files.
+
+The real greeter's monitor order and refresh rates are separate machine-specific X11 configuration under `/usr/share/sddm/scripts/Xsetup`; see `docs/SDDM_BACKUP_AND_TRANSFER.md`. (GPT, 2026-07-18)
 
 See `docs/SDDM_BACKUP_AND_TRANSFER.md` for the complete transfer and recovery procedure.
 
