@@ -226,9 +226,8 @@ Singleton {
     property var launcherTerminalCommand: ["kitty"]
 
     // ---- Wallpaper picker (widgets/TopBar/WallpaperPicker.qml) ----
-    // Folder scanned for wallpapers (top level only, no recursion).
-    // A leading "~" is expanded by the widget.
-    property string wallpapersPath: "~/Pictures/Wallpapers"
+    // The library path is persisted in UserPrefs.wallpapersPath so the
+    // top-bar picker and SDDM selector share one source.
 
     // Subdirectory of wallpapersPath holding the pre-squared
     // imagemagick thumbnails (hidden by default so it doesn't show up

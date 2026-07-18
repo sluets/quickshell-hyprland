@@ -1,7 +1,8 @@
 #!/bin/bash
 
-WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
-THUMB_DIR="$HOME/Pictures/Wallpapers/.thumbs"
+WALLPAPER_DIR="${1:-$HOME/Pictures/Wallpapers}"
+WALLPAPER_DIR="${WALLPAPER_DIR/#\~/$HOME}"
+THUMB_DIR="$WALLPAPER_DIR/.thumbs"
 
 mkdir -p "$THUMB_DIR"
 

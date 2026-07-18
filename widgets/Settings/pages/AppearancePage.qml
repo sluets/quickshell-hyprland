@@ -8,6 +8,7 @@
 
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import qs.core
 import "../components" as SettingsComponents
 
@@ -338,6 +339,75 @@ Text {
     color: Theme.colorMuted
     font.family: Theme.fontFamily
     font.pixelSize: Math.round(Theme.fontSize * 0.8)
+}
+
+// ---------------- Wallpaper library ----------------
+Text {
+    text: "Wallpaper Library"
+    Layout.topMargin: Theme.spacingLarge
+    color: Theme.colorForeground
+    font.family: Theme.fontFamily
+    font.pixelSize: Theme.fontSize
+    font.bold: true
+}
+
+Text {
+    Layout.fillWidth: true
+    text: "Shared by the top-bar picker and the SDDM wallpaper chooser. Thumbnails remain in the library's .thumbs folder."
+    wrapMode: Text.WordWrap
+    color: Theme.colorMuted
+    font.family: Theme.fontFamily
+    font.pixelSize: Math.round(Theme.fontSize * 0.9)
+}
+
+RowLayout {
+    Layout.fillWidth: true
+    spacing: Theme.spacingSmall
+
+    TextField {
+        id: wallpapersPathField
+        Layout.fillWidth: true
+        text: settingsRoot.shownWallpapersPath
+        placeholderText: "~/Pictures/Wallpapers"
+        color: Theme.colorForeground
+        placeholderTextColor: Theme.colorMuted
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        selectByMouse: true
+        onTextEdited: settingsRoot.stagedWallpapersPath = text.trim()
+
+        background: Rectangle {
+            radius: Theme.radiusMedium
+            color: wallpapersPathField.activeFocus ? Theme.colorHover : Theme.colorSurface
+            border.width: wallpapersPathField.activeFocus ? 2 : 1
+            border.color: wallpapersPathField.activeFocus ? Theme.colorAccent : Theme.colorMuted
+        }
+    }
+
+    Rectangle {
+        implicitWidth: resetWallpaperPathText.implicitWidth + Theme.spacingMedium * 2
+        implicitHeight: wallpapersPathField.implicitHeight
+        radius: Theme.radiusMedium
+        color: resetWallpaperPathMouse.containsMouse ? Theme.colorHover : Theme.colorSurface
+        border.width: 1
+        border.color: Theme.colorMuted
+
+        Text {
+            id: resetWallpaperPathText
+            anchors.centerIn: parent
+            text: "Reset"
+            color: Theme.colorForeground
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+        }
+        MouseArea {
+            id: resetWallpaperPathMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: settingsRoot.stagedWallpapersPath = "~/Pictures/Wallpapers"
+        }
+    }
 }
 
 // ---------------- Wallpaper Transition (2026-07-13) ----------------

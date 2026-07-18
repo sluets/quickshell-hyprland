@@ -301,7 +301,7 @@ Item {
         return p;
     }
 
-    readonly property string wallsDir: expandHome(Settings.wallpapersPath)
+    readonly property string wallsDir: expandHome(UserPrefs.wallpapersPath)
     readonly property string thumbsDir: wallsDir + "/" + Settings.wallpapersThumbDir
 
     function baseNameNoExt(p: string): string {

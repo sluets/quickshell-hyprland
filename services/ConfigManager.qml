@@ -473,6 +473,7 @@ Singleton {
             case "wallpaperTransitionFps": UserPrefs.setWallpaperTransitionFps(ch.value); n++; break;
             case "wallpaperTransitionAngle": UserPrefs.setWallpaperTransitionAngle(ch.value); n++; break;
             case "wallpaperTransitionPos": UserPrefs.setWallpaperTransitionPos(ch.value); n++; break;
+            case "wallpapersPath": UserPrefs.setWallpapersPath(ch.value); n++; break;
             case "clockUse24Hour": UserPrefs.setClockUse24Hour(ch.value); n++; break;
             case "clockShowSeconds": UserPrefs.setClockShowSeconds(ch.value); n++; break;
             case "wallpaperCachingEnabled": UserPrefs.setWallpaperCachingEnabled(ch.value); n++; break;

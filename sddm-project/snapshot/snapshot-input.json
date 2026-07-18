@@ -23,6 +23,18 @@
     "clockScalePercent": 100,
     "loginScalePercent": 100,
     "loginPanelWidth": 430,
-    "loginPanelSpacing": 14
+    "loginPanelSpacing": 14,
+    "clockShadowOpacityPercent": 56,
+    "clockShadowXOffset": 2,
+    "clockShadowYOffset": 2,
+    "showDate": true,
+    "dateScalePercent": 100,
+    "clockDateSpacing": 8
+  },
+  "clockAppearance": {
+    "useThemeColors": true,
+    "timeColor": "#FFFFFF",
+    "dateColor": "#FFFFFF",
+    "shadowColor": "#000000"
   }
 }

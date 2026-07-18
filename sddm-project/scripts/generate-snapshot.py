@@ -35,6 +35,12 @@ def clean_text(value: object, name: str) -> str:
     return value.strip()
 
 
+def boolean(value: object, name: str) -> bool:
+    if not isinstance(value, bool):
+        fail(f"{name} must be true or false")
+    return value
+
+
 def integer(value: object, name: str, low: int, high: int) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
         fail(f"{name} must be an integer")
@@ -58,10 +64,13 @@ def load_contract(path: Path) -> dict:
 def validate(data: dict, theme_dir: Path) -> dict[str, str | int | Path]:
     colors = data.get("colors")
     layout = data.get("layout")
+    clock_appearance = data.get("clockAppearance", {})
     if not isinstance(colors, dict):
         fail("colors must be an object")
     if not isinstance(layout, dict):
         fail("layout must be an object")
+    if not isinstance(clock_appearance, dict):
+        fail("clockAppearance must be an object")
 
     normalized: dict[str, str | int | Path] = {
         "Greeting": clean_text(data.get("greeting"), "greeting"),
@@ -74,10 +83,27 @@ def validate(data: dict, theme_dir: Path) -> dict[str, str | int | Path]:
         "LoginXOffset": integer(layout.get("loginXOffset"), "loginXOffset", -4096, 4096),
         "LoginYOffset": integer(layout.get("loginYOffset"), "loginYOffset", -4096, 4096),
         "ClockScalePercent": integer(layout.get("clockScalePercent"), "clockScalePercent", 50, 200),
+        "ShowDate": "true" if boolean(layout.get("showDate", True), "showDate") else "false",
+        "DateScalePercent": integer(layout.get("dateScalePercent", 100), "dateScalePercent", 50, 200),
+        "ClockDateSpacing": integer(layout.get("clockDateSpacing", 8), "clockDateSpacing", 0, 40),
+        "ClockShadowOpacityPercent": integer(layout.get("clockShadowOpacityPercent", 56), "clockShadowOpacityPercent", 0, 100),
+        "ClockShadowXOffset": integer(layout.get("clockShadowXOffset", 2), "clockShadowXOffset", -20, 20),
+        "ClockShadowYOffset": integer(layout.get("clockShadowYOffset", 2), "clockShadowYOffset", -20, 20),
         "LoginScalePercent": integer(layout.get("loginScalePercent"), "loginScalePercent", 50, 200),
         "LoginPanelWidth": integer(layout.get("loginPanelWidth"), "loginPanelWidth", 320, 720),
         "LoginPanelSpacing": integer(layout.get("loginPanelSpacing"), "loginPanelSpacing", 6, 30),
     }
+
+    normalized["ClockUseThemeColors"] = "true" if boolean(clock_appearance.get("useThemeColors", True), "clockAppearance.useThemeColors") else "false"
+    for config_key, source_key, fallback in (
+        ("ClockTimeColor", "timeColor", "#FFFFFF"),
+        ("ClockDateColor", "dateColor", "#FFFFFF"),
+        ("ClockShadowColor", "shadowColor", "#000000"),
+    ):
+        value = clean_text(clock_appearance.get(source_key, fallback), f"clockAppearance.{source_key}")
+        if not HEX_COLOR.fullmatch(value):
+            fail(f"clockAppearance.{source_key} must be #RRGGBB or #RRGGBBAA")
+        normalized[config_key] = value.upper()
 
     for key in REQUIRED_COLORS:
         value = clean_text(colors.get(key), f"colors.{key}")
@@ -108,7 +134,10 @@ def render_config(values: dict[str, str | int | Path]) -> bytes:
         "ColorBackground", "ColorForeground", "ColorAccent", "ColorUrgent",
         "ColorMuted", "ColorSurface", "ColorHover", "ColorBorder",
         "FontFamily", "Radius", "ClockXOffset", "ClockYOffset",
-        "LoginXOffset", "LoginYOffset", "ClockScalePercent", "LoginScalePercent",
+        "LoginXOffset", "LoginYOffset", "ClockScalePercent",
+        "ShowDate", "DateScalePercent", "ClockDateSpacing",
+        "ClockUseThemeColors", "ClockTimeColor", "ClockDateColor", "ClockShadowColor",
+        "ClockShadowOpacityPercent", "ClockShadowXOffset", "ClockShadowYOffset", "LoginScalePercent",
         "LoginPanelWidth", "LoginPanelSpacing",
     )
     lines = [

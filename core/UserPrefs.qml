@@ -291,6 +291,7 @@ Singleton {
     readonly property int wallpaperTransitionFps: adapter.wallpaperTransitionFps
     readonly property real wallpaperTransitionAngle: adapter.wallpaperTransitionAngle
     readonly property string wallpaperTransitionPos: adapter.wallpaperTransitionPos
+    readonly property string wallpapersPath: adapter.wallpapersPath
     readonly property bool wallpaperCachingEnabled: adapter.wallpaperCachingEnabled
     readonly property bool clockUse24Hour: adapter.clockUse24Hour
     readonly property bool clockShowSeconds: adapter.clockShowSeconds
@@ -401,6 +402,11 @@ Singleton {
     function setWallpaperTransitionPos(v: string): void {
         if (["center","top-left","top-right","bottom-left","bottom-right"].indexOf(v) !== -1)
             adapter.wallpaperTransitionPos = v;
+    }
+    function setWallpapersPath(v: string): void {
+        const cleaned = v.trim();
+        if (cleaned.length > 0)
+            adapter.wallpapersPath = cleaned;
     }
     function setNotifShowAppName(v: bool): void {
         adapter.notifShowAppName = v;
@@ -635,6 +641,7 @@ Singleton {
         property int wallpaperTransitionFps: 60
         property real wallpaperTransitionAngle: 45.0
         property string wallpaperTransitionPos: "center"
+        property string wallpapersPath: "~/Pictures/Wallpapers"
 
             // If true, the wallpaper picker scans the folder once and
             // keeps that list (and every already-decoded thumbnail) in

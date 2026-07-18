@@ -65,6 +65,16 @@ Rectangle {
     readonly property int loginXOffset: config.intValue("LoginXOffset")
     readonly property int loginYOffset: config.intValue("LoginYOffset")
     readonly property real clockScale: config.intValue("ClockScalePercent") / 100.0
+    readonly property bool showDate: config.stringValue("ShowDate") !== "false"
+    readonly property real dateScale: config.intValue("DateScalePercent") / 100.0
+    readonly property int clockDateSpacing: config.intValue("ClockDateSpacing")
+    readonly property bool clockUseThemeColors: config.stringValue("ClockUseThemeColors") !== "false"
+    readonly property color clockTimeColor: clockUseThemeColors ? colorForeground : config.stringValue("ClockTimeColor")
+    readonly property color clockDateColor: clockUseThemeColors ? colorForeground : config.stringValue("ClockDateColor")
+    readonly property color clockShadowColor: clockUseThemeColors ? "#000000" : config.stringValue("ClockShadowColor")
+    readonly property real clockShadowOpacity: config.intValue("ClockShadowOpacityPercent") / 100.0
+    readonly property int clockShadowXOffset: config.intValue("ClockShadowXOffset")
+    readonly property int clockShadowYOffset: config.intValue("ClockShadowYOffset")
     readonly property real loginScale: config.intValue("LoginScalePercent") / 100.0
     readonly property int loginPanelWidth: config.intValue("LoginPanelWidth")
     readonly property int loginPanelSpacing: config.intValue("LoginPanelSpacing")
@@ -179,28 +189,70 @@ Rectangle {
         anchors.top: parent.top
         anchors.leftMargin: Math.max(32, Math.round(parent.width * 0.035)) + root.clockXOffset
         anchors.topMargin: Math.max(28, Math.round(parent.height * 0.045)) + root.clockYOffset
-        spacing: 8
+        spacing: root.clockDateSpacing
 
-        Text {
-            id: clockText
-            property date now: new Date()
+        Item {
+            readonly property int leftPadding: Math.max(0, -root.clockShadowXOffset)
+            readonly property int topPadding: Math.max(0, -root.clockShadowYOffset)
 
-            text: Qt.formatTime(now, config.stringValue("ClockFormat"))
-            color: root.colorForeground
-            font.family: root.fontFamily
-            font.pixelSize: Math.round(Math.max(62, Math.min(116, root.width * 0.074)) * root.clockScale)
-            font.bold: true
-            style: Text.Raised
-            styleColor: "#90000000"
+            implicitWidth: clockText.implicitWidth + Math.abs(root.clockShadowXOffset)
+            implicitHeight: clockText.implicitHeight + Math.abs(root.clockShadowYOffset)
+            width: implicitWidth
+            height: implicitHeight
+
+            Text {
+                x: parent.leftPadding + root.clockShadowXOffset
+                y: parent.topPadding + root.clockShadowYOffset
+                text: clockText.text
+                color: root.clockShadowColor
+                opacity: root.clockShadowOpacity
+                font: clockText.font
+            }
+
+            Text {
+                id: clockText
+                property date now: new Date()
+
+                x: parent.leftPadding
+                y: parent.topPadding
+                text: Qt.formatTime(now, config.stringValue("ClockFormat"))
+                color: root.clockTimeColor
+                font.family: root.fontFamily
+                font.pixelSize: Math.round(Math.max(62, Math.min(116, root.width * 0.074)) * root.clockScale)
+                font.bold: true
+            }
         }
 
-        Text {
-            text: Qt.formatDate(clockText.now, config.stringValue("DateFormat"))
-            color: root.colorForeground
-            opacity: 0.92
-            font.family: root.fontFamily
-            font.pixelSize: Math.round(Math.max(18, Math.min(28, root.width * 0.017)) * root.clockScale)
-            font.weight: Font.Medium
+        Item {
+            visible: root.showDate
+            readonly property int leftPadding: Math.max(0, -root.clockShadowXOffset)
+            readonly property int topPadding: Math.max(0, -root.clockShadowYOffset)
+
+            implicitWidth: dateText.implicitWidth + Math.abs(root.clockShadowXOffset)
+            implicitHeight: dateText.implicitHeight + Math.abs(root.clockShadowYOffset)
+            width: implicitWidth
+            height: implicitHeight
+
+            Text {
+                x: parent.leftPadding + root.clockShadowXOffset
+                y: parent.topPadding + root.clockShadowYOffset
+                text: dateText.text
+                color: root.clockShadowColor
+                opacity: root.clockShadowOpacity * 0.92
+                font: dateText.font
+            }
+
+            Text {
+                id: dateText
+                x: parent.leftPadding
+                y: parent.topPadding
+                text: Qt.formatDate(clockText.now, config.stringValue("DateFormat"))
+                color: root.clockDateColor
+                opacity: 0.92
+                font.family: root.fontFamily
+                font.pixelSize: Math.round(Math.max(18, Math.min(28, root.width * 0.017)) * root.clockScale * root.dateScale)
+                font.weight: Font.Medium
+            }
         }
     }
 

@@ -83,11 +83,23 @@ def main() -> int:
     parser.add_argument("--border", required=True)
     parser.add_argument("--font", required=True)
     parser.add_argument("--radius", required=True, type=int)
+    parser.add_argument("--theme-source-mode", choices=("current", "selected"), required=True)
+    parser.add_argument("--source-theme-name", required=True)
     parser.add_argument("--clock-x-offset", required=True, type=int)
     parser.add_argument("--clock-y-offset", required=True, type=int)
     parser.add_argument("--login-x-offset", required=True, type=int)
     parser.add_argument("--login-y-offset", required=True, type=int)
     parser.add_argument("--clock-scale-percent", required=True, type=int)
+    parser.add_argument("--show-date", choices=("true", "false"), required=True)
+    parser.add_argument("--date-scale-percent", required=True, type=int)
+    parser.add_argument("--clock-date-spacing", required=True, type=int)
+    parser.add_argument("--clock-use-theme-colors", choices=("true", "false"), required=True)
+    parser.add_argument("--clock-time-color", required=True)
+    parser.add_argument("--clock-date-color", required=True)
+    parser.add_argument("--clock-shadow-color", required=True)
+    parser.add_argument("--clock-shadow-opacity-percent", required=True, type=int)
+    parser.add_argument("--clock-shadow-x-offset", required=True, type=int)
+    parser.add_argument("--clock-shadow-y-offset", required=True, type=int)
     parser.add_argument("--login-scale-percent", required=True, type=int)
     parser.add_argument("--login-panel-width", required=True, type=int)
     parser.add_argument("--login-panel-spacing", required=True, type=int)
@@ -137,6 +149,10 @@ def main() -> int:
         }
         contract["fontFamily"] = args.font
         contract["radius"] = max(0, min(64, args.radius))
+        contract["themeSelection"] = {
+            "mode": args.theme_source_mode,
+            "name": args.source_theme_name.strip(),
+        }
 
     if args.layout:
         contract["layout"] = {
@@ -145,9 +161,21 @@ def main() -> int:
             "loginXOffset": max(-4096, min(4096, args.login_x_offset)),
             "loginYOffset": max(-4096, min(4096, args.login_y_offset)),
             "clockScalePercent": max(50, min(200, args.clock_scale_percent)),
+            "showDate": args.show_date == "true",
+            "dateScalePercent": max(50, min(200, args.date_scale_percent)),
+            "clockDateSpacing": max(0, min(40, args.clock_date_spacing)),
+            "clockShadowOpacityPercent": max(0, min(100, args.clock_shadow_opacity_percent)),
+            "clockShadowXOffset": max(-20, min(20, args.clock_shadow_x_offset)),
+            "clockShadowYOffset": max(-20, min(20, args.clock_shadow_y_offset)),
             "loginScalePercent": max(50, min(200, args.login_scale_percent)),
             "loginPanelWidth": max(320, min(720, args.login_panel_width)),
             "loginPanelSpacing": max(6, min(30, args.login_panel_spacing)),
+        }
+        contract["clockAppearance"] = {
+            "useThemeColors": args.clock_use_theme_colors == "true",
+            "timeColor": args.clock_time_color,
+            "dateColor": args.clock_date_color,
+            "shadowColor": args.clock_shadow_color,
         }
         custom_text = args.custom_login_text.strip()
         contract["greeting"] = custom_text if custom_text else "Welcome back"

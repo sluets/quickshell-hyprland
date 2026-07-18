@@ -512,6 +512,7 @@ FloatingWindow {
     property var stagedWallpaperTransitionFps: null
     property var stagedWallpaperTransitionAngle: null
     property var stagedWallpaperTransitionPos: null
+    property var stagedWallpapersPath: null
     property var stagedNotifCorner: null
     property var stagedNotifOffsetX: null
     property var stagedNotifOffsetY: null
@@ -547,6 +548,7 @@ FloatingWindow {
     readonly property int shownWallpaperTransitionFps: stagedWallpaperTransitionFps !== null ? stagedWallpaperTransitionFps : UserPrefs.wallpaperTransitionFps
     readonly property real shownWallpaperTransitionAngle: stagedWallpaperTransitionAngle !== null ? stagedWallpaperTransitionAngle : UserPrefs.wallpaperTransitionAngle
     readonly property string shownWallpaperTransitionPos: stagedWallpaperTransitionPos !== null ? stagedWallpaperTransitionPos : UserPrefs.wallpaperTransitionPos
+    readonly property string shownWallpapersPath: stagedWallpapersPath !== null ? stagedWallpapersPath : UserPrefs.wallpapersPath
     readonly property bool shownNotifShowAppName: stagedNotifShowAppName !== null ? stagedNotifShowAppName : UserPrefs.notifShowAppName
     readonly property int shownNotifIconSize: stagedNotifIconSize !== null ? stagedNotifIconSize : UserPrefs.notifIconSize
     readonly property int shownNotifBodyLines: stagedNotifBodyLines !== null ? stagedNotifBodyLines : UserPrefs.notifBodyLines
@@ -808,7 +810,8 @@ FloatingWindow {
             ["wallpaperTransitionDuration", "Transition Duration", UserPrefs.wallpaperTransitionDuration, stagedWallpaperTransitionDuration, fmtSecs],
             ["wallpaperTransitionFps", "Transition FPS", UserPrefs.wallpaperTransitionFps, stagedWallpaperTransitionFps, fmtFps],
             ["wallpaperTransitionAngle", "Transition Angle", UserPrefs.wallpaperTransitionAngle, stagedWallpaperTransitionAngle, fmtDeg],
-            ["wallpaperTransitionPos", "Transition Position", UserPrefs.wallpaperTransitionPos, stagedWallpaperTransitionPos, fmtRaw]
+            ["wallpaperTransitionPos", "Transition Position", UserPrefs.wallpaperTransitionPos, stagedWallpaperTransitionPos, fmtRaw],
+            ["wallpapersPath", "Wallpaper Library", UserPrefs.wallpapersPath, stagedWallpapersPath, fmtRaw]
         ];
         for (let i = 0; i < fmtPairs.length; i++) {
             const [key, label, live, staged, fmt] = fmtPairs[i];
@@ -868,6 +871,7 @@ FloatingWindow {
         stagedWallpaperTransitionFps = null;
         stagedWallpaperTransitionAngle = null;
         stagedWallpaperTransitionPos = null;
+        stagedWallpapersPath = null;
         stagedDisplays = ({});
         displayError = "";
     }
