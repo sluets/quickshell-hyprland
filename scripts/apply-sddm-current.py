@@ -12,6 +12,7 @@ import json
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -68,6 +69,7 @@ def write_png(source: Path, destination: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--preview", action="store_true", help="build and launch an unprivileged temporary preview")
     parser.add_argument("--theme", action="store_true", help="update palette/font/radius")
     parser.add_argument("--wallpaper", action="store_true", help="update wallpaper")
     parser.add_argument("--layout", action="store_true", help="update clock/login offsets")
@@ -91,13 +93,26 @@ def main() -> int:
         fail("select Theme, Wallpaper, Layout, or a combination")
 
     home = Path.home()
-    sddm_dir = home / ".config" / "sddm-project"
+    source_dir = home / ".config" / "sddm-project"
+    source_contract = source_dir / "snapshot" / "snapshot-input.json"
+    if not source_contract.is_file():
+        fail(f"missing SDDM snapshot contract: {source_contract}")
+
+    preview_temp: tempfile.TemporaryDirectory[str] | None = None
+    if args.preview:
+        preview_temp = tempfile.TemporaryDirectory(prefix="quickshell-sddm-preview-")
+        sddm_dir = Path(preview_temp.name) / "theme"
+        shutil.copytree(source_dir, sddm_dir)
+    else:
+        sddm_dir = source_dir
+
     contract_path = sddm_dir / "snapshot" / "snapshot-input.json"
     apply_script = sddm_dir / "scripts" / "apply-sddm-theme.sh"
-    if not contract_path.is_file():
-        fail(f"missing SDDM snapshot contract: {contract_path}")
+    generator = sddm_dir / "scripts" / "generate-snapshot.py"
     if not apply_script.is_file():
         fail(f"missing SDDM apply script: {apply_script}")
+    if args.preview and not generator.is_file():
+        fail(f"missing SDDM snapshot generator: {generator}")
 
     try:
         contract = json.loads(contract_path.read_text(encoding="utf-8"))
@@ -137,6 +152,29 @@ def main() -> int:
     temp.replace(contract_path)
 
     print("snapshot contract:  updated")
+
+    if args.preview:
+        try:
+            generated = subprocess.run(
+                ["python3", str(generator), "--theme-dir", str(sddm_dir)],
+                cwd=sddm_dir,
+            )
+            if generated.returncode != 0:
+                return generated.returncode
+
+            greeter = shutil.which("sddm-greeter-qt6") or shutil.which("sddm-greeter")
+            if greeter is None:
+                fail("no SDDM greeter executable was found")
+            print(f"preview theme:      {sddm_dir}")
+            print("result:             temporary preview only; no root files written")
+            return subprocess.run(
+                [greeter, "--test-mode", "--theme", str(sddm_dir)],
+                cwd=sddm_dir,
+            ).returncode
+        finally:
+            if preview_temp is not None:
+                preview_temp.cleanup()
+
     completed = subprocess.run(["bash", str(apply_script)], cwd=sddm_dir)
     return completed.returncode
 

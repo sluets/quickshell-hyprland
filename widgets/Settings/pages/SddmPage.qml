@@ -56,36 +56,18 @@ ColumnLayout {
         layoutDirty = true;
     }
 
-    function beginTest() {
-        if (testing)
-            return;
-
-        processError = "";
-        testProcessError = "";
-        lastSucceeded = false;
-        statusText = "Launching SDDM test window…";
-        testing = true;
-        testProcess.running = true;
-    }
-
-    function beginApply() {
-        if (applying || (!includeTheme && !includeWallpaper && !layoutDirty))
-            return;
-
-        processOutput = "";
-        processError = "";
-        lastSucceeded = false;
-        statusText = "Preparing SDDM snapshot…";
-
+    function buildSnapshotCommand(preview) {
         const command = [
             "python3",
             Quickshell.env("HOME") + "/.config/quickshell/scripts/apply-sddm-current.py"
         ];
+        if (preview)
+            command.push("--preview");
         if (includeTheme)
             command.push("--theme");
         if (includeWallpaper)
             command.push("--wallpaper");
-        if (layoutDirty)
+        if (preview || layoutDirty)
             command.push("--layout");
         command.push(
             "--background", colorHex(Theme.colorBackground),
@@ -103,7 +85,39 @@ ColumnLayout {
             "--login-x-offset", String(loginXOffset),
             "--login-y-offset", String(loginYOffset)
         );
-        applyProcess.command = command;
+        return command;
+    }
+
+    function resetOffset(propertyName) {
+        if (page[propertyName] === 0)
+            return;
+        page[propertyName] = 0;
+        layoutDirty = true;
+    }
+
+    function beginTest() {
+        if (testing)
+            return;
+
+        processError = "";
+        testProcessError = "";
+        lastSucceeded = false;
+        statusText = "Building temporary SDDM preview…";
+        testProcess.command = buildSnapshotCommand(true);
+        testing = true;
+        testProcess.running = true;
+    }
+
+    function beginApply() {
+        if (applying || (!includeTheme && !includeWallpaper && !layoutDirty))
+            return;
+
+        processOutput = "";
+        processError = "";
+        lastSucceeded = false;
+        statusText = "Preparing SDDM snapshot…";
+
+        applyProcess.command = buildSnapshotCommand(false);
         applying = true;
         applyProcess.running = true;
     }
@@ -162,32 +176,40 @@ ColumnLayout {
         label: "Clock horizontal"
         valueText: (page.clockXOffset > 0 ? "+" : "") + page.clockXOffset + " px"
         staged: page.layoutDirty
+        showReset: true
         onMinus: page.changeOffset("clockXOffset", -10)
         onPlus: page.changeOffset("clockXOffset", 10)
+        onReset: page.resetOffset("clockXOffset")
     }
 
     SettingsComponents.StepperRow {
         label: "Clock vertical"
         valueText: (page.clockYOffset > 0 ? "+" : "") + page.clockYOffset + " px"
         staged: page.layoutDirty
+        showReset: true
         onMinus: page.changeOffset("clockYOffset", -10)
         onPlus: page.changeOffset("clockYOffset", 10)
+        onReset: page.resetOffset("clockYOffset")
     }
 
     SettingsComponents.StepperRow {
         label: "Login horizontal"
         valueText: (page.loginXOffset > 0 ? "+" : "") + page.loginXOffset + " px"
         staged: page.layoutDirty
+        showReset: true
         onMinus: page.changeOffset("loginXOffset", -10)
         onPlus: page.changeOffset("loginXOffset", 10)
+        onReset: page.resetOffset("loginXOffset")
     }
 
     SettingsComponents.StepperRow {
         label: "Login vertical"
         valueText: (page.loginYOffset > 0 ? "+" : "") + page.loginYOffset + " px"
         staged: page.layoutDirty
+        showReset: true
         onMinus: page.changeOffset("loginYOffset", -10)
         onPlus: page.changeOffset("loginYOffset", 10)
+        onReset: page.resetOffset("loginYOffset")
     }
 
     Rectangle {
@@ -329,18 +351,6 @@ ColumnLayout {
 
     Process {
         id: testProcess
-        command: [
-            "bash", "-lc",
-            "theme=/usr/share/sddm/themes/quickshell-custom; " +
-            "if [[ ! -d \"$theme\" ]]; then " +
-            "echo 'Installed SDDM theme not found. Apply it first.' >&2; exit 2; " +
-            "fi; " +
-            "if command -v sddm-greeter-qt6 >/dev/null 2>&1; then " +
-            "exec sddm-greeter-qt6 --test-mode --theme \"$theme\"; " +
-            "elif command -v sddm-greeter >/dev/null 2>&1; then " +
-            "exec sddm-greeter --test-mode --theme \"$theme\"; " +
-            "else echo 'No SDDM greeter executable was found.' >&2; exit 127; fi"
-        ]
 
         stderr: StdioCollector {
             // SDDM test mode writes normal diagnostic chatter to stderr,
@@ -354,7 +364,7 @@ ColumnLayout {
             page.testing = false;
             if (code === 0) {
                 page.processError = "";
-                page.statusText = "SDDM test window closed normally.";
+                page.statusText = "Temporary SDDM preview closed normally — nothing was installed.";
             } else {
                 page.processError = page.testProcessError;
                 page.statusText = "SDDM test failed (exit " + code + ").";

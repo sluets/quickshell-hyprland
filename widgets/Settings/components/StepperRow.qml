@@ -8,9 +8,11 @@ RowLayout {
     property string label: ""
     property string valueText: ""
     property bool staged: false
+    property bool showReset: false
 
     signal minus()
     signal plus()
+    signal reset()
 
     Layout.fillWidth: true
     spacing: Theme.spacingMedium
@@ -77,6 +79,31 @@ RowLayout {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: stepper.plus()
+        }
+    }
+
+    Rectangle {
+        visible: stepper.showReset
+        implicitWidth: resetText.implicitWidth + Theme.spacingMedium * 2
+        implicitHeight: resetText.implicitHeight + Theme.spacingSmall * 2
+        radius: Theme.radiusMedium
+        color: resetMouse.containsMouse ? Theme.colorHover : Theme.colorSurface
+
+        Text {
+            id: resetText
+            anchors.centerIn: parent
+            text: "Reset"
+            color: Theme.colorForeground
+            font.family: Theme.fontFamily
+            font.pixelSize: Math.round(Theme.fontSize * 0.82)
+        }
+
+        MouseArea {
+            id: resetMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: stepper.reset()
         }
     }
 
