@@ -20,6 +20,9 @@
     "clockYOffset": 0,
     "loginXOffset": 0,
     "loginYOffset": 0,
-    "clockScalePercent": 100
+    "clockScalePercent": 100,
+    "loginScalePercent": 100,
+    "loginPanelWidth": 430,
+    "loginPanelSpacing": 14
   }
 }

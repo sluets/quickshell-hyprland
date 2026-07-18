@@ -19,3 +19,6 @@ ClockYOffset=0
 LoginXOffset=0
 LoginYOffset=0
 ClockScalePercent=100
+LoginScalePercent=100
+LoginPanelWidth=430
+LoginPanelSpacing=14

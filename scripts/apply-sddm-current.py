@@ -72,7 +72,7 @@ def main() -> int:
     parser.add_argument("--preview", action="store_true", help="build and launch an unprivileged temporary preview")
     parser.add_argument("--theme", action="store_true", help="update palette/font/radius")
     parser.add_argument("--wallpaper", action="store_true", help="update wallpaper")
-    parser.add_argument("--layout", action="store_true", help="update clock/login offsets")
+    parser.add_argument("--layout", action="store_true", help="update clock/login layout")
     parser.add_argument("--background", required=True)
     parser.add_argument("--foreground", required=True)
     parser.add_argument("--accent", required=True)
@@ -88,6 +88,10 @@ def main() -> int:
     parser.add_argument("--login-x-offset", required=True, type=int)
     parser.add_argument("--login-y-offset", required=True, type=int)
     parser.add_argument("--clock-scale-percent", required=True, type=int)
+    parser.add_argument("--login-scale-percent", required=True, type=int)
+    parser.add_argument("--login-panel-width", required=True, type=int)
+    parser.add_argument("--login-panel-spacing", required=True, type=int)
+    parser.add_argument("--custom-login-text", required=True)
     args = parser.parse_args()
 
     if not args.theme and not args.wallpaper and not args.layout:
@@ -141,7 +145,12 @@ def main() -> int:
             "loginXOffset": max(-4096, min(4096, args.login_x_offset)),
             "loginYOffset": max(-4096, min(4096, args.login_y_offset)),
             "clockScalePercent": max(50, min(200, args.clock_scale_percent)),
+            "loginScalePercent": max(50, min(200, args.login_scale_percent)),
+            "loginPanelWidth": max(320, min(720, args.login_panel_width)),
+            "loginPanelSpacing": max(6, min(30, args.login_panel_spacing)),
         }
+        custom_text = args.custom_login_text.strip()
+        contract["greeting"] = custom_text if custom_text else "Welcome back"
 
     if args.wallpaper:
         source = current_wallpaper()

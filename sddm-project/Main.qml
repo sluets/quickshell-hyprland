@@ -65,6 +65,9 @@ Rectangle {
     readonly property int loginXOffset: config.intValue("LoginXOffset")
     readonly property int loginYOffset: config.intValue("LoginYOffset")
     readonly property real clockScale: config.intValue("ClockScalePercent") / 100.0
+    readonly property real loginScale: config.intValue("LoginScalePercent") / 100.0
+    readonly property int loginPanelWidth: config.intValue("LoginPanelWidth")
+    readonly property int loginPanelSpacing: config.intValue("LoginPanelSpacing")
 
     color: colorBackground
 
@@ -205,11 +208,13 @@ Rectangle {
     Rectangle {
         id: loginCard
 
-        width: Math.min(430, Math.max(360, root.width * 0.29))
+        width: Math.min(root.loginPanelWidth, Math.max(320, root.width - 64))
         implicitHeight: loginColumn.implicitHeight + 58
         anchors.centerIn: parent
         anchors.horizontalCenterOffset: root.loginXOffset
         anchors.verticalCenterOffset: root.loginYOffset
+        scale: root.loginScale
+        transformOrigin: Item.Center
         radius: root.radius + 6
         color: Qt.rgba(root.colorSurface.r, root.colorSurface.g,
                        root.colorSurface.b, 0.94)
@@ -220,7 +225,7 @@ Rectangle {
             id: loginColumn
             anchors.fill: parent
             anchors.margins: 29
-            spacing: 14
+            spacing: root.loginPanelSpacing
 
             Text {
                 Layout.fillWidth: true
