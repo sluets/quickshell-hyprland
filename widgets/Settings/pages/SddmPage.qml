@@ -24,6 +24,8 @@ ColumnLayout {
 
     property bool includeTheme: true
     property string selectedThemeName: UserPrefs.themeName
+    property bool useThemeFont: true
+    property string selectedFontFamily: Theme.fontFamily
     property bool includeWallpaper: true
     property bool applying: false
     property bool testing: false
@@ -57,6 +59,8 @@ ColumnLayout {
 
     readonly property var selectedThemeObject: Theme.themes[selectedThemeName] ?? Theme.themes[Theme.fallbackThemeName]
     readonly property var effectiveThemeObject: includeTheme ? Theme : selectedThemeObject
+    readonly property string effectiveFontFamily: (!includeTheme && !useThemeFont && selectedFontFamily !== "")
+        ? selectedFontFamily : effectiveThemeObject.fontFamily
 
     readonly property string effectiveLoginText: {
         const value = customLoginText.trim();
@@ -93,6 +97,12 @@ ColumnLayout {
         return index >= 0 ? index : names.indexOf(Theme.fallbackThemeName);
     }
 
+    function fontIndex(name) {
+        const names = settingsRoot.fontFamilyOptions || [];
+        const index = names.indexOf(name);
+        return index >= 0 ? index : 0;
+    }
+
     function changeOffset(propertyName, amount) {
         page[propertyName] = clampOffset(page[propertyName] + amount);
         markLayoutDirty();
@@ -121,7 +131,9 @@ ColumnLayout {
             "--surface", colorHex(effectiveThemeObject.colorSurface),
             "--hover", colorHex(effectiveThemeObject.colorHover),
             "--border", colorHex(effectiveThemeObject.barBorderColor),
-            "--font", effectiveThemeObject.fontFamily,
+            "--font", effectiveFontFamily,
+            "--font-source-mode", (!includeTheme && !useThemeFont) ? "custom" : "theme",
+            "--source-font-family", (!includeTheme && !useThemeFont) ? selectedFontFamily : effectiveThemeObject.fontFamily,
             "--radius", String(effectiveThemeObject.radiusMedium),
             "--theme-source-mode", includeTheme ? "current" : "selected",
             "--source-theme-name", includeTheme ? UserPrefs.themeName : selectedThemeName,
@@ -329,6 +341,118 @@ ColumnLayout {
                 color: Theme.colorMuted
                 font.family: Theme.fontFamily
                 font.pixelSize: Math.round(Theme.fontSize * 0.75)
+            }
+
+            SettingsComponents.ToggleSettingRow {
+                label: "Use theme font"
+                value: page.useThemeFont
+                staged: false
+                onToggled: {
+                    page.useThemeFont = !page.useThemeFont;
+                    page.markLayoutDirty();
+                }
+            }
+
+            ColumnLayout {
+                visible: !page.useThemeFont
+                Layout.fillWidth: true
+                spacing: Theme.spacingSmall
+
+                Text {
+                    text: "SDDM font"
+                    color: Theme.colorForeground
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Math.round(Theme.fontSize * 0.85)
+                    font.bold: true
+                }
+
+                ComboBox {
+                    id: sddmFontCombo
+                    Layout.fillWidth: true
+                    model: page.settingsRoot.fontFamilyOptions
+                    currentIndex: page.fontIndex(page.selectedFontFamily)
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+
+                    displayText: page.selectedFontFamily === "" ? "(Theme Default)" : page.selectedFontFamily
+
+                    onActivated: index => { // qmllint disable signal-handler-parameters
+                        const names = page.settingsRoot.fontFamilyOptions || [];
+                        if (index >= 0 && index < names.length) {
+                            page.selectedFontFamily = String(names[index]);
+                            page.markLayoutDirty();
+                        }
+                    }
+
+                    contentItem: Text {
+                        leftPadding: Theme.spacingMedium
+                        rightPadding: Theme.spacingMedium
+                        text: sddmFontCombo.displayText
+                        color: Theme.colorForeground
+                        font: sddmFontCombo.font
+                        verticalAlignment: Text.AlignVCenter
+                        elide: Text.ElideRight
+                    }
+
+                    background: Rectangle {
+                        implicitHeight: 44
+                        radius: Theme.radiusMedium
+                        color: sddmFontCombo.hovered ? Theme.colorHover : Theme.colorSurface
+                        border.width: sddmFontCombo.activeFocus ? 2 : 1
+                        border.color: sddmFontCombo.activeFocus ? Theme.colorAccent : Theme.colorMuted
+                    }
+
+                    popup: Popup {
+                        y: sddmFontCombo.height
+                        width: sddmFontCombo.width
+                        implicitHeight: Math.min(contentItem.implicitHeight, 320)
+                        padding: 1
+
+                        contentItem: ListView {
+                            clip: true
+                            implicitHeight: contentHeight
+                            model: sddmFontCombo.popup.visible ? sddmFontCombo.delegateModel : null
+                            currentIndex: sddmFontCombo.highlightedIndex
+                            ScrollIndicator.vertical: ScrollIndicator {}
+                        }
+
+                        background: Rectangle {
+                            radius: Theme.radiusMedium
+                            color: Theme.colorSurface
+                            border.width: 1
+                            border.color: Theme.colorMuted
+                        }
+                    }
+
+                    delegate: ItemDelegate {
+                        required property var modelData
+                        required property int index
+                        width: sddmFontCombo.width
+                        highlighted: sddmFontCombo.highlightedIndex === index
+
+                        contentItem: Text {
+                            text: modelData === "" ? "(Theme Default)" : modelData
+                            color: highlighted ? Theme.colorBackground : Theme.colorForeground
+                            font.family: modelData === "" ? Theme.fontFamily : modelData
+                            font.pixelSize: Theme.fontSize
+                            verticalAlignment: Text.AlignVCenter
+                            elide: Text.ElideRight
+                        }
+
+                        background: Rectangle {
+                            color: highlighted ? Theme.colorAccent : (hovered ? Theme.colorHover : "transparent")
+                        }
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "Uses the same installed Nerd Font list as the main Appearance settings."
+                    wrapMode: Text.WordWrap
+                    color: Theme.colorMuted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Math.round(Theme.fontSize * 0.75)
+                }
             }
         }
 
@@ -771,7 +895,7 @@ ColumnLayout {
         command: [
             "python3", "-c",
             "import json,pathlib; p=pathlib.Path.home()/'.config/sddm-project/snapshot/snapshot-input.json'; " +
-            "d=json.loads(p.read_text()); print(json.dumps({'layout': d.get('layout', {}), 'greeting': d.get('greeting', 'Welcome back'), 'themeSelection': d.get('themeSelection', {}), 'clockAppearance': d.get('clockAppearance', {})}))"
+            "d=json.loads(p.read_text()); print(json.dumps({'layout': d.get('layout', {}), 'greeting': d.get('greeting', 'Welcome back'), 'themeSelection': d.get('themeSelection', {}), 'fontSelection': d.get('fontSelection', {}), 'clockAppearance': d.get('clockAppearance', {})}))"
         ]
 
         stdout: StdioCollector {
@@ -780,10 +904,13 @@ ColumnLayout {
                     const saved = JSON.parse(text.trim());
                     const layout = saved.layout || {};
                     const themeSelection = saved.themeSelection || {};
+                    const fontSelection = saved.fontSelection || {};
                     const clockAppearance = saved.clockAppearance || {};
                     const savedThemeName = String(themeSelection.name || UserPrefs.themeName);
                     page.includeTheme = String(themeSelection.mode || "current") !== "selected";
                     page.selectedThemeName = Theme.themes[savedThemeName] ? savedThemeName : Theme.fallbackThemeName;
+                    page.useThemeFont = String(fontSelection.mode || "theme") !== "custom";
+                    page.selectedFontFamily = String(fontSelection.family || page.selectedThemeObject.fontFamily || Theme.fontFamily);
                     page.clockXOffset = page.clampOffset(Number(layout.clockXOffset || 0));
                     page.clockYOffset = page.clampOffset(Number(layout.clockYOffset || 0));
                     page.loginXOffset = page.clampOffset(Number(layout.loginXOffset || 0));

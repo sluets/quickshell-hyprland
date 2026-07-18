@@ -21,20 +21,28 @@
     "loginXOffset": 0,
     "loginYOffset": 0,
     "clockScalePercent": 100,
-    "loginScalePercent": 100,
-    "loginPanelWidth": 430,
-    "loginPanelSpacing": 14,
-    "clockShadowOpacityPercent": 56,
-    "clockShadowXOffset": 2,
-    "clockShadowYOffset": 2,
     "showDate": true,
     "dateScalePercent": 100,
-    "clockDateSpacing": 8
+    "clockDateSpacing": 8,
+    "clockShadowOpacityPercent": 100,
+    "clockShadowXOffset": 3,
+    "clockShadowYOffset": 3,
+    "loginScalePercent": 100,
+    "loginPanelWidth": 430,
+    "loginPanelSpacing": 14
   },
   "clockAppearance": {
     "useThemeColors": true,
-    "timeColor": "#FFFFFF",
-    "dateColor": "#FFFFFF",
+    "timeColor": "#EBDBB2",
+    "dateColor": "#EBDBB2",
     "shadowColor": "#000000"
+  },
+  "fontSelection": {
+    "mode": "theme",
+    "family": "CaskaydiaCove Nerd Font"
+  },
+  "themeSelection": {
+    "mode": "current",
+    "name": "GruvboxTheme"
   }
 }

@@ -82,6 +82,8 @@ def main() -> int:
     parser.add_argument("--hover", required=True)
     parser.add_argument("--border", required=True)
     parser.add_argument("--font", required=True)
+    parser.add_argument("--font-source-mode", choices=("theme", "custom"), required=True)
+    parser.add_argument("--source-font-family", required=True)
     parser.add_argument("--radius", required=True, type=int)
     parser.add_argument("--theme-source-mode", choices=("current", "selected"), required=True)
     parser.add_argument("--source-theme-name", required=True)
@@ -148,6 +150,10 @@ def main() -> int:
             "border": args.border,
         }
         contract["fontFamily"] = args.font
+        contract["fontSelection"] = {
+            "mode": args.font_source_mode,
+            "family": args.source_font_family.strip(),
+        }
         contract["radius"] = max(0, min(64, args.radius))
         contract["themeSelection"] = {
             "mode": args.theme_source_mode,

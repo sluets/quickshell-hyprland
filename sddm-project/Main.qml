@@ -81,6 +81,16 @@ Rectangle {
 
     color: colorBackground
 
+    property date currentDateTime: new Date()
+    readonly property string dateFormat: {
+        const value = config.stringValue("DateFormat")
+        return value && value.length > 0 ? value : "dddd, MMMM d"
+    }
+    readonly property string formattedDate: {
+        const value = Qt.formatDate(currentDateTime, dateFormat)
+        return value && value.length > 0 ? value : currentDateTime.toDateString()
+    }
+
     property bool loginBusy: false
     property bool powerActionPending: false
     property string statusText: ""
@@ -181,7 +191,7 @@ Rectangle {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: clockText.now = new Date()
+        onTriggered: root.currentDateTime = new Date()
     }
 
     Column {
@@ -211,11 +221,9 @@ Rectangle {
 
             Text {
                 id: clockText
-                property date now: new Date()
-
                 x: parent.leftPadding
                 y: parent.topPadding
-                text: Qt.formatTime(now, config.stringValue("ClockFormat"))
+                text: Qt.formatTime(root.currentDateTime, config.stringValue("ClockFormat"))
                 color: root.clockTimeColor
                 font.family: root.fontFamily
                 font.pixelSize: Math.round(Math.max(62, Math.min(116, root.width * 0.074)) * root.clockScale)
@@ -246,7 +254,7 @@ Rectangle {
                 id: dateText
                 x: parent.leftPadding
                 y: parent.topPadding
-                text: Qt.formatDate(clockText.now, config.stringValue("DateFormat"))
+                text: root.formattedDate
                 color: root.clockDateColor
                 opacity: 0.92
                 font.family: root.fontFamily
