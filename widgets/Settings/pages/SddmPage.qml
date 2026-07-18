@@ -25,6 +25,12 @@ ColumnLayout {
     property bool includeWallpaper: true
     property bool applying: false
     property bool testing: false
+    property bool layoutLoaded: false
+    property bool layoutDirty: false
+    property int clockXOffset: 0
+    property int clockYOffset: 0
+    property int loginXOffset: 0
+    property int loginYOffset: 0
     property string statusText: "Ready — nothing is copied until you press Apply to SDDM."
     property bool lastSucceeded: false
     property string processOutput: ""
@@ -41,6 +47,15 @@ ColumnLayout {
         return "#" + chanHex(c.r) + chanHex(c.g) + chanHex(c.b);
     }
 
+    function clampOffset(value) {
+        return Math.max(-4096, Math.min(4096, value));
+    }
+
+    function changeOffset(propertyName, amount) {
+        page[propertyName] = clampOffset(page[propertyName] + amount);
+        layoutDirty = true;
+    }
+
     function beginTest() {
         if (testing)
             return;
@@ -54,7 +69,7 @@ ColumnLayout {
     }
 
     function beginApply() {
-        if (applying || (!includeTheme && !includeWallpaper))
+        if (applying || (!includeTheme && !includeWallpaper && !layoutDirty))
             return;
 
         processOutput = "";
@@ -70,6 +85,8 @@ ColumnLayout {
             command.push("--theme");
         if (includeWallpaper)
             command.push("--wallpaper");
+        if (layoutDirty)
+            command.push("--layout");
         command.push(
             "--background", colorHex(Theme.colorBackground),
             "--foreground", colorHex(Theme.colorForeground),
@@ -80,7 +97,11 @@ ColumnLayout {
             "--hover", colorHex(Theme.colorHover),
             "--border", colorHex(Theme.barBorderColor),
             "--font", Theme.fontFamily,
-            "--radius", String(Theme.radiusMedium)
+            "--radius", String(Theme.radiusMedium),
+            "--clock-x-offset", String(clockXOffset),
+            "--clock-y-offset", String(clockYOffset),
+            "--login-x-offset", String(loginXOffset),
+            "--login-y-offset", String(loginYOffset)
         );
         applyProcess.command = command;
         applying = true;
@@ -118,6 +139,57 @@ ColumnLayout {
         onToggled: page.includeWallpaper = !page.includeWallpaper
     }
 
+    Text {
+        Layout.fillWidth: true
+        Layout.topMargin: Theme.spacingSmall
+        text: "Position offsets"
+        color: Theme.colorForeground
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        font.bold: true
+    }
+
+    Text {
+        Layout.fillWidth: true
+        text: "Adjusts the installed login screen in 10 px steps. Positive X moves right; positive Y moves down."
+        wrapMode: Text.WordWrap
+        color: Theme.colorMuted
+        font.family: Theme.fontFamily
+        font.pixelSize: Math.round(Theme.fontSize * 0.78)
+    }
+
+    SettingsComponents.StepperRow {
+        label: "Clock horizontal"
+        valueText: (page.clockXOffset > 0 ? "+" : "") + page.clockXOffset + " px"
+        staged: page.layoutDirty
+        onMinus: page.changeOffset("clockXOffset", -10)
+        onPlus: page.changeOffset("clockXOffset", 10)
+    }
+
+    SettingsComponents.StepperRow {
+        label: "Clock vertical"
+        valueText: (page.clockYOffset > 0 ? "+" : "") + page.clockYOffset + " px"
+        staged: page.layoutDirty
+        onMinus: page.changeOffset("clockYOffset", -10)
+        onPlus: page.changeOffset("clockYOffset", 10)
+    }
+
+    SettingsComponents.StepperRow {
+        label: "Login horizontal"
+        valueText: (page.loginXOffset > 0 ? "+" : "") + page.loginXOffset + " px"
+        staged: page.layoutDirty
+        onMinus: page.changeOffset("loginXOffset", -10)
+        onPlus: page.changeOffset("loginXOffset", 10)
+    }
+
+    SettingsComponents.StepperRow {
+        label: "Login vertical"
+        valueText: (page.loginYOffset > 0 ? "+" : "") + page.loginYOffset + " px"
+        staged: page.layoutDirty
+        onMinus: page.changeOffset("loginYOffset", -10)
+        onPlus: page.changeOffset("loginYOffset", 10)
+    }
+
     Rectangle {
         Layout.fillWidth: true
         Layout.topMargin: Theme.spacingMedium
@@ -140,7 +212,7 @@ ColumnLayout {
         MouseArea {
             id: applyMouse
             anchors.fill: parent
-            enabled: !page.applying && (page.includeTheme || page.includeWallpaper)
+            enabled: !page.applying && (page.includeTheme || page.includeWallpaper || page.layoutDirty)
             hoverEnabled: true
             cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
             onClicked: page.beginApply()
@@ -222,6 +294,40 @@ ColumnLayout {
     }
 
     Process {
+        id: layoutReadProcess
+        command: [
+            "python3", "-c",
+            "import json,pathlib; p=pathlib.Path.home()/'.config/sddm-project/snapshot/snapshot-input.json'; " +
+            "d=json.loads(p.read_text()); print(json.dumps(d.get('layout', {})))"
+        ]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const layout = JSON.parse(text.trim());
+                    page.clockXOffset = page.clampOffset(Number(layout.clockXOffset || 0));
+                    page.clockYOffset = page.clampOffset(Number(layout.clockYOffset || 0));
+                    page.loginXOffset = page.clampOffset(Number(layout.loginXOffset || 0));
+                    page.loginYOffset = page.clampOffset(Number(layout.loginYOffset || 0));
+                    page.layoutDirty = false;
+                    page.layoutLoaded = true;
+                } catch (error) {
+                    page.processError = "Could not read saved SDDM offsets: " + error;
+                }
+            }
+        }
+
+        stderr: StdioCollector {
+            onStreamFinished: {
+                if (text.trim() !== "")
+                    page.processError = "Could not read saved SDDM offsets: " + text.trim();
+            }
+        }
+    }
+
+    Component.onCompleted: layoutReadProcess.running = true
+
+    Process {
         id: testProcess
         command: [
             "bash", "-lc",
@@ -269,6 +375,7 @@ ColumnLayout {
             page.applying = false;
             page.lastSucceeded = (code === 0);
             if (code === 0) {
+                page.layoutDirty = false;
                 if (page.processOutput.indexOf("already up to date") >= 0)
                     page.statusText = "SDDM is already up to date — no files were written.";
                 else

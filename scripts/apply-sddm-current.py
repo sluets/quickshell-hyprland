@@ -70,6 +70,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--theme", action="store_true", help="update palette/font/radius")
     parser.add_argument("--wallpaper", action="store_true", help="update wallpaper")
+    parser.add_argument("--layout", action="store_true", help="update clock/login offsets")
     parser.add_argument("--background", required=True)
     parser.add_argument("--foreground", required=True)
     parser.add_argument("--accent", required=True)
@@ -80,10 +81,14 @@ def main() -> int:
     parser.add_argument("--border", required=True)
     parser.add_argument("--font", required=True)
     parser.add_argument("--radius", required=True, type=int)
+    parser.add_argument("--clock-x-offset", required=True, type=int)
+    parser.add_argument("--clock-y-offset", required=True, type=int)
+    parser.add_argument("--login-x-offset", required=True, type=int)
+    parser.add_argument("--login-y-offset", required=True, type=int)
     args = parser.parse_args()
 
-    if not args.theme and not args.wallpaper:
-        fail("select Theme, Wallpaper, or both")
+    if not args.theme and not args.wallpaper and not args.layout:
+        fail("select Theme, Wallpaper, Layout, or a combination")
 
     home = Path.home()
     sddm_dir = home / ".config" / "sddm-project"
@@ -112,6 +117,14 @@ def main() -> int:
         }
         contract["fontFamily"] = args.font
         contract["radius"] = max(0, min(64, args.radius))
+
+    if args.layout:
+        contract["layout"] = {
+            "clockXOffset": max(-4096, min(4096, args.clock_x_offset)),
+            "clockYOffset": max(-4096, min(4096, args.clock_y_offset)),
+            "loginXOffset": max(-4096, min(4096, args.login_x_offset)),
+            "loginYOffset": max(-4096, min(4096, args.login_y_offset)),
+        }
 
     if args.wallpaper:
         source = current_wallpaper()
