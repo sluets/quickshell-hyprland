@@ -1,3 +1,13 @@
+## 2026-07-18 — Settings pending-footer extraction, Rev 20 (GPT)
+
+- Extracted the fixed pending-changes panel, status line, and Apply/Cancel buttons from `widgets/Settings/SettingsWindow.qml` into `widgets/Settings/components/SettingsPendingFooter.qml`.
+- Kept the component presentation-only. `SettingsWindow.qml` still owns all staged properties, the `changes` model, validation, `discardStaged()`, `apply()`, and ConfigManager transaction ordering.
+- Preserved the fixed-height pending panel so staging and unstaging settings cannot move the footer or buttons under the pointer.
+- Reduced `SettingsWindow.qml` from 2,243 lines to 2,088 lines.
+- Live-tested by staging one change on each immediately visible Settings tab; all changes applied successfully and the footer behaved correctly.
+- Added `docs/SETTINGS_ARCHITECTURE.md` with ownership boundaries, troubleshooting, and the required regression checklist for future splits.
+- Approved next structural target: extract the staged transaction/controller in its own behavior-preserving revision before adding the planned launcher, wallpaper-picker, and notification placement features.
+
 ## 2026-07-18 — SDDM preview, layout controls, clock scaling, and X11 monitor setup (GPT)
 
 **Live-tested before clock-scale revision:**

@@ -177,17 +177,21 @@ quickshell/
 │   │                      SUPER+P, `qs ipc call power toggle`, or the
 │   │                      bar's arch icon.
 │   ├── Settings/
-│   │   └── SettingsWindow.qml  The settings application: a normal
-│   │                      compositor-managed FloatingWindow with a
-│   │                      persistent left sidebar, fixed header/footer,
-│   │                      and an independently scrolling page viewport.
+│   │   ├── SettingsWindow.qml  Settings application host: FloatingWindow
+│   │   │                  lifecycle, navigation, page hosting, staged
+│   │   │                  transaction, shared popups, validation, and
+│   │   │                  ConfigManager Apply/Cancel orchestration.
+│   │   ├── components/SettingsPendingFooter.qml
+│   │   │                  Fixed pending-change/status/Apply/Cancel UI.
+│   │   │                  Presentation only; emits apply/cancel signals
+│   │   │                  back to SettingsWindow and owns no transaction
+│   │   │                  state. Extracted in Rev 20.
+│   │   └── pages/         Page-specific controls and presentation.
 │   │                      Hyprland alone owns the outer border, gradient,
-│   │                      and rounded window shape; QML must not draw a
-│   │                      competing outer border. Dropdowns reserve a
-│   │                      permanent gutter so their panels never overlap
-│   │                      the custom scrollbar. Staged changes, pending
-│   │                      diff, Apply/Cancel, ConfigManager transaction,
-│   │                      and daily snapshot behavior are unchanged.
+│   │                      and rounded window shape. Dropdowns reserve a
+│   │                      permanent gutter beside the draggable scrollbar.
+│   │                      See docs/SETTINGS_ARCHITECTURE.md before further
+│   │                      splitting or changing Apply/Cancel ownership.
 │   └── Desktop/
 │       └── DesktopClock.qml  Borderless clock/date/weather sitting on
 │                          the wallpaper (Background layer — behind app

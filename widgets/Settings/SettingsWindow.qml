@@ -119,6 +119,10 @@
 // REVISION HISTORY
 //=============================================================================
 //
+// 2026-07-18  (GPT) Rev 6 settings split: extracted the fixed-height
+//             pending-changes panel and Apply/Cancel footer into
+//             components/SettingsPendingFooter.qml. Transaction state and
+//             behavior remain owned by SettingsWindow.qml.
 // 2026-07-15  (GPT) Rev 5 settings split: extracted only the Hyprland
 //             page into pages/HyprlandPage.qml. Staged state, config
 //             generation, Apply/Cancel behavior, and setup-warning
@@ -1707,171 +1711,12 @@ FloatingWindow {
             } // ================ end Displays ================
             */
 
-            Rectangle {
+            SettingsComponents.SettingsPendingFooter {
                 Layout.fillWidth: true
-                implicitHeight: 1
-                color: Theme.colorMuted
-            }
-
-            // ---------------- Pending changes + Apply/Cancel ----------------
-            // FIXED-HEIGHT panel (v0.6, see DESIGN NOTES: stable
-            // geometry). The header, the diff area, and the status
-            // line are ALWAYS present at a constant size — staging or
-            // unstaging a change changes what they say, never how much
-            // room they take, so nothing below or above them ever
-            // moves. Past pendingVisibleLines rows the list scrolls.
-            // Boxed panel (2026-07-13) — the header, diff list, and
-            // status line live inside one bordered container instead
-            // of sitting bare on the page, so "things about to be
-            // applied" reads as its own contained section rather than
-            // blending into the page content above it. Purely visual:
-            // the fixed-height rules from the DESIGN NOTES above are
-            // unchanged, just wrapped.
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: pendingColumn.implicitHeight + Theme.spacingMedium * 2
-                radius: Theme.radiusMedium
-                color: Theme.colorSurface
-                border.width: 1
-                border.color: Theme.colorMuted
-
-                ColumnLayout {
-                    id: pendingColumn
-                    anchors.fill: parent
-                    anchors.margins: Theme.spacingMedium
-                    spacing: Theme.spacingMedium
-
-                    Text {
-                        text: root.changes.length > 0
-                              ? "Pending changes (" + root.changes.length + "):"
-                              : "Pending changes: none"
-                        color: root.changes.length > 0 ? Theme.colorForeground : Theme.colorMuted
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-                        font.bold: true
-                    }
-
-                    // Invisible one-line probe — same font as the diff rows,
-                    // so the reserved height tracks font scale exactly
-                    // (hidden items are skipped by ColumnLayout, so this
-                    // costs no space itself).
-                    Text {
-                        id: pendingProbe
-                        visible: false
-                        text: "Xg"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-                    }
-
-                    ListView {
-                        id: pendingList
-                        Layout.fillWidth: true
-                        // Exactly pendingVisibleLines rows, whether 0 or 13
-                        // changes are staged. This constant is the fix.
-                        Layout.preferredHeight: pendingProbe.implicitHeight * root.pendingVisibleLines
-                                                + spacing * (root.pendingVisibleLines - 1)
-                        spacing: 2
-                        clip: true
-                        interactive: contentHeight > height
-                        model: root.changes
-
-                        delegate: Text {
-                            required property var modelData
-                            width: ListView.view.width
-                            text: "  " + modelData.label + ":  "
-                                  + modelData.from + "  →  " + modelData.to
-                            elide: Text.ElideRight
-                            color: Theme.colorAccent
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize
-                        }
-
-                        // Muted hint filling the reserved space when empty.
-                        Text {
-                            anchors.top: parent.top
-                            anchors.left: parent.left
-                            anchors.leftMargin: Theme.spacingMedium
-                            visible: root.changes.length === 0
-                            text: "Nothing staged — changes made on any tab collect\nhere, and nothing touches disk until Apply."
-                            color: Theme.colorMuted
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Math.round(Theme.fontSize * 0.8)
-                        }
-                    }
-
-                    // Status line — the async ConfigManager surfaced in UI.
-                    // Falls back to a single space (not ""), so the line
-                    // reserves its row even when idle — an appearing status
-                    // line was one more thing nudging the buttons (v0.6).
-                    Text {
-                        Layout.fillWidth: true
-                        text: ConfigManager.busy !== "" ? "Working (" + ConfigManager.busy + ")…"
-                            : ConfigManager.lastError !== "" ? "Error: " + ConfigManager.lastError
-                            : ConfigManager.lastOutput !== "" ? ConfigManager.lastOutput
-                            : " "
-                        elide: Text.ElideRight
-                        color: ConfigManager.lastError !== "" ? Theme.colorUrgent : Theme.colorMuted
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Math.round(Theme.fontSize * 0.8)
-                    }
-                }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.spacingMedium
-
-                Item { Layout.fillWidth: true }
-
-                Rectangle {
-                    readonly property bool enabled_: root.changes.length > 0
-                    implicitWidth: cancelText.implicitWidth + Theme.spacingLarge * 2
-                    implicitHeight: cancelText.implicitHeight + Theme.spacingSmall * 2
-                    radius: Theme.radiusMedium
-                    color: cancelMouse.containsMouse && enabled_ ? Theme.colorHover : Theme.colorSurface
-                    opacity: enabled_ ? 1.0 : 0.4
-                    Text {
-                        id: cancelText
-                        anchors.centerIn: parent
-                        text: "Cancel"
-                        color: Theme.colorForeground
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-                    }
-                    MouseArea {
-                        id: cancelMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: parent.enabled_ ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: root.discardStaged()
-                    }
-                }
-
-                Rectangle {
-                    readonly property bool enabled_: root.changes.length > 0
-                                                     && ConfigManager.busy === ""
-                    implicitWidth: applyText.implicitWidth + Theme.spacingLarge * 2
-                    implicitHeight: applyText.implicitHeight + Theme.spacingSmall * 2
-                    radius: Theme.radiusMedium
-                    color: applyMouse.containsMouse && enabled_ ? Theme.colorHover : Theme.colorAccent
-                    opacity: enabled_ ? 1.0 : 0.4
-                    Text {
-                        id: applyText
-                        anchors.centerIn: parent
-                        text: "Apply"
-                        color: Theme.colorBackground
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-                        font.bold: true
-                    }
-                    MouseArea {
-                        id: applyMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: parent.enabled_ ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: if (parent.enabled_) root.apply()
-                    }
-                }
+                changes: root.changes
+                pendingVisibleLines: root.pendingVisibleLines
+                onCancelRequested: root.discardStaged()
+                onApplyRequested: root.apply()
             }
         }
 

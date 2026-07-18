@@ -1,3 +1,28 @@
+## Settings pending footer stops updating after a split (Rev 20)
+
+**Current architecture:** `SettingsPendingFooter.qml` owns only the pending list, status display, and button presentation. `SettingsWindow.qml` still owns the staged transaction.
+
+**Symptoms:** pending rows remain empty, Apply/Cancel does nothing, Apply stays disabled, or status text appears stale after editing Settings files.
+
+**Checks:**
+
+```qml
+SettingsPendingFooter {
+    changes: root.changes
+    pendingVisibleLines: root.pendingVisibleLines
+    onCancelRequested: root.discardStaged()
+    onApplyRequested: root.apply()
+}
+```
+
+- If one staged setting is missing, fix the `changes` derivation in `SettingsWindow.qml`; the footer does not generate diffs.
+- If Apply remains disabled, inspect `ConfigManager.busy` and the active transaction. The footer intentionally blocks Apply while busy.
+- If Cancel or Apply clicks do nothing, restore the two signal handlers above.
+- If the footer jumps vertically, keep the empty panel rendered and preserve the fixed `ListView.Layout.preferredHeight`; do not make its geometry depend on `changes.length`.
+- Do not move persistence or staged properties into the footer while troubleshooting presentation.
+
+See `docs/SETTINGS_ARCHITECTURE.md` for the full ownership map and regression checklist.
+
 # Problems and Fixes
 
 ## 2026-07-15 — Desktop clock live corner switching fixed; center offsets still do not apply
