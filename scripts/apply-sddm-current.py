@@ -21,6 +21,15 @@ def fail(message: str) -> "NoReturn":
     raise SystemExit(2)
 
 
+def validate_wallpaper(path_text: str) -> Path:
+    if not path_text.strip():
+        fail("select an SDDM wallpaper or enter a custom wallpaper path")
+    path = Path(path_text).expanduser().resolve()
+    if not path.is_file() or path.is_symlink():
+        fail(f"selected wallpaper is not a regular file: {path}")
+    return path
+
+
 def current_wallpaper() -> Path:
     try:
         proc = subprocess.run(
@@ -72,6 +81,8 @@ def main() -> int:
     parser.add_argument("--preview", action="store_true", help="build and launch an unprivileged temporary preview")
     parser.add_argument("--theme", action="store_true", help="update palette/font/radius")
     parser.add_argument("--wallpaper", action="store_true", help="update wallpaper")
+    parser.add_argument("--wallpaper-source-mode", choices=("current", "selected"), required=True)
+    parser.add_argument("--wallpaper-path", default="")
     parser.add_argument("--layout", action="store_true", help="update clock/login layout")
     parser.add_argument("--background", required=True)
     parser.add_argument("--foreground", required=True)
@@ -187,9 +198,13 @@ def main() -> int:
         contract["greeting"] = custom_text if custom_text else "Welcome back"
 
     if args.wallpaper:
-        source = current_wallpaper()
+        source = current_wallpaper() if args.wallpaper_source_mode == "current" else validate_wallpaper(args.wallpaper_path)
         write_png(source, sddm_dir / "assets" / "background.png")
         contract["background"] = "assets/background.png"
+        contract["wallpaperSelection"] = {
+            "mode": args.wallpaper_source_mode,
+            "path": "" if args.wallpaper_source_mode == "current" else str(source),
+        }
         print(f"wallpaper:          {source}")
 
     temp = contract_path.with_suffix(".json.tmp")

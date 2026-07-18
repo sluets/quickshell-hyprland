@@ -1632,7 +1632,9 @@ values that are being silently ignored.
 
 **Diagnosis:** `hyprctl clients` showed identical stable metadata in both states (`class: org.quickshell`, `title: Quickshell Settings`). The only meaningful difference was `floating: 1` versus `floating: 0`. QML implicit dimensions are size requests; Hyprland owns geometry once the surface is tiled.
 
-**Fix:** Add an exact compositor rule in Hyprland `rules.lua`:
+**Initial fix:** Add an exact compositor rule that forces the window to float and center.
+
+**Later refinement (2026-07-18):** The fixed `size = "1440 820"` line was removed after Quickshell gained persisted preferred width/height controls. A compositor size rule overrides the saved QML preference, so the current rule must be:
 
 ```lua
 hl.window_rule({
@@ -1643,13 +1645,14 @@ hl.window_rule({
     },
     float = true,
     center = true,
-    size = "1440 820",
 })
 ```
 
-The final size was selected to fit a 1920x1080 laptop at 1.5x font scale while remaining comfortable on a 2560x1440 desktop.
+The preferred size is now configured under **Settings -> Appearance -> Settings Window**. `shell.qml` recreates only the Settings window on the next reopen when those saved dimensions change.
 
-**Lesson:** Do not keep tuning QML `implicitWidth`/`implicitHeight` when a window sometimes tiles. Compare `hyprctl clients` output first and fix compositor state with a precise window rule.
+**Additional gotcha:** Directly assigning `width` or `height` to Quickshell's `ProxyFloatingWindow` is deprecated. Use `implicitWidth` and `implicitHeight` at creation time instead.
+
+**Lesson:** Do not keep tuning QML dimensions when a window sometimes tiles, and do not leave a compositor `size` rule in place after adding an application-owned preferred size. Compare `hyprctl clients` first, force only float/center, and let Quickshell own the preferred dimensions.
 
 ## 2026-07-17 — Hyprland Lua exit keybind broke after an update
 

@@ -60,7 +60,7 @@ Test the source theme before committing:
 sddm-greeter-qt6 --test-mode --theme ~/.config/sddm-project
 ```
 
-For unsaved values from the Quickshell SDDM page, use **Test SDDM Theme** instead. It builds a temporary copy under `/tmp`, includes the current theme/wallpaper/layout controls, and writes no root-owned files.
+For unsaved values from the Quickshell SDDM page, use **Test SDDM Theme** instead. It builds a temporary copy under `/tmp`, includes the current or selected theme/font, selected wallpaper, clock/date appearance, shadows, and login-panel controls, and writes no root-owned files.
 
 Then commit it:
 
@@ -210,3 +210,18 @@ Working layout:
 ```
 
 This file is machine-specific and is outside the portable theme deployment. Before reusing it elsewhere, obtain the real SDDM/Xorg connector names from an `Xsetup` diagnostic log; Hyprland/Xwayland names may differ. (GPT, 2026-07-18)
+
+## User data that must also be backed up
+
+The Git repository contains the SDDM code, but the following machine/user state lives outside Git:
+
+```text
+~/.config/quickshell/user-prefs.json   # exact filename/location may follow Quickshell's JsonAdapter storage
+~/Pictures/Wallpapers/                 # or the custom UserPrefs.wallpapersPath
+<wallpaper-library>/.thumbs/
+/usr/share/sddm/scripts/Xsetup          # machine-specific monitor layout
+```
+
+The wallpaper library itself is not embedded in the Quickshell repository. Back it up separately. Thumbnails can be regenerated, but keeping `.thumbs` avoids rebuilding the cache.
+
+The `Xsetup` file is machine-specific; preserve it for the same hardware, but review connector names before restoring it to another machine.

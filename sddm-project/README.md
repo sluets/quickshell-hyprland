@@ -1,6 +1,6 @@
 # Quickshell custom SDDM theme
 
-<!-- GPT: updated 2026-07-18 -->
+<!-- GPT: updated 2026-07-18 after the major SDDM customization block -->
 
 This directory is the editable, Git-backed source for the custom Qt 6 SDDM login theme.
 
@@ -14,14 +14,15 @@ Open:
 Settings -> SDDM
 ```
 
-Available controls:
+The page supports:
 
-- include current Quickshell theme
-- include current wallpaper
-- clock scale, 50–200%
-- clock X/Y offsets
-- login-panel X/Y offsets
-- Reset buttons for each layout control
+- current or separately selected Quickshell theme
+- theme font or separately selected installed Nerd Font
+- current wallpaper or a selected wallpaper from the shared library
+- `.thumbs`-backed wallpaper grid plus custom image path
+- time/date visibility, scale, spacing, colors, and shadow controls
+- clock and login-panel X/Y offsets
+- login-panel width, scale, spacing, and custom greeting
 - temporary **Test SDDM Theme** preview
 - manual **Apply to SDDM** deployment
 
@@ -77,7 +78,29 @@ sddm-greeter-qt6 --test-mode \
   --theme /usr/share/sddm/themes/quickshell-custom
 ```
 
-The Quickshell Test button is preferred when previewing unsaved Settings controls because it first builds a temporary snapshot containing those values.
+Use the Quickshell Test button when previewing unsaved controls because it first builds a temporary snapshot containing those values.
+
+## Shared wallpaper library
+
+The SDDM wallpaper selector and the main Quickshell wallpaper picker share:
+
+```text
+UserPrefs.wallpapersPath
+```
+
+Default:
+
+```text
+~/Pictures/Wallpapers
+```
+
+Thumbnail cache:
+
+```text
+<wallpaper-library>/.thumbs
+```
+
+SDDM stores the original wallpaper path, never the thumbnail path. The generated theme copies the chosen image into its own assets so the greeter does not need access to the user's wallpaper directory.
 
 ## Safety behavior
 
@@ -108,10 +131,10 @@ sudo systemctl restart sddm
 
 ## Monitor layout
 
-The test greeter runs inside the current desktop session and follows Hyprland's monitor arrangement. The real greeter may use a separate X11 layout configured in:
+The test greeter runs inside the current desktop session and follows Hyprland's monitor arrangement. The real greeter uses a separate X11 layout configured in:
 
 ```text
 /usr/share/sddm/scripts/Xsetup
 ```
 
-Connector names can differ between Hyprland and SDDM/Xorg. See `docs/SDDM_BACKUP_AND_TRANSFER.md` before copying a monitor setup to another machine.
+Connector names can differ between Hyprland and SDDM/Xorg. See `docs/SDDM_BACKUP_AND_TRANSFER.md` before copying monitor settings to another machine.

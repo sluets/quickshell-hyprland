@@ -174,6 +174,7 @@
 //
 //=============================================================================
 
+import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
@@ -393,8 +394,62 @@ Scope {
     // The settings application, v0 (settings-manager plan, Phase 2) —
     // single instance, same Overlay-layer recipe as PowerScreen.
     // Opened via the gear menu ("Open Settings…" -> Signals) or IPC.
-    SettingsWindow {
-        id: settingsWindow
+    // GPT: Settings is loaded separately so a changed preferred window size
+    // can take effect without restarting the entire Quickshell process. A
+    // ProxyFloatingWindow only consumes implicit geometry when it is created;
+    // direct width/height writes are deprecated.
+    property bool openSettingsAfterReload: false
+
+    Loader {
+        id: settingsWindowLoader
+        active: true
+        sourceComponent: Component {
+            SettingsWindow {}
+        }
+
+        onLoaded: {
+            if (shellScope.openSettingsAfterReload && item) {
+                shellScope.openSettingsAfterReload = false;
+                item.open();
+            }
+        }
+    }
+
+    Timer {
+        id: settingsWindowReloadTimer
+        interval: 0
+        repeat: false
+        onTriggered: settingsWindowLoader.active = true
+    }
+
+    Connections {
+        target: Signals
+
+        function onToggleSettingsWindow(): void {
+            const win = settingsWindowLoader.item;
+            if (!win) {
+                shellScope.openSettingsAfterReload = true;
+                settingsWindowLoader.active = true;
+                return;
+            }
+
+            if (win.shown) {
+                win.close();
+                return;
+            }
+
+            const sizeChanged =
+                win.createdDefaultWidth !== UserPrefs.settingsWindowDefaultWidth
+                || win.createdDefaultHeight !== UserPrefs.settingsWindowDefaultHeight;
+
+            if (sizeChanged) {
+                shellScope.openSettingsAfterReload = true;
+                settingsWindowLoader.active = false;
+                settingsWindowReloadTimer.restart();
+            } else {
+                win.open();
+            }
+        }
     }
 
     PowerScreen { id: powerScreen }

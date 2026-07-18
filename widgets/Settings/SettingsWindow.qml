@@ -396,12 +396,12 @@ FloatingWindow {
     // itself is opaque so there is no transparent inset that can read as
     // a second inner frame when the compositor border is made very thick.
     color: Theme.colorBackground
-    implicitWidth: Math.round(Theme.fontSize * 74)
-    implicitHeight: Math.round(Theme.fontSize * 44)
+    implicitWidth: UserPrefs.settingsWindowDefaultWidth
+    implicitHeight: UserPrefs.settingsWindowDefaultHeight
     // Small enough for 1080p laptop panels and scaled displays while
     // preserving the larger default/implicit desktop size.
     minimumSize: Qt.size(Math.round(Theme.fontSize * 48), Math.round(Theme.fontSize * 34))
-    maximumSize: Qt.size(Math.round(Theme.fontSize * 96), Math.round(Theme.fontSize * 70))
+    maximumSize: Qt.size(1800, 1200)
 
     property bool shown: false
     property real reveal: shown ? 1 : 0
@@ -513,6 +513,8 @@ FloatingWindow {
     property var stagedWallpaperTransitionAngle: null
     property var stagedWallpaperTransitionPos: null
     property var stagedWallpapersPath: null
+    property var stagedSettingsWindowDefaultWidth: null
+    property var stagedSettingsWindowDefaultHeight: null
     property var stagedNotifCorner: null
     property var stagedNotifOffsetX: null
     property var stagedNotifOffsetY: null
@@ -549,6 +551,8 @@ FloatingWindow {
     readonly property real shownWallpaperTransitionAngle: stagedWallpaperTransitionAngle !== null ? stagedWallpaperTransitionAngle : UserPrefs.wallpaperTransitionAngle
     readonly property string shownWallpaperTransitionPos: stagedWallpaperTransitionPos !== null ? stagedWallpaperTransitionPos : UserPrefs.wallpaperTransitionPos
     readonly property string shownWallpapersPath: stagedWallpapersPath !== null ? stagedWallpapersPath : UserPrefs.wallpapersPath
+    readonly property int shownSettingsWindowDefaultWidth: stagedSettingsWindowDefaultWidth !== null ? stagedSettingsWindowDefaultWidth : UserPrefs.settingsWindowDefaultWidth
+    readonly property int shownSettingsWindowDefaultHeight: stagedSettingsWindowDefaultHeight !== null ? stagedSettingsWindowDefaultHeight : UserPrefs.settingsWindowDefaultHeight
     readonly property bool shownNotifShowAppName: stagedNotifShowAppName !== null ? stagedNotifShowAppName : UserPrefs.notifShowAppName
     readonly property int shownNotifIconSize: stagedNotifIconSize !== null ? stagedNotifIconSize : UserPrefs.notifIconSize
     readonly property int shownNotifBodyLines: stagedNotifBodyLines !== null ? stagedNotifBodyLines : UserPrefs.notifBodyLines
@@ -811,7 +815,9 @@ FloatingWindow {
             ["wallpaperTransitionFps", "Transition FPS", UserPrefs.wallpaperTransitionFps, stagedWallpaperTransitionFps, fmtFps],
             ["wallpaperTransitionAngle", "Transition Angle", UserPrefs.wallpaperTransitionAngle, stagedWallpaperTransitionAngle, fmtDeg],
             ["wallpaperTransitionPos", "Transition Position", UserPrefs.wallpaperTransitionPos, stagedWallpaperTransitionPos, fmtRaw],
-            ["wallpapersPath", "Wallpaper Library", UserPrefs.wallpapersPath, stagedWallpapersPath, fmtRaw]
+            ["wallpapersPath", "Wallpaper Library", UserPrefs.wallpapersPath, stagedWallpapersPath, fmtRaw],
+            ["settingsWindowDefaultWidth", "Settings Default Width", UserPrefs.settingsWindowDefaultWidth, stagedSettingsWindowDefaultWidth, fmtPx],
+            ["settingsWindowDefaultHeight", "Settings Default Height", UserPrefs.settingsWindowDefaultHeight, stagedSettingsWindowDefaultHeight, fmtPx]
         ];
         for (let i = 0; i < fmtPairs.length; i++) {
             const [key, label, live, staged, fmt] = fmtPairs[i];
@@ -872,6 +878,8 @@ FloatingWindow {
         stagedWallpaperTransitionAngle = null;
         stagedWallpaperTransitionPos = null;
         stagedWallpapersPath = null;
+        stagedSettingsWindowDefaultWidth = null;
+        stagedSettingsWindowDefaultHeight = null;
         stagedDisplays = ({});
         displayError = "";
     }
@@ -975,6 +983,17 @@ FloatingWindow {
     readonly property var displayChanges: []
     function applyDisplays(): void {}
 
+    // GPT: Captured creation geometry lets shell.qml determine whether this
+    // hidden window must be recreated before the next open. ProxyFloatingWindow
+    // owns its real size; setting width/height directly is deprecated.
+    property int createdDefaultWidth: 0
+    property int createdDefaultHeight: 0
+
+    Component.onCompleted: {
+        createdDefaultWidth = UserPrefs.settingsWindowDefaultWidth;
+        createdDefaultHeight = UserPrefs.settingsWindowDefaultHeight;
+    }
+
     function open(): void {
         shown = true;
         // Daily snapshot on settings open (plan's retention design).
@@ -1024,11 +1043,6 @@ FloatingWindow {
         // Staged values clear immediately; the resolved border object above
         // remains attached to the transaction until its writes complete.
         discardStaged();
-    }
-
-    Connections {
-        target: Signals
-        function onToggleSettingsWindow(): void { root.toggle(); }
     }
 
     // ---- Hyprland border conversion helpers ----
@@ -1385,17 +1399,47 @@ FloatingWindow {
                     } // ---- end page stack ----
                 } // ---- end page flickable ----
 
-                // Minimal themed scroll indicator.
+                // Draggable themed scrollbar. The earlier 3px indicator was
+                // visual-only, which made long SDDM pages miserable in a
+                // compact window. This thumb has a real hit target and maps
+                // pointer movement directly to Flickable.contentY.
                 Rectangle {
+                    id: pageScrollThumb
                     visible: pageFlick.contentHeight > pageFlick.height
                     anchors.right: parent.right
-                    anchors.rightMargin: Math.max(6, Math.floor((root.pageScrollGutter - width) / 2))
-                    y: pageFlick.y + pageFlick.visibleArea.yPosition * pageFlick.height
-                    width: 3
-                    height: Math.max(28, pageFlick.visibleArea.heightRatio * pageFlick.height)
-                    radius: 2
-                    color: Theme.colorAccent
-                    opacity: 0.65
+                    anchors.rightMargin: 4
+                    y: pageFlick.visibleArea.yPosition * pageFlick.height
+                    width: pageScrollMouse.containsMouse || pageScrollMouse.pressed ? 12 : 8
+                    height: Math.max(32, pageFlick.visibleArea.heightRatio * pageFlick.height)
+                    radius: width / 2
+                    color: pageScrollMouse.containsMouse || pageScrollMouse.pressed
+                        ? Theme.colorAccent : Theme.colorMuted
+                    opacity: pageScrollMouse.containsMouse || pageScrollMouse.pressed ? 1.0 : 0.75
+
+                    Behavior on width { NumberAnimation { duration: 90 } }
+
+                    MouseArea {
+                        id: pageScrollMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        property real pressMouseY: 0
+                        property real pressContentY: 0
+
+                        onPressed: mouse => {
+                            pressMouseY = mapToItem(pageViewport, mouse.x, mouse.y).y;
+                            pressContentY = pageFlick.contentY;
+                        }
+                        onPositionChanged: mouse => {
+                            if (!pressed) return;
+                            const currentY = mapToItem(pageViewport, mouse.x, mouse.y).y;
+                            const track = Math.max(1, pageViewport.height - pageScrollThumb.height);
+                            const contentRange = Math.max(0, pageFlick.contentHeight - pageFlick.height);
+                            pageFlick.contentY = Math.max(0, Math.min(contentRange,
+                                pressContentY + (currentY - pressMouseY) * contentRange / track));
+                        }
+                    }
                 }
             } // ---- end page viewport ----
 

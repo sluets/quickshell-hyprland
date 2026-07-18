@@ -292,6 +292,8 @@ Singleton {
     readonly property real wallpaperTransitionAngle: adapter.wallpaperTransitionAngle
     readonly property string wallpaperTransitionPos: adapter.wallpaperTransitionPos
     readonly property string wallpapersPath: adapter.wallpapersPath
+    readonly property int settingsWindowDefaultWidth: adapter.settingsWindowDefaultWidth
+    readonly property int settingsWindowDefaultHeight: adapter.settingsWindowDefaultHeight
     readonly property bool wallpaperCachingEnabled: adapter.wallpaperCachingEnabled
     readonly property bool clockUse24Hour: adapter.clockUse24Hour
     readonly property bool clockShowSeconds: adapter.clockShowSeconds
@@ -407,6 +409,12 @@ Singleton {
         const cleaned = v.trim();
         if (cleaned.length > 0)
             adapter.wallpapersPath = cleaned;
+    }
+    function setSettingsWindowDefaultWidth(v: int): void {
+        adapter.settingsWindowDefaultWidth = Math.min(1800, Math.max(700, v));
+    }
+    function setSettingsWindowDefaultHeight(v: int): void {
+        adapter.settingsWindowDefaultHeight = Math.min(1200, Math.max(500, v));
     }
     function setNotifShowAppName(v: bool): void {
         adapter.notifShowAppName = v;
@@ -642,6 +650,10 @@ Singleton {
         property real wallpaperTransitionAngle: 45.0
         property string wallpaperTransitionPos: "center"
         property string wallpapersPath: "~/Pictures/Wallpapers"
+        // Initial Settings window geometry. The current historical defaults
+        // are preserved so laptop behavior does not change until customized.
+        property int settingsWindowDefaultWidth: 1036
+        property int settingsWindowDefaultHeight: 616
 
             // If true, the wallpaper picker scans the folder once and
             // keeps that list (and every already-decoded thumbnail) in

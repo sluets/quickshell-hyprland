@@ -27,6 +27,9 @@ ColumnLayout {
     property bool useThemeFont: true
     property string selectedFontFamily: Theme.fontFamily
     property bool includeWallpaper: true
+    property string selectedWallpaperPath: ""
+    property var wallpaperItems: []
+    property bool wallpaperScanRunning: false
     property bool applying: false
     property bool testing: false
     property bool layoutLoaded: false
@@ -59,6 +62,10 @@ ColumnLayout {
 
     readonly property var selectedThemeObject: Theme.themes[selectedThemeName] ?? Theme.themes[Theme.fallbackThemeName]
     readonly property var effectiveThemeObject: includeTheme ? Theme : selectedThemeObject
+    readonly property string wallpapersDir: expandHome(UserPrefs.wallpapersPath)
+    readonly property string wallpaperThumbsDir: wallpapersDir + "/" + Settings.wallpapersThumbDir
+    readonly property string selectedWallpaperName: selectedWallpaperPath === "" ? "Choose wallpaper" : baseName(selectedWallpaperPath)
+
     readonly property string effectiveFontFamily: (!includeTheme && !useThemeFont && selectedFontFamily !== "")
         ? selectedFontFamily : effectiveThemeObject.fontFamily
 
@@ -87,6 +94,31 @@ ColumnLayout {
     function validHex(value, fallback) {
         const text = String(value || "").trim();
         return new RegExp("^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$").test(text) ? text.toUpperCase() : fallback;
+    }
+
+    function expandHome(path) {
+        const value = String(path || "");
+        if (value === "~")
+            return Quickshell.env("HOME");
+        if (value.startsWith("~/"))
+            return Quickshell.env("HOME") + value.slice(1);
+        return value;
+    }
+
+    function baseName(path) {
+        const parts = String(path || "").split("/");
+        return parts.length > 0 ? parts[parts.length - 1] : "";
+    }
+
+    function baseNameNoExt(path) {
+        const name = baseName(path);
+        const at = name.lastIndexOf(".");
+        return at > 0 ? name.slice(0, at) : name;
+    }
+
+    function scanWallpapers() {
+        wallpaperScanRunning = true;
+        wallpaperScanProcess.running = true;
     }
 
     function markLayoutDirty() { layoutDirty = true; }
@@ -118,8 +150,9 @@ ColumnLayout {
         // A theme is always exported: either the active Quickshell theme or
         // the separately selected SDDM theme.
         command.push("--theme");
-        if (includeWallpaper)
-            command.push("--wallpaper");
+        command.push("--wallpaper");
+        command.push("--wallpaper-source-mode", includeWallpaper ? "current" : "selected");
+        command.push("--wallpaper-path", includeWallpaper ? "" : selectedWallpaperPath);
         if (preview || layoutDirty)
             command.push("--layout");
         command.push(
@@ -237,7 +270,7 @@ ColumnLayout {
 
     SettingsComponents.CollapsibleSection {
         title: "Theme & wallpaper"
-        summary: (page.includeTheme ? "Current theme" : page.selectedThemeName) + " · " + (page.includeWallpaper ? "Current wallpaper" : "No wallpaper")
+        summary: (page.includeTheme ? "Current theme" : page.selectedThemeName) + " · " + (page.includeWallpaper ? "Current wallpaper" : page.selectedWallpaperName)
         expanded: true
 
         SettingsComponents.ToggleSettingRow {
@@ -457,10 +490,153 @@ ColumnLayout {
         }
 
         SettingsComponents.ToggleSettingRow {
-            label: "Include current wallpaper"
+            label: "Use current wallpaper"
             value: page.includeWallpaper
             staged: false
-            onToggled: page.includeWallpaper = !page.includeWallpaper
+            onToggled: {
+                page.includeWallpaper = !page.includeWallpaper;
+                if (!page.includeWallpaper)
+                    page.scanWallpapers();
+            }
+        }
+
+        ColumnLayout {
+            visible: !page.includeWallpaper
+            Layout.fillWidth: true
+            spacing: Theme.spacingSmall
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Text {
+                    text: "SDDM wallpaper"
+                    color: Theme.colorForeground
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Math.round(Theme.fontSize * 0.85)
+                    font.bold: true
+                    Layout.fillWidth: true
+                }
+
+                Rectangle {
+                    implicitWidth: refreshWallpaperLabel.implicitWidth + Theme.spacingMedium * 2
+                    implicitHeight: refreshWallpaperLabel.implicitHeight + Theme.spacingSmall
+                    radius: Theme.radiusMedium
+                    color: refreshWallpaperMouse.containsMouse ? Theme.colorHover : Theme.colorSurface
+                    border.width: 1
+                    border.color: Theme.colorMuted
+
+                    Text {
+                        id: refreshWallpaperLabel
+                        anchors.centerIn: parent
+                        text: page.wallpaperScanRunning ? "Scanning…" : "Refresh"
+                        color: Theme.colorForeground
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Math.round(Theme.fontSize * 0.78)
+                    }
+
+                    MouseArea {
+                        id: refreshWallpaperMouse
+                        anchors.fill: parent
+                        enabled: !page.wallpaperScanRunning
+                        hoverEnabled: true
+                        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: page.scanWallpapers()
+                    }
+                }
+            }
+
+            GridView {
+                id: sddmWallpaperGrid
+                Layout.fillWidth: true
+                implicitHeight: Math.min(contentHeight, 320)
+                height: implicitHeight
+                clip: true
+                cellWidth: 150
+                cellHeight: 112
+                model: page.wallpaperItems
+                boundsBehavior: Flickable.StopAtBounds
+                ScrollBar.vertical: ScrollBar {}
+
+                delegate: Item {
+                    required property var modelData
+                    width: sddmWallpaperGrid.cellWidth
+                    height: sddmWallpaperGrid.cellHeight
+
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        radius: Theme.radiusMedium
+                        color: Theme.colorSurface
+                        border.width: page.selectedWallpaperPath === modelData.path ? 3 : 1
+                        border.color: page.selectedWallpaperPath === modelData.path ? Theme.colorAccent : Theme.colorMuted
+                        clip: true
+
+                        Image {
+                            anchors.fill: parent
+                            source: "file://" + modelData.thumb
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            cache: true
+                            sourceSize.width: 300
+                            sourceSize.height: 220
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: page.selectedWallpaperPath = modelData.path
+                        }
+                    }
+                }
+            }
+
+            Text {
+                visible: !page.wallpaperScanRunning && page.wallpaperItems.length === 0
+                Layout.fillWidth: true
+                text: "No supported images found in " + page.wallpapersDir
+                wrapMode: Text.WordWrap
+                color: Theme.colorMuted
+                font.family: Theme.fontFamily
+                font.pixelSize: Math.round(Theme.fontSize * 0.78)
+            }
+
+            Text {
+                text: "Custom wallpaper path"
+                color: Theme.colorForeground
+                font.family: Theme.fontFamily
+                font.pixelSize: Math.round(Theme.fontSize * 0.82)
+                font.bold: true
+            }
+
+            TextField {
+                id: customWallpaperPathField
+                Layout.fillWidth: true
+                text: page.selectedWallpaperPath
+                placeholderText: "/path/to/wallpaper.png"
+                color: Theme.colorForeground
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize
+                selectByMouse: true
+                onTextEdited: page.selectedWallpaperPath = text.trim()
+
+                background: Rectangle {
+                    implicitHeight: 44
+                    radius: Theme.radiusMedium
+                    color: Theme.colorSurface
+                    border.width: customWallpaperPathField.activeFocus ? 2 : 1
+                    border.color: customWallpaperPathField.activeFocus ? Theme.colorAccent : Theme.colorMuted
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: "Thumbnails come from " + page.wallpaperThumbsDir + ". The original image path—not the thumbnail—is saved for SDDM."
+                wrapMode: Text.WordWrap
+                color: Theme.colorMuted
+                font.family: Theme.fontFamily
+                font.pixelSize: Math.round(Theme.fontSize * 0.75)
+            }
         }
     }
 
@@ -891,11 +1067,53 @@ ColumnLayout {
     }
 
     Process {
+        id: wallpaperScanProcess
+        command: ["sh", "-c",
+            "echo ===WALLS===; " +
+            "find -L \"$1\" -maxdepth 1 -type f " +
+            "\\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' " +
+            "-o -iname '*.webp' -o -iname '*.gif' -o -iname '*.bmp' \\) " +
+            "2>/dev/null | xargs -r -d '\\n' realpath | sort -f; " +
+            "echo ===THUMBS===; " +
+            "find -L \"$2\" -maxdepth 1 -type f 2>/dev/null | sort -f",
+            "sh", page.wallpapersDir, page.wallpaperThumbsDir]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const walls = [];
+                const thumbByBase = {};
+                let section = "";
+                for (const rawLine of text.split("\n")) {
+                    const line = rawLine.trim();
+                    if (line === "===WALLS===") { section = "walls"; continue; }
+                    if (line === "===THUMBS===") { section = "thumbs"; continue; }
+                    if (line.length === 0) continue;
+                    if (section === "walls")
+                        walls.push(line);
+                    else if (section === "thumbs")
+                        thumbByBase[page.baseNameNoExt(line)] = line;
+                }
+                page.wallpaperItems = walls.map(path => ({
+                    path: path,
+                    thumb: thumbByBase[page.baseNameNoExt(path)] ?? path,
+                    name: page.baseNameNoExt(path)
+                }));
+                page.wallpaperScanRunning = false;
+            }
+        }
+        onExited: code => { // qmllint disable signal-handler-parameters
+            page.wallpaperScanRunning = false;
+            if (code !== 0)
+                page.processError = "Wallpaper library scan failed (exit " + code + ").";
+        }
+    }
+
+    Process {
         id: layoutReadProcess
         command: [
             "python3", "-c",
             "import json,pathlib; p=pathlib.Path.home()/'.config/sddm-project/snapshot/snapshot-input.json'; " +
-            "d=json.loads(p.read_text()); print(json.dumps({'layout': d.get('layout', {}), 'greeting': d.get('greeting', 'Welcome back'), 'themeSelection': d.get('themeSelection', {}), 'fontSelection': d.get('fontSelection', {}), 'clockAppearance': d.get('clockAppearance', {})}))"
+            "d=json.loads(p.read_text()); print(json.dumps({'layout': d.get('layout', {}), 'greeting': d.get('greeting', 'Welcome back'), 'themeSelection': d.get('themeSelection', {}), 'fontSelection': d.get('fontSelection', {}), 'clockAppearance': d.get('clockAppearance', {}), 'wallpaperSelection': d.get('wallpaperSelection', {})}))"
         ]
 
         stdout: StdioCollector {
@@ -906,6 +1124,7 @@ ColumnLayout {
                     const themeSelection = saved.themeSelection || {};
                     const fontSelection = saved.fontSelection || {};
                     const clockAppearance = saved.clockAppearance || {};
+                    const wallpaperSelection = saved.wallpaperSelection || {};
                     const savedThemeName = String(themeSelection.name || UserPrefs.themeName);
                     page.includeTheme = String(themeSelection.mode || "current") !== "selected";
                     page.selectedThemeName = Theme.themes[savedThemeName] ? savedThemeName : Theme.fallbackThemeName;
@@ -931,6 +1150,8 @@ ColumnLayout {
                     page.loginPanelSpacing = page.clampPanelSpacing(Number(layout.loginPanelSpacing || 14));
                     page.customLoginText = String(saved.greeting || "Welcome back");
                     page.useCustomLoginText = page.customLoginText !== "Welcome back";
+                    page.includeWallpaper = String(wallpaperSelection.mode || "current") !== "selected";
+                    page.selectedWallpaperPath = String(wallpaperSelection.path || "");
                     page.layoutDirty = false;
                     page.layoutLoaded = true;
                 } catch (error) {

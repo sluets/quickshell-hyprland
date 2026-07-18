@@ -20,6 +20,40 @@
 - Set `DisplayPort-1` left and `DisplayPort-0` right/primary, both at `2560x1440 @ 143.97 Hz`.
 - Kept this monitor layout outside the portable theme because connector names and physical ordering are machine-specific.
 
+## 2026-07-18 — SDDM major customization and Settings window UX checkpoint (GPT-5.6 Thinking)
+
+**Context:** The original SDDM integration expanded into a complete configurable login-screen editor. The Settings window also needed a usable scrollbar and machine-appropriate preferred spawn dimensions.
+
+**What was built / changed:**
+
+- Added separately selected SDDM theme without changing the active desktop theme.
+- Added theme-font or custom installed Nerd Font selection.
+- Added shared wallpaper-library path used by both the main wallpaper picker and SDDM.
+- Added `.thumbs`-backed alternate SDDM wallpaper grid, full-image fallback, custom path, and hidden filenames.
+- Added time/date display, independent date scaling, spacing, and reliable date rendering fallback.
+- Added theme/custom colors for time, date, and shadow.
+- Added adjustable shadow opacity and X/Y offsets.
+- Added clock and login-panel position, scale, width, spacing, and greeting controls.
+- Test mode now builds a temporary user-owned snapshot and previews all unsaved values with no root writes.
+- Apply remains manual and digest-aware, skipping identical root-owned installs.
+- Added a visible draggable Settings scrollbar.
+- Added persisted Settings preferred width/height under Appearance.
+- Removed the compositor fixed-size requirement; Hyprland should only float and center the window.
+- `shell.qml` now recreates only the Settings window after the saved preferred size changes.
+
+**Live-test status:**
+
+- Alternate theme, custom font, wallpaper selection, time/date, colors, shadows, offsets, preview, scrollbar, and preferred window sizing were all live-tested successfully.
+- Real SDDM monitor layout remains machine-specific through `/usr/share/sddm/scripts/Xsetup`.
+
+**Known constraints / gotchas:**
+
+- Do not assign `width`/`height` directly to `ProxyFloatingWindow`; use implicit dimensions.
+- Do not restore a Hyprland `size = ...` rule for Settings or it will override the persisted preference.
+- The test greeter follows Hyprland monitor layout; the real greeter uses SDDM/Xorg connector names.
+- Wallpaper originals live outside Git and require a separate backup.
+
+
 ## 2026-07-17 — Desktop clock shadow strength
 
 ## 2026-07-17 — SDDM completion, Settings fixes, desktop-clock controls, and Hyprland window behavior (GPT-5.6 Thinking)

@@ -191,6 +191,9 @@ you'd like, with or without continuing to sync a knowledge base.
 - **`docs/PROBLEMS_AND_FIXES.md`** — a running log of non-obvious
   problems hit during development and their actual fixes, so they don't
   get rediscovered the hard way twice
+- **`docs/SDDM_THEME_PLAN.md`** — current SDDM architecture, controls, preview/apply flow, and optional future work
+- **`docs/SDDM_BACKUP_AND_TRANSFER.md`** — SDDM installation, migration, backup, and recovery
+- **`docs/HYPRLAND_WINDOW_RULES.md`** — compositor rules required by Settings and the saved-size behavior
 
 ## File header convention
 

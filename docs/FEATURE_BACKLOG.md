@@ -102,9 +102,7 @@ DONE THIS SESSION — no action needed
   be built (2026-07-11, before this session) — see
   NotificationPopups.qml. Flagged here only because it came up as if
   it might still be missing; it isn't.
-- SDDM login theme — Phase 0 (skeleton, test-mode confirmed working)
-  built and delivered as sddm-rev0. See docs/SDDM_THEME_PLAN.md for
-  Phases 1+.
+- SDDM login theme major customization block complete: safe temporary preview, alternate themes/fonts, shared-library wallpaper thumbnails, time/date colors and shadows, login-panel sizing, and hash-aware Apply. See docs/SDDM_THEME_PLAN.md.
 
 =================================================================
 SMALL, READY TO BUILD (recipe exists, low risk)
@@ -134,7 +132,7 @@ BIGGER — HAS ITS OWN PLAN DOC, START THERE
 - Hyprland animation control — docs/HYPR_ANIMATIONS_PLAN.md. Phase 0
   is a conversation (confirm ownership-transfer + preset names), not
   code — can happen anytime, doesn't need the machine.
-- SDDM follow-up controls and polish — login-panel sizing, optional typography, installed-status display, and rollback UI. See docs/SDDM_THEME_PLAN.md. Automatic live wallpaper sync remains intentionally rejected.
+- SDDM follow-up is now optional only: installed-status detail, deactivate/rollback UI, or a safely designed machine-specific monitor-layout UI. The major visual customization block is complete. See docs/SDDM_THEME_PLAN.md.
 
 =================================================================
 NEEDS A SYSTEM PACKAGE, NOT CODE
@@ -184,3 +182,6 @@ REVISION HISTORY
 - [x] Add desktop clock shadow-strength control (0–100%).
 
 - [x] Desktop clock: configurable shadow X/Y offsets (-20px to +20px).
+
+- [x] SDDM major customization block: alternate theme/font, wallpaper thumbnail selector, date, custom colors/shadows, login-panel controls, and safe preview/apply.
+- [x] Settings window draggable scrollbar and persisted default size.

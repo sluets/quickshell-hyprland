@@ -1,10 +1,12 @@
 # Hyprland Window Rules Used by Quickshell
 
-This file documents compositor-side rules that Quickshell depends on. These rules are **not** stored in the Quickshell configuration itself, so they must be copied to every machine's Hyprland Lua configuration.
+<!-- GPT: updated 2026-07-18 -->
+
+This file documents compositor-side rules that Quickshell depends on. These rules are not stored in the Quickshell repository unless the Hyprland configuration is backed up separately.
 
 ## Quickshell Settings window
 
-The Settings window reports stable client metadata:
+Stable client metadata:
 
 ```text
 class: org.quickshell
@@ -13,14 +15,9 @@ initialClass: org.quickshell
 initialTitle: Quickshell Settings
 ```
 
-Without an explicit rule, Hyprland may treat it differently depending on workspace state:
+The window must be forced to float. Without that rule, Hyprland can tile it and ignore the QML preferred dimensions.
 
-- with one tiled client present, it may appear floating;
-- with multiple tiled clients present, it may join the tiling layout;
-- on an otherwise empty workspace, it may expand to most of the usable area;
-- QML `implicitWidth` and `implicitHeight` are only size requests and do not control a tiled window.
-
-Add this rule to the machine's Hyprland `rules.lua`:
+Use:
 
 ```lua
 hl.window_rule({
@@ -32,42 +29,54 @@ hl.window_rule({
 
     float = true,
     center = true,
-    size = "1440 820",
 })
 ```
 
-The approved `1440 x 820` size:
+**Do not add a hardcoded `size` rule.** The preferred Settings width and height are now persisted in Quickshell under:
 
-- fits inside a 1920 x 1080 laptop display;
-- leaves the Settings footer buttons visible at 1.5x shell font scale;
-- remains comfortable on the 2560 x 1440 desktop;
-- respects monitor reserved areas such as the Quickshell top bar.
+```text
+Settings -> Appearance -> Settings Window
+```
 
-Reload Hyprland after editing:
+Defaults:
+
+```text
+1036 x 616
+```
+
+Supported ranges:
+
+```text
+width:  700–1800 px
+height: 500–1200 px
+```
+
+When the saved preferred size changes, `shell.qml` recreates only the Settings window on the next reopen. Quickshell itself does not need to be restarted.
+
+The implementation deliberately uses `implicitWidth` and `implicitHeight`; assigning `width` or `height` directly to Quickshell's `ProxyFloatingWindow` is deprecated and produces warnings.
+
+Reload Hyprland after editing the compositor rule:
 
 ```bash
 hyprctl reload
 ```
 
-Confirm the rule from an empty workspace, with one tiled window, and with multiple tiled windows. The Settings window should float, center, and use the same dimensions in every case.
+Verify:
+
+1. Open Settings from an empty workspace.
+2. Open it with several tiled clients present.
+3. Change the saved default size, Apply, close Settings, and reopen it.
+4. Confirm `hyprctl clients` reports the window as floating.
 
 ## Super+M exit binding
 
-The old shell-command fallback stopped working after a Hyprland Lua update:
-
-```lua
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch exit"))
-```
-
-On the tested system, `hyprshutdown` was not installed and the legacy CLI form `hyprctl dispatch exit` was rejected by the Lua dispatcher parser.
-
-Use the native Lua dispatcher instead:
+Use the native Lua dispatcher:
 
 ```lua
 hl.bind(mainMod .. " + M", hl.dsp.exit())
 ```
 
-Terminal equivalent for testing:
+Terminal equivalent:
 
 ```bash
 hyprctl dispatch 'hl.dsp.exit()'
@@ -75,15 +84,10 @@ hyprctl dispatch 'hl.dsp.exit()'
 
 ## Porting to another machine
 
-After cloning the Quickshell repository to another machine:
+1. Copy the Settings float/center rule into that machine's `rules.lua`.
+2. Do not copy a fixed size line.
+3. Copy the native `Super+M` binding.
+4. Run `hyprctl reload`.
+5. Choose an appropriate preferred Settings size in Appearance for that display.
 
-1. Copy the Settings rule into that machine's `rules.lua`.
-2. Copy the native `Super+M` binding into its keybind file.
-3. Run `hyprctl reload`.
-4. Open Settings and verify with `hyprctl clients` that `floating: 1` is reported.
-
-Do not assume compositor-side rules are backed up by the Quickshell Git repository unless the Hyprland configuration itself is also committed elsewhere.
-
----
-
-Updated 2026-07-17 by GPT-5.6 Thinking.
+A smaller saved size is useful on a 14-inch 1080p laptop; a larger size is more appropriate on a 2560x1440 desktop.

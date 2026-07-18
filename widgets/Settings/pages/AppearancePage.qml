@@ -410,6 +410,45 @@ RowLayout {
     }
 }
 
+// ---------------- Settings window geometry ----------------
+Text {
+    text: "Settings Window"
+    Layout.topMargin: Theme.spacingLarge
+    color: Theme.colorForeground
+    font.family: Theme.fontFamily
+    font.pixelSize: Theme.fontSize
+    font.bold: true
+}
+
+Text {
+    Layout.fillWidth: true
+    text: "Controls the size used the next time Settings opens. Manual resizing remains temporary."
+    wrapMode: Text.WordWrap
+    color: Theme.colorMuted
+    font.family: Theme.fontFamily
+    font.pixelSize: Math.round(Theme.fontSize * 0.9)
+}
+
+SettingsComponents.StepperRow {
+    label: "Default width"
+    valueText: settingsRoot.shownSettingsWindowDefaultWidth + " px"
+    staged: settingsRoot.stagedSettingsWindowDefaultWidth !== null
+    showReset: true
+    onMinus: settingsRoot.stagedSettingsWindowDefaultWidth = Math.max(700, settingsRoot.shownSettingsWindowDefaultWidth - 50)
+    onPlus: settingsRoot.stagedSettingsWindowDefaultWidth = Math.min(1800, settingsRoot.shownSettingsWindowDefaultWidth + 50)
+    onReset: settingsRoot.stagedSettingsWindowDefaultWidth = 1036
+}
+
+SettingsComponents.StepperRow {
+    label: "Default height"
+    valueText: settingsRoot.shownSettingsWindowDefaultHeight + " px"
+    staged: settingsRoot.stagedSettingsWindowDefaultHeight !== null
+    showReset: true
+    onMinus: settingsRoot.stagedSettingsWindowDefaultHeight = Math.max(500, settingsRoot.shownSettingsWindowDefaultHeight - 50)
+    onPlus: settingsRoot.stagedSettingsWindowDefaultHeight = Math.min(1200, settingsRoot.shownSettingsWindowDefaultHeight + 50)
+    onReset: settingsRoot.stagedSettingsWindowDefaultHeight = 616
+}
+
 // ---------------- Wallpaper Transition (2026-07-13) ----------------
 // Migrated from core/Settings.qml — see that file's note.
 // Same closed-button + floating-list recipe as the Theme
