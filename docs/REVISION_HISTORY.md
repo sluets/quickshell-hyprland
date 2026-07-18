@@ -1,3 +1,30 @@
+## 2026-07-18 — Settings transaction-controller extraction, Rev 21 (GPT)
+
+**Context:** After Rev 20 separated the fixed pending footer, the next structural target was the large staged-settings transaction still embedded in `SettingsWindow.qml`.
+
+**What changed:**
+
+- Added `widgets/Settings/SettingsTransaction.qml` as the authoritative controller for all normal Settings staged state.
+- Moved every global `staged...` value and staged-or-live `shown...` value into the controller.
+- Moved pending-change derivation, discard/reset behavior, validation helpers, and Apply orchestration into the controller.
+- Moved final Hyprland border-color resolution and color conversion into the controller so Apply resolves one immutable final border state from the complete staged transaction.
+- Kept lightweight compatibility aliases/functions in `SettingsWindow.qml`, allowing all existing page files and the Rev 20 footer to continue using their prior API without a simultaneous page rewrite.
+- Preserved the separate SDDM preview/root-install workflow rather than merging it into the normal desktop Apply transaction.
+- Reduced `SettingsWindow.qml` from 2,088 lines to 1,860 lines; the extracted controller is 356 lines.
+
+**Live-test status:**
+
+- Staged settings correctly appeared in the pending list.
+- Cancel correctly discarded staged values and restored controls.
+- A broad, but not exhaustive, selection of settings across multiple pages was staged and applied successfully.
+- No visual or behavioral regression was observed during that test pass.
+
+**Known constraints / follow-up:**
+
+- Rev 21 intentionally keeps compatibility aliases in `SettingsWindow.qml`; pages have not yet been converted to reference the controller directly.
+- Not every individual setting path was tested. If a later issue appears, first compare its staged property, `shown...` value, pending-diff entry, discard assignment, and Apply assignment inside `SettingsTransaction.qml`.
+- Documentation was updated immediately after the successful smoke test so the ownership change and troubleshooting path are preserved.
+
 ## 2026-07-18 — Settings pending-footer extraction, Rev 20 (GPT)
 
 - Extracted the fixed pending-changes panel, status line, and Apply/Cancel buttons from `widgets/Settings/SettingsWindow.qml` into `widgets/Settings/components/SettingsPendingFooter.qml`.

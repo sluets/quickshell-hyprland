@@ -178,9 +178,14 @@ quickshell/
 │   │                      bar's arch icon.
 │   ├── Settings/
 │   │   ├── SettingsWindow.qml  Settings application host: FloatingWindow
-│   │   │                  lifecycle, navigation, page hosting, staged
-│   │   │                  transaction, shared popups, validation, and
-│   │   │                  ConfigManager Apply/Cancel orchestration.
+│   │   │                  lifecycle, preferred sizing, navigation, page
+│   │   │                  hosting, shared popups, and compatibility aliases
+│   │   │                  connecting pages/footer to the transaction controller.
+│   │   ├── SettingsTransaction.qml  Shared staged-settings controller. Owns
+│   │   │                  staged values, effective shown values, pending-diff
+│   │   │                  generation, discard/reset, validation helpers, and
+│   │   │                  Apply orchestration, including final Hyprland border
+│   │   │                  resolution.
 │   │   ├── components/SettingsPendingFooter.qml
 │   │   │                  Fixed pending-change/status/Apply/Cancel UI.
 │   │   │                  Presentation only; emits apply/cancel signals
@@ -412,6 +417,25 @@ places:
 Weather icons are rendered with the same effective color as the desktop clock text.
 
 **Known limitation:** X/Y offsets currently work for corner positions but not for Center. This is deferred until after the Settings pages are fully split.
+
+## Settings transaction ownership (Rev 21)
+
+`widgets/Settings/SettingsTransaction.qml` is the authoritative owner of the
+normal Settings staged transaction. It contains the `staged...` properties,
+the staged-or-live `shown...` values used by controls, pending-change derivation,
+`discardStaged()`, validation helpers, and `apply()`. It also resolves the final
+Hyprland active-border snapshot from the complete staged state before persistence,
+which avoids page-local apply-order races.
+
+`SettingsWindow.qml` remains the application shell: window lifecycle and preferred
+size, sidebar/navigation, page hosting, shared popup hosting, and wiring the
+transaction controller to pages and `SettingsPendingFooter.qml`. For Rev 21 it
+retains compatibility aliases with the old property/function names. Those aliases
+are deliberate migration scaffolding; remove them only in a later, separately
+tested revision that updates every page consumer.
+
+The SDDM page keeps its separate preview/install workflow. Do not silently fold
+root-owned SDDM installation into the normal desktop Apply transaction.
 
 ## Adding a new widget — checklist
 

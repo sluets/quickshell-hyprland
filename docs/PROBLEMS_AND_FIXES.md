@@ -1,6 +1,28 @@
+## 2026-07-18 — Settings transaction split troubleshooting map (Rev 21)
+
+**Change:** The staged transaction moved from `SettingsWindow.qml` into `SettingsTransaction.qml`. The window now forwards the old API through compatibility aliases so the page files did not need to change in the same revision.
+
+**Live-test result:** Pending rows, Cancel, and a broad selection of Apply paths worked correctly. The test was intentionally a smoke test rather than an exhaustive test of every setting.
+
+**If a setting later fails, trace these five places in `SettingsTransaction.qml`:**
+
+1. its `staged...` property declaration;
+2. its effective `shown...` expression used by the page;
+3. its entry in the pending `changes` derivation;
+4. its reset inside `discardStaged()`;
+5. its persistence/action inside `apply()`.
+
+Then confirm `SettingsWindow.qml` still exposes the matching compatibility alias expected by the page. A setting may appear visually correct while one of the other four paths is missing, so do not fix only the symptom seen in the page.
+
+**Hyprland border special case:** The controller resolves the complete final border state before writes. Do not reintroduce page-local saved-value lookups or make Apply depend on which page staged its value first.
+
+**Do not do this while debugging:** Do not move transaction logic into `SettingsPendingFooter.qml`; it remains presentation-only. Do not remove all compatibility aliases as part of an unrelated bug fix. Page migration must be its own revision with a full multi-tab regression test.
+
+---
+
 ## Settings pending footer stops updating after a split (Rev 20)
 
-**Current architecture:** `SettingsPendingFooter.qml` owns only the pending list, status display, and button presentation. `SettingsWindow.qml` still owns the staged transaction.
+**Current architecture:** `SettingsPendingFooter.qml` owns only the pending list, status display, and button presentation. Since Rev 21, `SettingsTransaction.qml` owns the staged transaction; `SettingsWindow.qml` forwards compatibility aliases and connects the footer signals.
 
 **Symptoms:** pending rows remain empty, Apply/Cancel does nothing, Apply stays disabled, or status text appears stale after editing Settings files.
 
@@ -15,11 +37,11 @@ SettingsPendingFooter {
 }
 ```
 
-- If one staged setting is missing, fix the `changes` derivation in `SettingsWindow.qml`; the footer does not generate diffs.
+- If one staged setting is missing, fix the `changes` derivation in `SettingsTransaction.qml`; the footer does not generate diffs.
 - If Apply remains disabled, inspect `ConfigManager.busy` and the active transaction. The footer intentionally blocks Apply while busy.
 - If Cancel or Apply clicks do nothing, restore the two signal handlers above.
 - If the footer jumps vertically, keep the empty panel rendered and preserve the fixed `ListView.Layout.preferredHeight`; do not make its geometry depend on `changes.length`.
-- Do not move persistence or staged properties into the footer while troubleshooting presentation.
+- Do not move persistence or staged properties into the footer while troubleshooting presentation; they belong in `SettingsTransaction.qml`.
 
 See `docs/SETTINGS_ARCHITECTURE.md` for the full ownership map and regression checklist.
 
