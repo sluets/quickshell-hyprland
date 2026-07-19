@@ -283,6 +283,12 @@ Item {
                 settingsRoot: viewRoot.settingsRoot
             }
 
+            // ================ LAUNCHER PAGE ================
+            SettingsPages.LauncherPage {
+                id: launcherPage
+                settingsRoot: viewRoot.settingsRoot
+            }
+
             // ================ NOTIFICATIONS PAGE ================
             SettingsPages.NotificationsPage {
                 id: notificationsPage

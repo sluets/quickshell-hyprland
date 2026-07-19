@@ -360,6 +360,7 @@ PanelWindow {
         // focused monitor).
         Launcher {
             id: launcher
+            modelData: topBar.modelData
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
         }

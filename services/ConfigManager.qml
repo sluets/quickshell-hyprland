@@ -482,6 +482,10 @@ Singleton {
             case "clockUse24Hour": UserPrefs.setClockUse24Hour(ch.value); n++; break;
             case "clockShowSeconds": UserPrefs.setClockShowSeconds(ch.value); n++; break;
             case "wallpaperCachingEnabled": UserPrefs.setWallpaperCachingEnabled(ch.value); n++; break;
+            case "launcherPlacement": UserPrefs.setLauncherPlacement(ch.value); n++; break;
+            case "launcherOffsetX": UserPrefs.setLauncherOffsetX(ch.value); n++; break;
+            case "launcherOffsetY": UserPrefs.setLauncherOffsetY(ch.value); n++; break;
+            case "launcherShowAppsOnOpen": UserPrefs.setLauncherShowAppsOnOpen(ch.value); n++; break;
             case "notifShowAppName": UserPrefs.setNotifShowAppName(ch.value); n++; break;
             case "notifIconSize": UserPrefs.setNotifIconSize(ch.value); n++; break;
             case "notifBodyLines": UserPrefs.setNotifBodyLines(ch.value); n++; break;

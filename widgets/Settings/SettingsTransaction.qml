@@ -13,6 +13,10 @@ Item {
     property var stagedNotifIconSize: null
     property var stagedNotifBodyLines: null
     property var stagedNotifFontScale: null
+    property var stagedLauncherPlacement: null
+    property var stagedLauncherOffsetX: null
+    property var stagedLauncherOffsetY: null
+    property var stagedLauncherShowAppsOnOpen: null
     property var stagedHyprGapsIn: null
     property var stagedHyprGapsOut: null
     property var stagedHyprBorderSize: null
@@ -81,6 +85,10 @@ Item {
     readonly property int shownNotifIconSize: stagedNotifIconSize !== null ? stagedNotifIconSize : UserPrefs.notifIconSize
     readonly property int shownNotifBodyLines: stagedNotifBodyLines !== null ? stagedNotifBodyLines : UserPrefs.notifBodyLines
     readonly property real shownNotifFontScale: stagedNotifFontScale !== null ? stagedNotifFontScale : UserPrefs.notifFontScale
+    readonly property string shownLauncherPlacement: stagedLauncherPlacement !== null ? stagedLauncherPlacement : UserPrefs.launcherPlacement
+    readonly property int shownLauncherOffsetX: stagedLauncherOffsetX !== null ? stagedLauncherOffsetX : UserPrefs.launcherOffsetX
+    readonly property int shownLauncherOffsetY: stagedLauncherOffsetY !== null ? stagedLauncherOffsetY : UserPrefs.launcherOffsetY
+    readonly property bool shownLauncherShowAppsOnOpen: stagedLauncherShowAppsOnOpen !== null ? stagedLauncherShowAppsOnOpen : UserPrefs.launcherShowAppsOnOpen
     readonly property int shownHyprGapsIn: stagedHyprGapsIn !== null ? stagedHyprGapsIn : UserPrefs.hyprGapsIn
     readonly property int shownHyprGapsOut: stagedHyprGapsOut !== null ? stagedHyprGapsOut : UserPrefs.hyprGapsOut
     readonly property int shownHyprBorderSize: stagedHyprBorderSize !== null ? stagedHyprBorderSize : UserPrefs.hyprBorderSize
@@ -164,6 +172,14 @@ Item {
                      from: UserPrefs.fontFamilyOverride === "" ? "theme" : UserPrefs.fontFamilyOverride,
                      to: stagedFontFamilyOverride === "" ? "theme" : stagedFontFamilyOverride,
                      value: stagedFontFamilyOverride });
+        if (stagedLauncherPlacement !== null && stagedLauncherPlacement !== UserPrefs.launcherPlacement)
+            c.push({ key: "launcherPlacement", label: "Launcher Placement", from: UserPrefs.launcherPlacement, to: stagedLauncherPlacement, value: stagedLauncherPlacement });
+        if (stagedLauncherOffsetX !== null && stagedLauncherOffsetX !== UserPrefs.launcherOffsetX)
+            c.push({ key: "launcherOffsetX", label: "Launcher Offset X", from: UserPrefs.launcherOffsetX + " px", to: stagedLauncherOffsetX + " px", value: stagedLauncherOffsetX });
+        if (stagedLauncherOffsetY !== null && stagedLauncherOffsetY !== UserPrefs.launcherOffsetY)
+            c.push({ key: "launcherOffsetY", label: "Launcher Offset Y", from: UserPrefs.launcherOffsetY + " px", to: stagedLauncherOffsetY + " px", value: stagedLauncherOffsetY });
+        if (stagedLauncherShowAppsOnOpen !== null && stagedLauncherShowAppsOnOpen !== UserPrefs.launcherShowAppsOnOpen)
+            c.push({ key: "launcherShowAppsOnOpen", label: "Show Apps on Open", from: UserPrefs.launcherShowAppsOnOpen ? "on" : "off", to: stagedLauncherShowAppsOnOpen ? "on" : "off", value: stagedLauncherShowAppsOnOpen });
         if (stagedNotifShowAppName !== null
                 && stagedNotifShowAppName !== UserPrefs.notifShowAppName)
             c.push({ key: "notifShowAppName", label: "Notif App Name",
@@ -278,6 +294,10 @@ Item {
         stagedNotifIconSize = null;
         stagedNotifBodyLines = null;
         stagedNotifFontScale = null;
+        stagedLauncherPlacement = null;
+        stagedLauncherOffsetX = null;
+        stagedLauncherOffsetY = null;
+        stagedLauncherShowAppsOnOpen = null;
         stagedHyprGapsIn = null;
         stagedHyprGapsOut = null;
         stagedHyprBorderSize = null;

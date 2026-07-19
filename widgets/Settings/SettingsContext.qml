@@ -27,7 +27,7 @@ Item {
     property bool wallpaperTransitionTypeDropdownOpen: false
     // Displays remains a future feature. Its disabled prototype was removed
     // in Rev 25; rebuild it around a real services/DisplayManager.qml.
-    readonly property var pages: ["Appearance", "Notifications", "Desktop", "Hyprland", "UI Profiles", "SDDM"]
+    readonly property var pages: ["Appearance", "Launcher", "Notifications", "Desktop", "Hyprland", "UI Profiles", "SDDM"]
 
     // ---- Shared preset-color-picker overlay state (2026-07-11, Opus) ----
     // The swatch popup can't live inside its HexColorRow: the popup is
@@ -88,6 +88,10 @@ Item {
     property alias stagedNotifIconSize: settingsTransaction.stagedNotifIconSize
     property alias stagedNotifBodyLines: settingsTransaction.stagedNotifBodyLines
     property alias stagedNotifFontScale: settingsTransaction.stagedNotifFontScale
+    property alias stagedLauncherPlacement: settingsTransaction.stagedLauncherPlacement
+    property alias stagedLauncherOffsetX: settingsTransaction.stagedLauncherOffsetX
+    property alias stagedLauncherOffsetY: settingsTransaction.stagedLauncherOffsetY
+    property alias stagedLauncherShowAppsOnOpen: settingsTransaction.stagedLauncherShowAppsOnOpen
     property alias stagedHyprGapsIn: settingsTransaction.stagedHyprGapsIn
     property alias stagedHyprGapsOut: settingsTransaction.stagedHyprGapsOut
     property alias stagedHyprBorderSize: settingsTransaction.stagedHyprBorderSize
@@ -136,6 +140,10 @@ Item {
 
     readonly property string shownTheme: settingsTransaction.shownTheme
     readonly property real shownFontScale: settingsTransaction.shownFontScale
+    readonly property string shownLauncherPlacement: settingsTransaction.shownLauncherPlacement
+    readonly property int shownLauncherOffsetX: settingsTransaction.shownLauncherOffsetX
+    readonly property int shownLauncherOffsetY: settingsTransaction.shownLauncherOffsetY
+    readonly property bool shownLauncherShowAppsOnOpen: settingsTransaction.shownLauncherShowAppsOnOpen
     readonly property int shownBarBorderWidthOverride: settingsTransaction.shownBarBorderWidthOverride
     readonly property bool shownBarBorderUseThemeColor: settingsTransaction.shownBarBorderUseThemeColor
     readonly property string shownBarBorderCustomColor: settingsTransaction.shownBarBorderCustomColor
@@ -199,6 +207,10 @@ Item {
     // (project convention: plain unicode over Nerd glyphs where
     // possible) — self-evident for corners, compact enough that five
     // cells + a label fit the fixed content width at fontScale 1.0.
+    readonly property var launcherPlacementOptions: [
+        { value: "attached", text: "Attached" },
+        { value: "centered", text: "Centered" }
+    ]
     readonly property var notifCornerOptions: [
         { value: "top-left", text: "↖" }, { value: "top-right", text: "↗" },
         { value: "bottom-left", text: "↙" }, { value: "bottom-right", text: "↘" }

@@ -234,6 +234,13 @@ Singleton {
     readonly property int notifIconSize: adapter.notifIconSize
     readonly property int notifBodyLines: adapter.notifBodyLines
     readonly property real notifFontScale: adapter.notifFontScale
+    readonly property string launcherPlacement: adapter.launcherPlacement
+    readonly property int launcherOffsetX: adapter.launcherOffsetX
+    readonly property int launcherOffsetY: adapter.launcherOffsetY
+    readonly property bool launcherShowAppsOnOpen: adapter.launcherShowAppsOnOpen
+    readonly property var launcherFavoriteIds: adapter.launcherFavoriteIds
+    readonly property var launcherHiddenIds: adapter.launcherHiddenIds
+    readonly property var launcherUsage: adapter.launcherUsage
     readonly property string notifCorner: adapter.notifCorner
     readonly property int notifOffsetX: adapter.notifOffsetX
     readonly property int notifOffsetY: adapter.notifOffsetY
@@ -453,6 +460,47 @@ Singleton {
     function setSettingsWindowDefaultHeight(v: int): void {
         adapter.settingsWindowDefaultHeight = Math.min(1200, Math.max(500, v));
     }
+    function setLauncherPlacement(v: string): void {
+        if (["attached", "centered"].indexOf(v) !== -1)
+            adapter.launcherPlacement = v;
+    }
+    function setLauncherOffsetX(v: int): void { adapter.launcherOffsetX = _clampOffset(v); }
+    function setLauncherOffsetY(v: int): void { adapter.launcherOffsetY = _clampOffset(v); }
+    function setLauncherShowAppsOnOpen(v: bool): void { adapter.launcherShowAppsOnOpen = v; }
+
+    function launcherIsFavorite(id: string): bool {
+        return adapter.launcherFavoriteIds.indexOf(id) !== -1;
+    }
+
+    function launcherIsHidden(id: string): bool {
+        return adapter.launcherHiddenIds.indexOf(id) !== -1;
+    }
+
+    function toggleLauncherFavorite(id: string): void {
+        const next = adapter.launcherFavoriteIds.slice();
+        const index = next.indexOf(id);
+        if (index === -1) next.push(id);
+        else next.splice(index, 1);
+        adapter.launcherFavoriteIds = next;
+    }
+
+    function hideLauncherApp(id: string): void {
+        if (adapter.launcherHiddenIds.indexOf(id) !== -1) return;
+        const next = adapter.launcherHiddenIds.slice();
+        next.push(id);
+        adapter.launcherHiddenIds = next;
+    }
+
+    function recordLauncherUse(id: string): void {
+        const next = Object.assign({}, adapter.launcherUsage);
+        next[id] = (next[id] || 0) + 1;
+        adapter.launcherUsage = next;
+    }
+
+    function clearLauncherUsage(): void { adapter.launcherUsage = {}; }
+    function clearLauncherHidden(): void { adapter.launcherHiddenIds = []; }
+    function clearLauncherFavorites(): void { adapter.launcherFavoriteIds = []; }
+
     function setNotifShowAppName(v: bool): void {
         adapter.notifShowAppName = v;
     }
@@ -616,6 +664,14 @@ Singleton {
         property int notifIconSize: 48
         property int notifBodyLines: 4
         property real notifFontScale: 1.0
+        // Launcher presentation settings. Attached preserves the historical default. // GPT Rev 41
+        property string launcherPlacement: "attached"
+        property int launcherOffsetX: 0
+        property int launcherOffsetY: 0
+        property bool launcherShowAppsOnOpen: false
+        property var launcherFavoriteIds: []
+        property var launcherHiddenIds: []
+        property var launcherUsage: ({})
         // Notification popup position (2026-07-11). Defaults MATCH the
         // previously hardcoded placement (top-right, offsets 0 — the
         // widget's own base margins already clear the bar), so first
