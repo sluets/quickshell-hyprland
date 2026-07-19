@@ -1,3 +1,27 @@
+## 2026-07-19 — Extracted Settings view failed because sibling QML types were not resolved
+
+**Trying to do:** Move the visible Settings shell into `components/SettingsView.qml` while continuing to use sibling components such as `SettingsOverlays.qml` and `SettingsPendingFooter.qml`.
+
+**What went wrong:** Quickshell failed to load with `SettingsOverlays is not a type`. Moving code into a new component changed QML type-resolution context; relying on implicit same-directory discovery was not reliable here.
+
+**What fixed it:** Add `import "." as SettingsComponents` inside `SettingsView.qml` and instantiate the siblings as `SettingsComponents.SettingsOverlays` and `SettingsComponents.SettingsPendingFooter`.
+
+**Don't try this instead (looks right, isn't):** Do not assume a type that resolved before extraction will resolve from its new file without checking that file's imports. After moving QML into a component, treat imports and sibling qualification as part of the move, then run the parser before broad behavior testing.
+
+---
+
+## 2026-07-19 — Settings monolith kept regrowing because new features were added directly to the window
+
+**Trying to do:** Keep expanding Settings while retaining maintainability.
+
+**What went wrong:** Feature UI, popup layers, staged transaction logic, page hosting, and compatibility forwarding accumulated in `SettingsWindow.qml`, eventually pushing it above 2,400 lines and requiring many structural revisions to separate safely.
+
+**What fixed it:** Revs 20–29 established dedicated ownership for the footer, transaction, profile restore, overlays, visible view shell, and page-facing context. `SettingsWindow.qml` is now a 495-line host.
+
+**Don't try this instead (looks right, isn't):** Do not build a feature inline because it is initially small and promise to split it later. Start new tabs in `pages/`, shared UI in `components/`, staged logic in `SettingsTransaction.qml`, page-facing state in `SettingsContext.qml`, and system operations in scripts/services.
+
+---
+
 ## 2026-07-19 — UI Profiles depended on a fixed 250 ms reload delay
 
 **Symptoms / risk:** Rev 24 worked in live testing, but profile restore waited a hardcoded 250 ms after replacing `user-prefs.json` before reading the restored Hyprland values. On a sufficiently delayed reload, Hyprland generation could have read the old in-memory values and produced stale output.

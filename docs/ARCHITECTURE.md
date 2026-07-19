@@ -568,3 +568,15 @@ not exist — Quickshell's versioning is 0.x, not a major-version scheme.
 If you're reading an old note or an AI-generated summary that says
 "Quickshell 3.0," it's wrong; trust `quickshell --version` on the actual
 machine, or the project's own changelog, over any scratch note.
+
+## Settings architecture after Rev 29
+
+Settings is now split into five explicit layers:
+
+- `SettingsWindow.qml`: window lifecycle and hosting only;
+- `SettingsContext.qml`: page-facing facade, shared models, popup state, and transaction forwards;
+- `SettingsTransaction.qml`: staged values, effective values, pending diffs, discard, validation, and Apply;
+- `components/SettingsView.qml`: titlebar, navigation, pages, scrolling, footer, and overlay mounting;
+- `components/SettingsOverlays.qml`: shared dropdown and color-picker popup layer.
+
+`SettingsWindow.qml` fell from the historical 2,400+ line monolith to 495 lines by Rev 29. Future Settings features must start in a dedicated page/component/context/transaction/service boundary rather than being embedded in the window and split later. The detailed rules and regression checklist are in `docs/SETTINGS_ARCHITECTURE.md`.

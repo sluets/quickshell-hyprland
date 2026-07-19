@@ -1,3 +1,56 @@
+## 2026-07-19 — Settings context/facade extraction, Rev 29 (GPT)
+
+**Context:** After Rev 27 moved the visible Settings shell out of `SettingsWindow.qml`, the window still republished most of the transaction and page-facing API. The final major cut moved that compatibility layer into a dedicated context object so the window could become a true host.
+
+**What changed:**
+
+- Added `widgets/Settings/SettingsContext.qml`.
+- Moved all staged-setting compatibility aliases and all `shown...` effective-value forwards into the context.
+- Moved ownership of the `SettingsTransaction` instance into the context.
+- Moved the pending-change model, Apply/Cancel coordination, shared dropdown state, color-picker state, page list/current-page state, and shared option models into the context.
+- Added forwards for close, native move, and UI Profiles Hyprland reapply so existing pages and components keep the same behavior without a six-page rewrite.
+- Reduced `SettingsWindow.qml` from 755 lines to 495 lines. The new `SettingsContext.qml` is 307 lines.
+
+**Live-test status:**
+
+- The user staged a large set of changes and confirmed Cancel reverted all of them.
+- The user staged a second large set and confirmed Apply committed all of them.
+- UI Profiles `Restore My Default` continued to restore general UI, wallpaper, and Hyprland behavior correctly.
+- No parser errors, warnings, or observed regressions remained.
+
+**Permanent rule:** New Settings features must be split according to the current ownership model from their first revision. Do not accumulate new page UI, transaction logic, overlays, scripts, or services back into `SettingsWindow.qml`.
+
+## 2026-07-19 — Settings view-shell extraction and sibling import fix, Revs 27–28 (GPT)
+
+**Context:** After overlays were extracted, the visible window shell still occupied most of `SettingsWindow.qml`.
+
+**What changed:**
+
+- Added `widgets/Settings/components/SettingsView.qml`.
+- Moved the titlebar, sidebar navigation, page heading, page stack, all page instances, scrollbar, pending footer, and overlay mounting into the view component.
+- Reduced `SettingsWindow.qml` from 1,132 lines to 755 lines.
+- Rev 28 fixed QML sibling-component resolution by explicitly importing the components directory as `SettingsComponents` and qualifying `SettingsPendingFooter` and `SettingsOverlays`.
+
+**Live-test status:**
+
+- Rev 27 initially failed to parse with `SettingsOverlays is not a type`.
+- Rev 28 loaded successfully and the extracted Settings view was live-tested without further errors.
+
+## 2026-07-19 — Settings overlay extraction, Rev 26 (GPT)
+
+**Context:** Card-level popup UI remained embedded at the bottom of `SettingsWindow.qml` even though it was visually and behaviorally self-contained.
+
+**What changed:**
+
+- Added `widgets/Settings/components/SettingsOverlays.qml`.
+- Moved the theme dropdown, font-family dropdown, wallpaper-transition dropdown, click-outside dismiss layers, shared preset color picker, and popup positioning/clamping logic into the component.
+- Preserved card-level mounting so popups remain unclipped and keep their existing dismissal behavior.
+- Reduced `SettingsWindow.qml` from 1,487 lines to 1,132 lines.
+
+**Live-test status:**
+
+- Dropdowns, color pickers, Apply, and Cancel were tested successfully.
+
 ## 2026-07-19 — Confirmed profile reload handshake and Displays cleanup, Rev 25 (GPT)
 
 **Context:** Static review identified two worthwhile cleanup targets after Rev 24: UI Profiles waited a fixed 250 ms before reapplying Hyprland, and `SettingsWindow.qml` still carried a large disabled Displays prototype for a service that did not exist.

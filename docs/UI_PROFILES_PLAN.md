@@ -34,8 +34,11 @@ scripts/settings-profile.sh
 widgets/Settings/SettingsTransaction.qml
     reapplyCurrentHyprland() bridge into the normal generator path
 
+widgets/Settings/SettingsContext.qml
+    page-facing restore/reapply bridge and shared Settings facade
+
 widgets/Settings/SettingsWindow.qml
-    page hosting and temporary compatibility wrapper
+    window host and minimal externally required wrapper
 
 core/UserPrefs.qml
     explicit reloadFromDisk() entry point and preferencesReloaded() signal
@@ -96,3 +99,7 @@ A profile should represent more than a color theme: font, scale, bar layout, not
 9. Verify a missing saved wallpaper does not block settings restoration.
 10. Verify SDDM is untouched.
 11. Verify restore performs no timer-based wait and still reapplies Hyprland after `preferencesReloaded`.
+
+## Rev 29 architecture note
+
+UI Profiles remains a page-level feature. New profile functionality belongs in `UiProfilesPage.qml`, dedicated profile components, `settings-profile.sh`, or a future profile service. Do not add named-profile management, profile cards, import/export, or snapshot I/O to `SettingsWindow.qml`. Page-facing calls should go through `SettingsContext.qml`; normal Hyprland regeneration must continue to use `SettingsTransaction.qml`.
