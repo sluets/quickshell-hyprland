@@ -200,6 +200,11 @@ import qs.core
 PanelWindow {
     id: topBar
 
+    // Attachment points for the optional connected notification surface. // GPT Rev 54
+    readonly property alias notificationLeftAnchorItem: notificationLeftAnchor
+    readonly property alias notificationCenterAnchorItem: notificationCenterAnchor
+    readonly property alias notificationRightAnchorItem: notificationRightAnchor
+
     // ---- Which monitor this bar belongs to (see DESIGN NOTES) ----
     // Injected by the Variants block in shell.qml — one bar per
     // non-excluded screen.
@@ -373,6 +378,33 @@ PanelWindow {
             id: wallpaperPicker
             modelData: topBar.modelData
             anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
+        // Invisible anchors for the connected notification surface. They are
+        // separate from launcher/wallpaper anchors so notification placement can
+        // move independently without changing those popouts. // GPT Rev 54
+        Item {
+            id: notificationLeftAnchor
+            width: 1
+            height: Theme.barHeight
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
+        Item {
+            id: notificationCenterAnchor
+            width: 1
+            height: Theme.barHeight
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
+        Item {
+            id: notificationRightAnchor
+            width: 1
+            height: Theme.barHeight
+            anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
         }
 

@@ -84,6 +84,9 @@ Item {
 
     property alias stagedTheme: settingsTransaction.stagedTheme
     property alias stagedFontScale: settingsTransaction.stagedFontScale
+    property alias stagedNotifPresentation: settingsTransaction.stagedNotifPresentation
+    property alias stagedNotifBarPosition: settingsTransaction.stagedNotifBarPosition
+    property alias stagedNotifBarOffsetX: settingsTransaction.stagedNotifBarOffsetX
     property alias stagedNotifShowAppName: settingsTransaction.stagedNotifShowAppName
     property alias stagedNotifIconSize: settingsTransaction.stagedNotifIconSize
     property alias stagedNotifBodyLines: settingsTransaction.stagedNotifBodyLines
@@ -171,6 +174,9 @@ Item {
     readonly property string shownWallpapersPath: settingsTransaction.shownWallpapersPath
     readonly property int shownSettingsWindowDefaultWidth: settingsTransaction.shownSettingsWindowDefaultWidth
     readonly property int shownSettingsWindowDefaultHeight: settingsTransaction.shownSettingsWindowDefaultHeight
+    readonly property string shownNotifPresentation: settingsTransaction.shownNotifPresentation
+    readonly property string shownNotifBarPosition: settingsTransaction.shownNotifBarPosition
+    readonly property int shownNotifBarOffsetX: settingsTransaction.shownNotifBarOffsetX
     readonly property bool shownNotifShowAppName: settingsTransaction.shownNotifShowAppName
     readonly property int shownNotifIconSize: settingsTransaction.shownNotifIconSize
     readonly property int shownNotifBodyLines: settingsTransaction.shownNotifBodyLines
@@ -226,6 +232,15 @@ Item {
     readonly property var launcherPlacementOptions: [
         { value: "attached", text: "Attached" },
         { value: "centered", text: "Centered" }
+    ]
+    readonly property var notifPresentationOptions: [
+        { value: "detached", text: "Detached" },
+        { value: "bar", text: "On Bar" }
+    ]
+    readonly property var notifBarPositionOptions: [
+        { value: "left", text: "Left" },
+        { value: "center", text: "Center" },
+        { value: "right", text: "Right" }
     ]
     readonly property var notifCornerOptions: [
         { value: "top-left", text: "↖" }, { value: "top-right", text: "↗" },

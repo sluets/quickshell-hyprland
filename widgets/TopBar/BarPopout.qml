@@ -207,6 +207,8 @@ PopupWindow {
     // The logical open/closed state. Callers toggle THIS, never
     // `visible` — see DESIGN NOTES.
     property bool open: false
+    // Notifications open unsolicited and should not disappear on an unrelated click. // GPT Rev 52
+    property bool dismissOnOutsideClick: true
     // Children declared inside a BarPopout land in the inner column.
     default property alias content: contentColumn.data
 
@@ -218,7 +220,7 @@ PopupWindow {
     onOpenChanged: {
         if (open) {
             visible = true;
-            focusGrab.active = true;
+            focusGrab.active = root.dismissOnOutsideClick;
             _updateGap();
             revealProgress = 1;
         } else {
@@ -400,7 +402,7 @@ PopupWindow {
     HyprlandFocusGrab {
         id: focusGrab
         windows: [root]
-        onCleared: root.open = false
+        onCleared: if (root.dismissOnOutsideClick) root.open = false
     }
 
     // ---- Scroll down / scroll back up reveal ----

@@ -230,6 +230,9 @@ Singleton {
     // ---- Public read surface — widgets bind to THESE ----
     readonly property string themeName: adapter.themeName
     readonly property real fontScale: adapter.fontScale
+    readonly property string notifPresentation: adapter.notifPresentation
+    readonly property string notifBarPosition: adapter.notifBarPosition
+    readonly property int notifBarOffsetX: adapter.notifBarOffsetX
     readonly property bool notifShowAppName: adapter.notifShowAppName
     readonly property int notifIconSize: adapter.notifIconSize
     readonly property int notifBodyLines: adapter.notifBodyLines
@@ -510,6 +513,20 @@ Singleton {
     function clearLauncherHidden(): void { adapter.launcherHiddenIds = []; }
     function clearLauncherFavorites(): void { adapter.launcherFavoriteIds = []; }
 
+    function setNotifPresentation(v: string): void {
+        if (["detached", "bar"].indexOf(v) !== -1)
+            adapter.notifPresentation = v;
+    }
+
+    function setNotifBarPosition(v: string): void {
+        if (["left", "center", "right"].indexOf(v) !== -1)
+            adapter.notifBarPosition = v;
+    }
+
+    function setNotifBarOffsetX(v: int): void {
+        adapter.notifBarOffsetX = Math.min(2000, Math.max(-2000, v));
+    }
+
     function setNotifShowAppName(v: bool): void {
         adapter.notifShowAppName = v;
     }
@@ -669,6 +686,9 @@ Singleton {
         // maintainer's own hand-edit (THOUGHTS.txt: the app name
         // shared the summary's row and truncated long song titles).
         // Other defaults match the previously hardcoded card values.
+        property string notifPresentation: "detached"
+        property string notifBarPosition: "right"
+        property int notifBarOffsetX: 0
         property bool notifShowAppName: false
         property int notifIconSize: 48
         property int notifBodyLines: 4

@@ -9,6 +9,9 @@ Item {
     // ---- Staged (uncommitted) values. null = not staged. ----
     property var stagedTheme: null
     property var stagedFontScale: null
+    property var stagedNotifPresentation: null
+    property var stagedNotifBarPosition: null
+    property var stagedNotifBarOffsetX: null
     property var stagedNotifShowAppName: null
     property var stagedNotifIconSize: null
     property var stagedNotifBodyLines: null
@@ -87,6 +90,9 @@ Item {
     readonly property string shownWallpapersPath: stagedWallpapersPath !== null ? stagedWallpapersPath : UserPrefs.wallpapersPath
     readonly property int shownSettingsWindowDefaultWidth: stagedSettingsWindowDefaultWidth !== null ? stagedSettingsWindowDefaultWidth : UserPrefs.settingsWindowDefaultWidth
     readonly property int shownSettingsWindowDefaultHeight: stagedSettingsWindowDefaultHeight !== null ? stagedSettingsWindowDefaultHeight : UserPrefs.settingsWindowDefaultHeight
+    readonly property string shownNotifPresentation: stagedNotifPresentation !== null ? stagedNotifPresentation : UserPrefs.notifPresentation
+    readonly property string shownNotifBarPosition: stagedNotifBarPosition !== null ? stagedNotifBarPosition : UserPrefs.notifBarPosition
+    readonly property int shownNotifBarOffsetX: stagedNotifBarOffsetX !== null ? stagedNotifBarOffsetX : UserPrefs.notifBarOffsetX
     readonly property bool shownNotifShowAppName: stagedNotifShowAppName !== null ? stagedNotifShowAppName : UserPrefs.notifShowAppName
     readonly property int shownNotifIconSize: stagedNotifIconSize !== null ? stagedNotifIconSize : UserPrefs.notifIconSize
     readonly property int shownNotifBodyLines: stagedNotifBodyLines !== null ? stagedNotifBodyLines : UserPrefs.notifBodyLines
@@ -198,6 +204,12 @@ Item {
             c.push({ key: "wallpaperPickerOffsetX", label: "Wallpaper Picker Offset X", from: UserPrefs.wallpaperPickerOffsetX + " px", to: stagedWallpaperPickerOffsetX + " px", value: stagedWallpaperPickerOffsetX });
         if (stagedWallpaperPickerOffsetY !== null && stagedWallpaperPickerOffsetY !== UserPrefs.wallpaperPickerOffsetY)
             c.push({ key: "wallpaperPickerOffsetY", label: "Wallpaper Picker Offset Y", from: UserPrefs.wallpaperPickerOffsetY + " px", to: stagedWallpaperPickerOffsetY + " px", value: stagedWallpaperPickerOffsetY });
+        if (stagedNotifPresentation !== null && stagedNotifPresentation !== UserPrefs.notifPresentation)
+            c.push({ key: "notifPresentation", label: "Notification Presentation", from: UserPrefs.notifPresentation, to: stagedNotifPresentation, value: stagedNotifPresentation });
+        if (stagedNotifBarPosition !== null && stagedNotifBarPosition !== UserPrefs.notifBarPosition)
+            c.push({ key: "notifBarPosition", label: "Notification Bar Position", from: UserPrefs.notifBarPosition, to: stagedNotifBarPosition, value: stagedNotifBarPosition });
+        if (stagedNotifBarOffsetX !== null && stagedNotifBarOffsetX !== UserPrefs.notifBarOffsetX)
+            c.push({ key: "notifBarOffsetX", label: "Notification Bar Offset X", from: UserPrefs.notifBarOffsetX + " px", to: stagedNotifBarOffsetX + " px", value: stagedNotifBarOffsetX });
         if (stagedNotifShowAppName !== null
                 && stagedNotifShowAppName !== UserPrefs.notifShowAppName)
             c.push({ key: "notifShowAppName", label: "Notif App Name",
@@ -311,6 +323,9 @@ Item {
         stagedBarPaddingSideOverride = null;
         stagedBarPaddingBottomOverride = null;
         stagedFontFamilyOverride = null;
+        stagedNotifPresentation = null;
+        stagedNotifBarPosition = null;
+        stagedNotifBarOffsetX = null;
         stagedNotifShowAppName = null;
         stagedNotifIconSize = null;
         stagedNotifBodyLines = null;

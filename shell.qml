@@ -213,6 +213,19 @@ Scope {
         return fallback;
     }
 
+    // Bar anchor used by the single notification renderer. It follows the
+    // focused monitor and the saved left/center/right attachment setting. // GPT Rev 54
+    readonly property var notificationAnchorItem: {
+        const bar = shellScope.barForFocused();
+        if (!bar)
+            return null;
+        switch (UserPrefs.notifBarPosition) {
+        case "left": return bar.notificationLeftAnchorItem;
+        case "center": return bar.notificationCenterAnchorItem;
+        default: return bar.notificationRightAnchorItem;
+        }
+    }
+
     function toggleLauncher(): void {
         const target = shellScope.barForFocused();
         for (let i = 0; i < bars.instances.length; i++) {
@@ -384,7 +397,7 @@ Scope {
     // notification daemon. The NotificationServer itself lives in
     // services/Notifs.qml (singleton — the D-Bus name can only have
     // one owner).
-    NotificationPopups {}
+    NotificationPopups { anchorItem: shellScope.notificationAnchorItem }
 
     // Power screen — fullscreen dimmed overlay, single instance (same
     // "default output only" limitation as VolumeOsd — see its DESIGN

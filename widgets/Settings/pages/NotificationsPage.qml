@@ -19,6 +19,66 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: Theme.spacingMedium
 
+    Text {
+        text: "Presentation"
+        color: Theme.colorForeground
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        font.bold: true
+    }
+
+    SettingsComponents.OptionPickerRow {
+        label: "Style"
+        options: settingsRoot.notifPresentationOptions
+        shownValue: settingsRoot.shownNotifPresentation
+        staged: settingsRoot.stagedNotifPresentation !== null
+        onPicked: value => settingsRoot.stagedNotifPresentation = value
+    }
+
+    SettingsComponents.OptionPickerRow {
+        visible: settingsRoot.shownNotifPresentation === "bar"
+        label: "Bar Position"
+        options: settingsRoot.notifBarPositionOptions
+        shownValue: settingsRoot.shownNotifBarPosition
+        staged: settingsRoot.stagedNotifBarPosition !== null
+        onPicked: value => settingsRoot.stagedNotifBarPosition = value
+    }
+
+    ColumnLayout {
+        visible: settingsRoot.shownNotifPresentation === "bar"
+        Layout.fillWidth: true
+        spacing: Theme.spacingSmall
+
+        Text {
+            text: "Horizontal Offset"
+            color: settingsRoot.stagedNotifBarOffsetX !== null ? Theme.colorAccent : Theme.colorForeground
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+        }
+
+        SettingsComponents.StepperRow {
+            label: ""
+            labelColumnWidth: 0
+            valueColumnWidth: 72
+            valueText: settingsRoot.shownNotifBarOffsetX + " px"
+            staged: settingsRoot.stagedNotifBarOffsetX !== null
+            onMinus: settingsRoot.stagedNotifBarOffsetX =
+                Math.max(-2000, settingsRoot.shownNotifBarOffsetX - 5)
+            onPlus: settingsRoot.stagedNotifBarOffsetX =
+                Math.min(2000, settingsRoot.shownNotifBarOffsetX + 5)
+        }
+    }
+
+    Text {
+        visible: settingsRoot.shownNotifPresentation === "bar"
+        text: "Offset is added after the safe edge inset. Extreme values may intentionally clip the connected fillet."
+        color: Theme.colorMuted
+        font.family: Theme.fontFamily
+        font.pixelSize: Math.round(Theme.fontSize * 0.8)
+        wrapMode: Text.Wrap
+        Layout.fillWidth: true
+    }
+
     SettingsComponents.ToggleSettingRow {
         label: "Show App Name"
         value: settingsRoot.shownNotifShowAppName
@@ -57,6 +117,7 @@ ColumnLayout {
     }
 
     Text {
+        visible: settingsRoot.shownNotifPresentation === "detached"
         text: "Position"
         Layout.topMargin: Theme.spacingLarge
         color: Theme.colorForeground
@@ -66,6 +127,7 @@ ColumnLayout {
     }
 
     SettingsComponents.OptionPickerRow {
+        visible: settingsRoot.shownNotifPresentation === "detached"
         label: "Corner"
         options: settingsRoot.notifCornerOptions
         shownValue: settingsRoot.shownNotifCorner
@@ -74,6 +136,7 @@ ColumnLayout {
     }
 
     SettingsComponents.StepperRow {
+        visible: settingsRoot.shownNotifPresentation === "detached"
         label: "Offset X"
         valueText: settingsRoot.shownNotifOffsetX + " px"
         staged: settingsRoot.stagedNotifOffsetX !== null
@@ -84,6 +147,7 @@ ColumnLayout {
     }
 
     SettingsComponents.StepperRow {
+        visible: settingsRoot.shownNotifPresentation === "detached"
         label: "Offset Y"
         valueText: settingsRoot.shownNotifOffsetY + " px"
         staged: settingsRoot.stagedNotifOffsetY !== null
