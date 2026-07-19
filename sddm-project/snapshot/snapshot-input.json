@@ -4,14 +4,14 @@
   "clockFormat": "h:mm AP",
   "dateFormat": "dddd, MMMM d",
   "colors": {
-    "background": "#1E1E2E",
-    "foreground": "#CDD6F4",
-    "accent": "#CBA6F7",
-    "urgent": "#F38BA8",
-    "muted": "#6C7086",
-    "surface": "#11111B",
-    "hover": "#313244",
-    "border": "#CBA6F7"
+    "background": "#282828",
+    "foreground": "#EBDBB2",
+    "accent": "#FE8019",
+    "urgent": "#FB4934",
+    "muted": "#928374",
+    "surface": "#1D2021",
+    "hover": "#3C3836",
+    "border": "#FE8019"
   },
   "fontFamily": "CaskaydiaCove Nerd Font",
   "radius": 6,
@@ -43,7 +43,7 @@
   },
   "themeSelection": {
     "mode": "current",
-    "name": "CatppuccinMochaTheme"
+    "name": "GruvboxTheme"
   },
   "wallpaperSelection": {
     "mode": "current",
