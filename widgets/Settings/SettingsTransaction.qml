@@ -17,6 +17,7 @@ Item {
     property var stagedHyprGapsOut: null
     property var stagedHyprBorderSize: null
     property var stagedHyprRounding: null
+    property var stagedHyprAnimationPreset: null
     property var stagedHyprActiveBorderUseThemeColor: null
     property var stagedHyprActiveBorderCustomColor: null
     property var stagedBarBorderWidthOverride: null
@@ -80,6 +81,7 @@ Item {
     readonly property int shownHyprGapsOut: stagedHyprGapsOut !== null ? stagedHyprGapsOut : UserPrefs.hyprGapsOut
     readonly property int shownHyprBorderSize: stagedHyprBorderSize !== null ? stagedHyprBorderSize : UserPrefs.hyprBorderSize
     readonly property int shownHyprRounding: stagedHyprRounding !== null ? stagedHyprRounding : UserPrefs.hyprRounding
+    readonly property string shownHyprAnimationPreset: stagedHyprAnimationPreset !== null ? stagedHyprAnimationPreset : UserPrefs.hyprAnimationPreset
     readonly property bool shownHyprActiveBorderUseThemeColor: stagedHyprActiveBorderUseThemeColor !== null ? stagedHyprActiveBorderUseThemeColor : UserPrefs.hyprActiveBorderUseThemeColor
     readonly property string shownHyprActiveBorderCustomColor: stagedHyprActiveBorderCustomColor !== null ? stagedHyprActiveBorderCustomColor : UserPrefs.hyprActiveBorderCustomColor
     readonly property string shownNotifCorner: stagedNotifCorner !== null ? stagedNotifCorner : UserPrefs.notifCorner
@@ -182,7 +184,8 @@ Item {
             ["hyprGapsIn", "Gaps In", UserPrefs.hyprGapsIn, stagedHyprGapsIn],
             ["hyprGapsOut", "Gaps Out", UserPrefs.hyprGapsOut, stagedHyprGapsOut],
             ["hyprBorderSize", "Border Size", UserPrefs.hyprBorderSize, stagedHyprBorderSize],
-            ["hyprRounding", "Rounding", UserPrefs.hyprRounding, stagedHyprRounding]
+            ["hyprRounding", "Rounding", UserPrefs.hyprRounding, stagedHyprRounding],
+            ["hyprAnimationPreset", "Animation Preset", UserPrefs.hyprAnimationPreset, stagedHyprAnimationPreset]
         ];
         for (let i = 0; i < hyprPairs.length; i++) {
             const [key, label, live, staged] = hyprPairs[i];
@@ -267,6 +270,7 @@ Item {
         stagedHyprGapsOut = null;
         stagedHyprBorderSize = null;
         stagedHyprRounding = null;
+        stagedHyprAnimationPreset = null;
         stagedHyprActiveBorderUseThemeColor = null;
         stagedHyprActiveBorderCustomColor = null;
         stagedBarBorderWidthOverride = null;
@@ -346,6 +350,7 @@ Item {
             { key: "hyprGapsOut", value: UserPrefs.hyprGapsOut },
             { key: "hyprBorderSize", value: UserPrefs.hyprBorderSize },
             { key: "hyprRounding", value: UserPrefs.hyprRounding },
+            { key: "hyprAnimationPreset", value: UserPrefs.hyprAnimationPreset },
             { key: "hyprActiveBorderUseThemeColor", value: UserPrefs.hyprActiveBorderUseThemeColor },
             { key: "hyprActiveBorderCustomColor", value: UserPrefs.hyprActiveBorderCustomColor }
         ];

@@ -257,6 +257,7 @@ Singleton {
     readonly property int hyprGapsOut: adapter.hyprGapsOut
     readonly property int hyprBorderSize: adapter.hyprBorderSize
     readonly property int hyprRounding: adapter.hyprRounding
+    readonly property string hyprAnimationPreset: adapter.hyprAnimationPreset
     // Hyprland active-window border color (settings window, Hyprland
     // page, 2026-07-12) — same use-theme-or-custom-hex pattern as
     // barBorderUseThemeColor/barBorderCustomColor. "Theme" here means
@@ -321,6 +322,11 @@ Singleton {
 
     function setHyprRounding(v: int): void {
         adapter.hyprRounding = Math.min(30, Math.max(0, v));
+    }
+
+    function setHyprAnimationPreset(v: string): void {
+        const allowed = ["off", "snappy", "smooth", "bouncy"];
+        adapter.hyprAnimationPreset = allowed.indexOf(v) >= 0 ? v : "smooth";
     }
 
     function setHyprActiveBorderUseThemeColor(v: bool): void {
@@ -626,6 +632,9 @@ Singleton {
         property int hyprGapsOut: 10
         property int hyprBorderSize: 2
         property int hyprRounding: 10
+        // Hyprland animation preset. "smooth" reproduces the pre-managed
+        // animation block from user/look.lua.  // GPT Rev 30
+        property string hyprAnimationPreset: "smooth"
         // Hyprland active border color (Hyprland page, 2026-07-12).
         // Defaults to "follow theme" — true/empty custom means this
         // pref writes nothing different until someone turns it on;

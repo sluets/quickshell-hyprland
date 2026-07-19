@@ -1,3 +1,45 @@
+## 2026-07-19 — Hyprland animation presets stabilized, Revs 30–39 (GPT)
+
+**Context:** The first animation-preset implementation transferred animation ownership from `user/look.lua` into a manager-owned generated file. Live testing exposed several Hyprland Lua API, quoting, load-order, and reload-strategy mistakes before the safe final path was established.
+
+**Final implementation:**
+
+- Added staged presets: **Off**, **Snappy**, **Smooth**, and **Bouncy**.
+- Added persisted `UserPrefs.hyprAnimationPreset` state and full Apply/Cancel/UI Profiles integration.
+- Added `~/.config/hypr/generated/animations.lua` to the normal managed-output set.
+- Added `scripts/install-hypr-animation-presets.sh` for the one-time ownership migration from the old hand-owned animation block in `user/look.lua`.
+- `Smooth` preserves the previous hand-tuned baseline.
+- `Snappy` uses shorter durations, `Bouncy` uses a visibly lower-damped spring, and `Off` disables animations.
+- The final safe Apply flow is:
+
+  ```text
+  write generated/appearance.lua
+  write generated/animations.lua
+  hyprctl reload
+  ```
+
+- A normal reload applies animation changes safely and can be repeated rapidly without crashing Hyprland.
+
+**Failed approaches and fixes:**
+
+- Rev 30 generated `require("hyprlang")`; this module is not loadable in the current Hyprland Lua environment. Generated files must use the existing global `hl` API directly.
+- Rev 31 exposed invalid color generation in `appearance.lua`: `rgba(...)` is not a callable Lua function here. Colors must be emitted as strings such as `"rgba(33ccffee)"`, and gradients must use the proper table shape.
+- Rev 32 then exposed fragile nested QML/shell quoting. Rev 33 replaced quoted shell-variable assembly with direct heredoc generation for solid and gradient Lua blocks.
+- Rev 34 corrected preset semantics and ownership order: Hyprland animation speed is duration in deciseconds, and the generated animation file must load after `user.look` so hand-owned values cannot override it.
+- Rev 35 used `hyprctl reload full-reset` to force a fresh Lua context. Repeated Applies reliably crashed Hyprland.
+- Rev 36 attempted debouncing/cooldowns around `full-reset`; animation changes could still crash the compositor.
+- Revs 37–38 attempted live Lua evaluation with `hyprctl eval`; the first version also contained a QML parser error from backticks inside a backtick-delimited string, and the runtime `dofile` command syntax was invalid.
+- Rev 39 removed both `full-reset` and live-eval experiments and adopted the ordinary `hyprctl reload` path that the user confirmed works.
+
+**Live-test status:**
+
+- Gaps, borders, rounding, and animation presets all apply correctly.
+- Multiple back-to-back animation Applies no longer crash Hyprland.
+- No manual reload is required.
+- The generated appearance and animation files rebuild correctly.
+
+**Permanent safety rule:** Never use `hyprctl reload full-reset` from the Settings Apply path. Do not use live `eval`/`dofile` for generated animation updates. Write both generated files completely, then perform one ordinary `hyprctl reload`.
+
 ## 2026-07-19 — Settings context/facade extraction, Rev 29 (GPT)
 
 **Context:** After Rev 27 moved the visible Settings shell out of `SettingsWindow.qml`, the window still republished most of the transaction and page-facing API. The final major cut moved that compatibility layer into a dedicated context object so the window could become a true host.

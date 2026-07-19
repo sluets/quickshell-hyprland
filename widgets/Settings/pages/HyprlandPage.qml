@@ -83,6 +83,39 @@ ColumnLayout {
             Math.min(30, settingsRoot.shownHyprRounding + 1)
     }
 
+
+    Text {
+        text: "Animation Preset"
+        color: Theme.colorForeground
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        font.bold: true
+    }
+
+    SettingsComponents.OptionPickerRow {
+        label: "Preset"
+        options: [
+            { text: "Off", value: "off" },
+            { text: "Snappy", value: "snappy" },
+            { text: "Smooth", value: "smooth" },
+            { text: "Bouncy", value: "bouncy" }
+        ]
+        shownValue: settingsRoot.shownHyprAnimationPreset
+        staged: settingsRoot.stagedHyprAnimationPreset !== null
+        onPicked: value => settingsRoot.stagedHyprAnimationPreset = value
+    }
+
+    Text {
+        text: "Smooth matches the original hand-owned animation block. "
+            + "Requires the one-time animation ownership migration documented "
+            + "in docs/HYPR_ANIMATIONS_PLAN.md."
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        color: Theme.colorMuted
+        font.family: Theme.fontFamily
+        font.pixelSize: Math.round(Theme.fontSize * 0.8)
+    }
+
     // GPT: Theme color here means the shell accent color. Hyprland does not
     // know about the shell theme directly; ConfigManager writes the resolved
     // color into the generated Hyprland appearance file.

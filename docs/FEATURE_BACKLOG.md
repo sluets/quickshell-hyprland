@@ -1,55 +1,36 @@
 =================================================================
-CURRENT PRIORITY ORDER — 2026-07-18 (GPT)
+CURRENT PRIORITY ORDER — 2026-07-19 (GPT)
 =================================================================
 
-SDDM current status:
-- Phases 0–4 complete.
-- Temporary unsaved preview, clock/login offsets, Reset buttons, aligned controls, and manual hash-aware Apply complete.
-- Clock scale (50–200%) is built and under live test.
-- Real X11 greeter monitor order and 144 Hz modes are fixed through the machine-specific Xsetup script.
-- Next optional SDDM controls: login-panel width/scale and SDDM-only typography.
+Completed structural checkpoints:
+- Settings monolith split complete through Rev 29.
+- UI Profiles restore point complete and live-tested through Rev 25.
+- Hyprland animation presets complete and live-tested through Rev 39.
+- Safe animation Apply uses generated files plus one ordinary `hyprctl reload`;
+  `full-reset` and live-eval approaches are permanently rejected.
 
-
-1. Continue splitting the Settings menu one page/component at a time.
-   - Rev 2 HyprlandPage extraction is live-tested and approved.
-   - Preserve behavior during each extraction.
-   - Test each page before continuing.
-
-2. Make requested Settings adjustments and fix known bugs one at a time.
-   - Border-color coupling fixed and live-tested.
-   - Desktop clock anchor/disappearing and center-offset bugs fixed and live-tested.
-   - Desktop clock weather icon, temperature, scale, shadow strength, and shadow X/Y controls completed.
-   - Hyprland setup warning now uses a machine-specific readiness check.
-   - Automatic backup pruning now runs silently in the background.
-   - Settings window now requires a documented Hyprland float/center rule on every machine.
-
-3. Before adding major features, perform a controlled structural cleanup.
-   - Rename vague or inconsistent files/components.
-   - Split oversized files by responsibility.
-   - Establish predictable folders and naming.
-   - Add small folder README maps where useful.
-   - Do not refactor everything at once.
-
-4. Add automated smoke checks and QML tooling.
+1. Add automated smoke checks and QML tooling.
    - `.qmlls.ini` setup instructions and `.gitignore`.
    - QML parse/import checks.
    - Missing-file checks.
    - Theme-contract validation.
    - Optional runtime log scanning.
 
-5. Reduce duplicated settings plumbing with a central schema/model where
-   practical, then move staging/diff/apply orchestration toward a
-   `SettingsStore`-style component.
+2. Split `ConfigManager.qml` responsibilities and externalize long embedded
+   shell scripts where practical. Preserve the tested generated-file contracts.
 
-6. Split `ConfigManager.qml` responsibilities, externalize long shell
-   scripts, add managed-path allowlisting, and improve explicit service
-   state handling.
+3. Continue small, low-risk requested features.
+   - Launcher width, maximum results, and initial app-list behavior.
+   - Power menu Lock and Suspend.
+   - Additional themes.
 
-7. Resume deferred feature work only after the structure is safer.
-   - Hyprland animation presets, beginning with Phase 0 ownership decisions.
-   - MPD local-library music client plan.
+4. Resume larger deferred features deliberately.
+   - Named UI Profiles / Save As.
+   - MPD local-library music client.
+   - Centered launcher and wallpaper picker options.
+   - Displays page only after a real display service and timed rollback exist.
 
-8. Continue documentation cleanup.
+5. Continue documentation cleanup.
    - Remove or archive stale one-time migration/session documents.
    - Consolidate overlapping docs.
    - GPT signs documentation and in-file comments it adds or changes.
@@ -129,7 +110,7 @@ SMALL, READY TO BUILD (recipe exists, low risk)
 BIGGER — HAS ITS OWN PLAN DOC, START THERE
 =================================================================
 
-- Hyprland animation control — docs/HYPR_ANIMATIONS_PLAN.md. Phase 0
+- Hyprland animation control — docs/HYPR_ANIMATIONS_PLAN.md. Rev 30
   is a conversation (confirm ownership-transfer + preset names), not
   code — can happen anytime, doesn't need the machine.
 - SDDM follow-up is now optional only: installed-status detail, deactivate/rollback UI, or a safely designed machine-specific monitor-layout UI. The major visual customization block is complete. See docs/SDDM_THEME_PLAN.md.

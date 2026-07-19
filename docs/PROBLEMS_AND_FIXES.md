@@ -1,3 +1,51 @@
+## 2026-07-19 — Animation preset Apply crashed Hyprland because full-reset was used
+
+**Trying to do:** Apply manager-generated Hyprland animation presets immediately after writing `generated/animations.lua`.
+
+**What went wrong:** `hyprctl reload full-reset` was added to force Hyprland to rebuild its Lua config context. Repeating animation Applies four or five times reliably crashed the compositor. A debounce and cooldown reduced reset frequency but did not make the approach safe.
+
+**What fixed it:** Remove `full-reset` entirely. The stable path writes `generated/appearance.lua` and `generated/animations.lua`, then runs one ordinary `hyprctl reload`. The user tested repeated back-to-back animation Applies without another crash.
+
+**Don't try this instead (looks right, isn't):** Do not call `full-reset` from ordinary Settings Apply, even only for animation changes, and do not try to make it safe with timers or cooldowns. It destroys and rebuilds the compositor's Lua config context and is too disruptive for interactive settings changes.
+
+---
+
+## 2026-07-19 — Generated Hyprland Lua used the wrong module and color syntax
+
+**Trying to do:** Generate standalone `appearance.lua` and `animations.lua` files from Quickshell.
+
+**What went wrong:** The first generator emitted `require("hyprlang")`, but the current Hyprland Lua setup exposes the global `hl` object rather than a loadable `hyprlang` module. A later generator emitted `rgba(0x...)` as though `rgba` were a Lua function, causing `attempt to call a nil value (global 'rgba')`.
+
+**What fixed it:** Generated files now use `hl.config()`, `hl.curve()`, and `hl.animation()` directly. Colors are emitted as strings such as `"rgba(33ccffee)"`; gradients use a `{ colors = { ... }, angle = ... }` table.
+
+**Don't try this instead (looks right, isn't):** Do not infer Lua API syntax from the old text-config syntax or from another Hyprland binding. Verify the exact working style already used by this config before generating new Lua.
+
+---
+
+## 2026-07-19 — Nested QML and shell quoting broke the appearance generator
+
+**Trying to do:** Build a shell variable containing Lua color/gradient code, then insert it into a generated heredoc.
+
+**What went wrong:** Quotes were consumed across QML's JavaScript string, the shell command string, and the shell variable itself. `/bin/sh` received malformed syntax near `(` and Settings Apply failed before rewriting the broken file.
+
+**What fixed it:** Stop assembling nested quoted Lua in a shell variable. Generate the solid and gradient Lua blocks directly in separate heredoc branches.
+
+**Don't try this instead (looks right, isn't):** Avoid three-layer quoting for generated code. Prefer fixed-shape heredocs with values substituted only at simple scalar positions.
+
+---
+
+## 2026-07-19 — Live animation eval experiment failed and briefly broke QML parsing
+
+**Trying to do:** Avoid compositor reloads by executing the generated animation file through `hyprctl eval`.
+
+**What went wrong:** Backticks used as Markdown-style emphasis inside a QML backtick-delimited shell string terminated the QML string early, producing `Expected token ','`. After that parser fix, the attempted `dofile` eval syntax still produced `unexpected symbol near '/'` and did not apply the settings.
+
+**What fixed it:** Remove the live-eval path completely and use the tested ordinary `hyprctl reload`.
+
+**Don't try this instead (looks right, isn't):** Do not put unescaped backticks inside QML template strings, and do not introduce a live-eval execution path when a normal reload already applies the generated file safely.
+
+---
+
 ## 2026-07-19 — Extracted Settings view failed because sibling QML types were not resolved
 
 **Trying to do:** Move the visible Settings shell into `components/SettingsView.qml` while continuing to use sibling components such as `SettingsOverlays.qml` and `SettingsPendingFooter.qml`.

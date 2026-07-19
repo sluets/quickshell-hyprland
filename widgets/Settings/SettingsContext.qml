@@ -92,6 +92,7 @@ Item {
     property alias stagedHyprGapsOut: settingsTransaction.stagedHyprGapsOut
     property alias stagedHyprBorderSize: settingsTransaction.stagedHyprBorderSize
     property alias stagedHyprRounding: settingsTransaction.stagedHyprRounding
+    property alias stagedHyprAnimationPreset: settingsTransaction.stagedHyprAnimationPreset
     property alias stagedHyprActiveBorderUseThemeColor: settingsTransaction.stagedHyprActiveBorderUseThemeColor
     property alias stagedHyprActiveBorderCustomColor: settingsTransaction.stagedHyprActiveBorderCustomColor
     property alias stagedBarBorderWidthOverride: settingsTransaction.stagedBarBorderWidthOverride
@@ -154,6 +155,7 @@ Item {
     readonly property int shownHyprGapsOut: settingsTransaction.shownHyprGapsOut
     readonly property int shownHyprBorderSize: settingsTransaction.shownHyprBorderSize
     readonly property int shownHyprRounding: settingsTransaction.shownHyprRounding
+    readonly property string shownHyprAnimationPreset: settingsTransaction.shownHyprAnimationPreset
     readonly property bool shownHyprActiveBorderUseThemeColor: settingsTransaction.shownHyprActiveBorderUseThemeColor
     readonly property string shownHyprActiveBorderCustomColor: settingsTransaction.shownHyprActiveBorderCustomColor
     readonly property string shownNotifCorner: settingsTransaction.shownNotifCorner

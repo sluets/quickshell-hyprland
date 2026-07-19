@@ -8,9 +8,9 @@ docs/HYPR_ANIMATIONS_PLAN.md
 PURPOSE
 =================================================================
 
-Planning doc for exposing Hyprland animation control in the settings
-window. Not started — this is the plan to start FROM, same role as
-docs/SDDM_THEME_PLAN.md played before that build.
+Implementation and expansion plan for Hyprland animation presets in the
+settings window. Option A is complete and live-tested through Rev 39 with
+four staged presets and a manager-owned generated/animations.lua.
 
 Unlike SDDM, this ISN'T a separate project — it's a new page (or new
 section of the Hyprland page) in the existing settings window,
@@ -105,7 +105,7 @@ it — worth keeping that door open when A's data shape gets designed.
 PHASES (Option A track)
 =================================================================
 
----- Phase 0 — Ownership decision + ask ----
+---- Phase 0 — Ownership decision + ask (COMPLETE) ----
 
 Goal: get explicit sign-off before any code, same as Q8 required for
 a single key.
@@ -122,7 +122,7 @@ a single key.
   source (or a fresh baseline) — don't invent numbers nobody asked
   for.
 
----- Phase 1 — Preset table + generation script ----
+---- Phase 1 — Preset table + generation script (IMPLEMENTED, UNTESTED) ----
 
 Goal: a ConfigManager-generated animations.lua that reproduces
 CURRENT behavior exactly under the default preset — no visual change
@@ -138,7 +138,7 @@ until someone picks a different one.
   against copies, diff the output against current look.lua for the
   baseline preset BEFORE it ever touches a real config).
 
----- Phase 2 — UserPrefs + settings window UI ----
+---- Phase 2 — UserPrefs + settings window UI (IMPLEMENTED, UNTESTED) ----
 
 Goal: a working staged/Apply control, same shape as every other
 Hyprland-page setting.
@@ -152,13 +152,13 @@ Hyprland-page setting.
   CATCH above), NOT a plain UserPrefs JSON write — this is the one
   place this phase differs from a typical settings-window addition.
 
----- Phase 3 — Live test ----
+---- Phase 3 — Live test (COMPLETE) ----
 
-Goal: same live-confirmation discipline as every other phase in this
-project — nothing here is "done" until it's been watched actually
-happen on the real machine, preset-by-preset, including confirming a
-DELIBERATELY malformed preset value doesn't wedge Hyprland (the
-revert-timer's whole job).
+Result: all four presets were applied on the real machine, repeated rapid
+Applies were tested, and the final normal-reload path did not crash Hyprland.
+Malformed-generation experiments exposed API and quoting failures during
+Revs 30–38; those are documented in PROBLEMS_AND_FIXES.md. The final design
+does not use a countdown revert window or full Lua-context reset.
 
 =================================================================
 OUT OF SCOPE FOR NOW
@@ -179,3 +179,47 @@ REVISION HISTORY
 
 2026-07-13  Initial plan. Nothing built yet — start at Phase 0 (ask,
             don't assume, on the ownership-transfer question).
+
+
+=================================================================
+REV 30 IMPLEMENTATION NOTES
+=================================================================
+
+- Presets: Off, Snappy, Smooth, Bouncy.
+- Smooth is the compatibility baseline and reproduces the previous
+  hand-owned user/look.lua values exactly.
+- The generated file is ~/.config/hypr/generated/animations.lua.
+- scripts/install-hypr-animation-presets.sh performs the one-time ownership
+  migration with timestamped backups: it adds require("generated.animations")
+  to hyprland.lua and removes the old curve/animation block from user/look.lua.
+- The preset is part of the normal staged Apply/Cancel transaction and UI
+  Profiles restore path.
+- generated/animations.lua is part of ConfigManager.managedPaths.
+- Rev 30 uses the existing pre-Apply snapshot and fixed-shape generator. The
+  plan's generic countdown revert window remains available if live testing
+  demonstrates that animation-file writes need it.
+
+=================================================================
+FINAL IMPLEMENTATION STATUS — REVS 30–39
+=================================================================
+
+- Option A is complete: Off, Snappy, Smooth, Bouncy.
+- Smooth preserves the old user/look.lua baseline.
+- Animation ownership lives in generated/animations.lua.
+- The migration script removes the old hand-owned animation block and ensures
+  generated animations load after user.look.
+- Hyprland Lua speed values are durations in deciseconds; lower values are faster.
+- Generated files use the global hl API directly. Do not require("hyprlang").
+- Hyprland color values are strings (for example "rgba(33ccffee)").
+- Solid and gradient appearance code is emitted through direct heredoc branches,
+  not nested shell-string assembly.
+- Safe final Apply path: write appearance.lua, write animations.lua, then run
+  one ordinary hyprctl reload.
+- Never use hyprctl reload full-reset from Settings Apply. Repeated full resets
+  crashed Hyprland even with debounce/cooldown logic.
+- Never use hyprctl eval/dofile for this feature. The experiment was removed.
+- UI Profiles includes the persisted animation preset and reuses the normal
+  Hyprland regeneration path after restore.
+
+Future expansion remains Option B only: advanced per-leaf editing and optional
+curve controls layered on top of the stable preset system.

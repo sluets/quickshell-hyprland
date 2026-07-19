@@ -424,16 +424,42 @@ the staged-or-live `shown...` values used by controls, pending-change derivation
 Hyprland active-border snapshot from the complete staged state before persistence,
 which avoids page-local apply-order races.
 
-`SettingsWindow.qml` remains the application shell: window lifecycle and preferred
-size, sidebar/navigation, page hosting, shared popup hosting, and wiring the
-transaction controller to pages and `SettingsPendingFooter.qml`. For Rev 21 it
-retains compatibility aliases with the old property/function names. Those aliases
-are deliberate migration scaffolding; remove them only in a later, separately
-tested revision that updates every page consumer.
+`SettingsWindow.qml` is now only the window host: lifecycle, preferred geometry,
+open/close/toggle behavior, native movement, and mounting `SettingsContext` plus
+`SettingsView`. Page-facing aliases and shared state live in `SettingsContext.qml`;
+staged/diff/apply logic lives in `SettingsTransaction.qml`; visible shell UI lives
+in `components/SettingsView.qml`; overlays live in `components/SettingsOverlays.qml`.
+New Settings features must follow that split from their first revision.
 
 The SDDM page keeps its separate preview/install workflow. Do not silently fold
 root-owned SDDM installation into the normal desktop Apply transaction.
 
+
+## Hyprland animation preset architecture (Revs 30–39)
+
+Animation ownership is manager-owned, not hand-owned:
+
+- `widgets/Settings/pages/HyprlandPage.qml` owns the preset control.
+- `SettingsTransaction.qml` owns staged/shown/diff/discard/apply behavior.
+- `SettingsContext.qml` forwards the page-facing state.
+- `core/UserPrefs.qml` persists the selected preset.
+- `services/ConfigManager.qml` writes both `generated/appearance.lua` and `generated/animations.lua`.
+- `scripts/install-hypr-animation-presets.sh` performs the one-time ownership migration out of `user/look.lua`.
+
+The generated animation file must load after `user.look`, so old hand-owned values
+cannot override it. The normal Apply sequence is intentionally simple and safe:
+
+```text
+write appearance.lua completely
+write animations.lua completely
+hyprctl reload
+```
+
+Do not use `hyprctl reload full-reset`; repeated full context resets crashed
+Hyprland during live testing. Do not use `hyprctl eval`/`dofile`; that experiment
+was unnecessary and unreliable. Generated Lua uses the existing global `hl` API
+directly, and color values are strings such as `"rgba(33ccffee)"`, not Lua
+function calls.
 
 ## UI Profiles restore-point architecture (Rev 22–24)
 

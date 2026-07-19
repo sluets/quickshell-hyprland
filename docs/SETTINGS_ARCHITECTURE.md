@@ -1,6 +1,6 @@
 # Settings Architecture and Split Map
 
-_Last updated 2026-07-19 by GPT through Rev 29._
+_Last updated 2026-07-19 by GPT through Rev 39._
 
 This is the authoritative ownership map for Settings. New work must follow it from the first revision so `SettingsWindow.qml` never becomes a monolith again.
 
@@ -96,6 +96,19 @@ Renders pending changes, status/error/output text, and Apply/Cancel controls. It
 
 Pages own labels, controls, and page-specific presentation. They stage values through `SettingsContext`. A page must not directly write durable preferences or grow system scripts inline.
 
+### Hyprland animation presets
+
+Animation presets follow the same split architecture:
+
+- `HyprlandPage.qml` presents Off/Snappy/Smooth/Bouncy.
+- `SettingsTransaction.qml` owns staged state, effective value, pending diff, discard, validation, and Apply.
+- `SettingsContext.qml` exposes the page-facing alias/forward.
+- `UserPrefs.qml` persists the selected preset.
+- `ConfigManager.qml` generates `~/.config/hypr/generated/animations.lua`.
+- `install-hypr-animation-presets.sh` performs the one-time ownership transfer from `user/look.lua`.
+
+The final Apply path writes both generated Hyprland files, then performs one normal `hyprctl reload`. Never add `full-reset`, a full-reset debounce, or a live-eval shortcut to this path.
+
 ### SDDM — separate privileged transaction
 
 SDDM remains outside the normal desktop Apply transaction. Preserve Test mode, snapshot generation, digest checks, explicit privileged Apply, and reboot verification.
@@ -144,7 +157,8 @@ SDDM remains outside the normal desktop Apply transaction. Preserve Test mode, s
 - stage again, Apply, and verify persistence;
 - close with pending changes and verify intended discard behavior;
 - restore `My Default` and verify UI, wallpaper, and Hyprland output;
-- test SDDM separately through its own workflow.
+- test SDDM separately through its own workflow;
+- apply each animation preset, including several rapid back-to-back Applies, and confirm Hyprland stays alive.
 
 ## Troubleshooting a single setting
 
