@@ -13,10 +13,8 @@
 // (theme, font scale, bar border), Notifications (card prefs +
 // popup corner/offsets + test button), Desktop (the desktop clock:
 // enabled, position, monitor, colors, shadow), Hyprland (gaps/border/
-// rounding), Displays (per-monitor mode/scale, its own transaction —
-// DISABLED 2026-07-12, block-commented pending a real
-// services/DisplayManager.qml; see the `pages` property) —
-// and the full transaction UX the plan promised: changes are STAGED,
+// rounding), UI Profiles, and SDDM — plus the full transaction UX the
+// plan promised: changes are STAGED,
 // a pending-changes panel shows
 // the diff ("Theme: HoneycombTheme → DefaultTheme"), and nothing
 // touches disk until Apply — which runs through
@@ -101,9 +99,8 @@
 //   2. TOP-ANCHORED, NOT CENTERED. A centered card distributes any
 //      height change both ways; a top-anchored card only grows
 //      DOWNWARD, so a control never moves unless something ABOVE it
-//      changed — and the things that appear mid-interaction (revealed
-//      rows, the Displays diff) all appear BELOW the control that
-//      triggered them.
+//      changed — and the things that appear mid-interaction appear
+//      BELOW the control that triggered them.
 //   3. FIXED-HEIGHT PENDING PANEL. The pending area permanently
 //      reserves pendingVisibleLines rows (a ListView — scrolls past
 //      that) and the status line reserves its row even when empty, so
@@ -426,11 +423,8 @@ FloatingWindow {
     property bool themeDropdownOpen: false
     property bool fontFamilyDropdownOpen: false
     property bool wallpaperTransitionTypeDropdownOpen: false
-    // "Displays" temporarily removed (2026-07-12) — DisplayManager.qml
-    // was never actually wired up/written, so the page has always
-    // thrown ReferenceErrors at runtime. Page body + supporting
-    // functions are still below, block-commented rather than
-    // deleted — re-add "Displays" here once DisplayManager exists.
+    // Displays remains a future feature. Its disabled prototype was removed
+    // in Rev 25; rebuild it around a real services/DisplayManager.qml.
     readonly property var pages: ["Appearance", "Notifications", "Desktop", "Hyprland", "UI Profiles", "SDDM"]
 
     // ---- Shared preset-color-picker overlay state (2026-07-11, Opus) ----
@@ -469,8 +463,8 @@ FloatingWindow {
     // ---- Stable geometry (see DESIGN NOTES) ----
     // One content width for every page, scaled off the font token so
     // it tracks font scale (≈504 px at the default 14 px). Wide
-    // enough for the widest page (Displays, formerly minimum 420);
-    // anything longer elides rather than widening the card.
+    // enough for the widest current page; anything longer elides rather
+    // than widening the card.
     readonly property int contentWidth: Math.round(Theme.fontSize * 52)
     readonly property int sidebarWidth: Math.round(Theme.fontSize * 14)
     // Reserved space beside scrollable pages so full-width controls and
@@ -480,16 +474,6 @@ FloatingWindow {
     // The panel reserves exactly this many rows at ALL times — that
     // fixed reservation is the whole point.
     readonly property int pendingVisibleLines: 4
-
-    // Live monitor state is re-read every time the Displays page comes
-    // into view (it can change under us — cables, games flipping
-    // modes), not once per window open.
-    onCurrentPageChanged: {
-        // Displays page disabled (see `pages` above) — DisplayManager
-        // doesn't exist yet.
-        // if (currentPage === "Displays")
-        //     DisplayManager.refresh();
-    }
 
     // GPT Rev 21: staged settings now live in a dedicated transaction controller.
     SettingsTransaction {
@@ -597,8 +581,6 @@ FloatingWindow {
         wallpaperTransitionTypeDropdownOpen = false;
         closeColorPicker();
         settingsTransaction.discardStaged();
-        stagedDisplays = ({});
-        displayError = "";
     }
 
     // Segmented-picker option lists. Corners are plain-unicode arrows
@@ -697,104 +679,7 @@ FloatingWindow {
         return [""].concat(pref).concat(rest);
     }
 
-    // ---- Displays page state (see the page's comment for why this
-    // is a SEPARATE transaction from the global Apply) ----
-    // Map: monitor name -> { mode?, scale?, disabled? }. Always
-    // REASSIGNED (never mutated in place) so bindings re-evaluate.
-    property var stagedDisplays: ({})
-    property string displayError: ""
-
-    // DISPLAYS PAGE DISABLED (2026-07-12) — DisplayManager.qml was
-    // never actually written, so every function below threw
-    // ReferenceError at runtime the moment the page (or even just
-    // `pages`, for the tab) referenced it. Block-commented rather
-    // than deleted: the logic is believed correct and ready to go
-    // the moment services/DisplayManager.qml exists — see
-    // notes/SONNET_QUEUE.md. Un-comment this block AND the page UI
-    // further down AND re-add "Displays" to `pages` above, together.
-    /*
-    function stageDisplay(name: string, field: string, value: var): void {
-        const m = {};
-        for (const k in stagedDisplays)
-            m[k] = stagedDisplays[k];
-        const e = m[name] ? Object.assign({}, m[name]) : {};
-        e[field] = value;
-        m[name] = e;
-        stagedDisplays = m;
-    }
-
-    function shownDispMode(mon: var): string {
-        const s = stagedDisplays[mon.name];
-        return (s && s.mode !== undefined) ? s.mode : mon.currentMode;
-    }
-    function shownDispScale(mon: var): real {
-        const s = stagedDisplays[mon.name];
-        return (s && s.scale !== undefined) ? s.scale : mon.scale;
-    }
-    function shownDispDisabled(mon: var): bool {
-        const s = stagedDisplays[mon.name];
-        return (s && s.disabled !== undefined) ? s.disabled : mon.disabled;
-    }
-
-    // The Displays page's own diff (NOT part of root.changes — display
-    // applies go through the revert-window transaction, not the
-    // staged-prefs one).
-    readonly property var displayChanges: {
-        const c = [];
-        const mons = DisplayManager.monitors;
-        for (let i = 0; i < mons.length; i++) {
-            const m = mons[i];
-            const s = stagedDisplays[m.name];
-            if (!s)
-                continue;
-            if (s.disabled !== undefined && s.disabled !== m.disabled)
-                c.push({ label: m.name + " Enabled",
-                         from: m.disabled ? "off" : "on",
-                         to: s.disabled ? "off" : "on" });
-            if (s.mode !== undefined && s.mode !== m.currentMode)
-                c.push({ label: m.name + " Mode",
-                         from: m.currentMode, to: s.mode });
-            if (s.scale !== undefined && Math.abs(s.scale - m.scale) > 0.001)
-                c.push({ label: m.name + " Scale",
-                         from: DisplayManager.fmtScale(m.scale),
-                         to: DisplayManager.fmtScale(s.scale) });
-        }
-        return c;
-    }
-
-    function applyDisplays(): void {
-        if (displayChanges.length === 0 || ConfigManager.busy !== ""
-                || ConfigManager.revertPending)
-            return;
-        const mons = DisplayManager.monitors;
-        const cfgs = [];
-        for (let i = 0; i < mons.length; i++) {
-            const m = mons[i];
-            cfgs.push({
-                output: m.name,
-                mode: shownDispMode(m),
-                // Enabled monitors keep their exact live position; a
-                // monitor that was DISABLED at refresh reports garbage
-                // coordinates, so on re-enable it gets "auto" (right
-                // edge of the layout) — see DisplayManager's notes.
-                position: m.disabled ? "auto" : (m.x + "x" + m.y),
-                scale: shownDispScale(m),
-                disabled: shownDispDisabled(m)
-            });
-        }
-        if (DisplayManager.apply(cfgs)) {
-            displayError = "";
-            stagedDisplays = ({});
-        } else {
-            displayError = DisplayManager.lastError !== ""
-                ? DisplayManager.lastError : ConfigManager.lastError;
-        }
-    }
-    */
-    // Stand-ins so any leftover binding elsewhere still resolves to
-    // something harmless while the block above is commented out.
-    readonly property var displayChanges: []
-    function applyDisplays(): void {}
+    // Displays is intentionally deferred until a real DisplayManager service exists.
 
     // GPT: Captured creation geometry lets shell.qml determine whether this
     // hidden window must be recreated before the next open. ProxyFloatingWindow
@@ -814,9 +699,6 @@ FloatingWindow {
         // Backup on a fresh first launch) — tomorrow's open gets it.
         if (ConfigManager.busy === "")
             ConfigManager.dailySnapshotIfNeeded();
-        // Displays page disabled (see `pages` above).
-        // if (currentPage === "Displays")
-        //     DisplayManager.refresh();
     }
 
     function close(): void {
@@ -841,8 +723,6 @@ FloatingWindow {
         fontFamilyDropdownOpen = false;
         wallpaperTransitionTypeDropdownOpen = false;
         closeColorPicker();
-        stagedDisplays = ({});
-        displayError = "";
     }
 
     visible: shown
@@ -1229,270 +1109,6 @@ FloatingWindow {
                     }
                 }
             } // ---- end page viewport ----
-
-            // ================ DISPLAYS PAGE (DISABLED 2026-07-12) ============
-            // Block-commented, not deleted — DisplayManager.qml doesn't
-            // exist yet, so this whole page threw ReferenceErrors at
-            // runtime (see the state-block comment above `open()` for
-            // the restore steps). NOT part of the staged/Apply
-            // transaction below — display changes apply IMMEDIATELY
-            // via its own button, wrapped in ConfigManager's revert
-            // window (auto snapshot -> write -> countdown; unconfirmed
-            // changes revert on their own). Mixing "staged until
-            // Apply" and "applied with a revert timer" into one button
-            // would make both semantics — and Cancel — ambiguous, so
-            // this page owns its transaction, the same way the future
-            // Backups page's restore is live (notes/SONNET_QUEUE.md
-            // Q2, the transient/durable split).
-            /*
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: root.currentPage === "Displays"
-                spacing: Theme.spacingMedium
-
-                Text {
-                    visible: DisplayManager.monitors.length === 0
-                    text: DisplayManager.refreshing ? "Reading monitors…"
-                        : (DisplayManager.lastError !== ""
-                            ? DisplayManager.lastError : "No monitors found")
-                    color: Theme.colorMuted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                }
-
-                Repeater {
-                    model: DisplayManager.monitors
-
-                    ColumnLayout {
-                        id: monBlock
-                        required property var modelData
-                        readonly property var mon: modelData
-
-                        Layout.fillWidth: true
-                        spacing: Theme.spacingSmall
-
-                        Text {
-                            text: monBlock.mon.name
-                                  + (monBlock.mon.focused ? "  (focused)" : "")
-                                  + (monBlock.mon.disabled ? "  (disabled)" : "")
-                            color: Theme.colorForeground
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize
-                            font.bold: true
-                        }
-
-                        Text {
-                            visible: monBlock.mon.description !== ""
-                            text: monBlock.mon.description
-                            // Elide, don't widen — the card is fixed
-                            // width (v0.6) and EDID descriptions can
-                            // be long.
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            color: Theme.colorMuted
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Math.round(Theme.fontSize * 0.8)
-                        }
-
-                        SettingsComponents.ToggleSettingRow {
-                            label: "Enabled"
-                            value: !root.shownDispDisabled(monBlock.mon)
-                            staged: root.stagedDisplays[monBlock.mon.name] !== undefined
-                                    && root.stagedDisplays[monBlock.mon.name].disabled !== undefined
-                            onToggled: root.stageDisplay(monBlock.mon.name,
-                                "disabled", !root.shownDispDisabled(monBlock.mon))
-                        }
-
-                        // Mode steps through availableModes verbatim —
-                        // every value the stepper can land on is one
-                        // the monitor advertised.
-                        SettingsComponents.StepperRow {
-                            label: "Mode"
-                            valueText: root.shownDispMode(monBlock.mon)
-                            staged: root.stagedDisplays[monBlock.mon.name] !== undefined
-                                    && root.stagedDisplays[monBlock.mon.name].mode !== undefined
-                            onMinus: {
-                                const modes = monBlock.mon.availableModes;
-                                const idx = modes.indexOf(root.shownDispMode(monBlock.mon));
-                                if (idx > 0)
-                                    root.stageDisplay(monBlock.mon.name, "mode", modes[idx - 1]);
-                                else if (idx === -1 && modes.length > 0)
-                                    root.stageDisplay(monBlock.mon.name, "mode", modes[0]);
-                            }
-                            onPlus: {
-                                const modes = monBlock.mon.availableModes;
-                                const idx = modes.indexOf(root.shownDispMode(monBlock.mon));
-                                if (idx !== -1 && idx < modes.length - 1)
-                                    root.stageDisplay(monBlock.mon.name, "mode", modes[idx + 1]);
-                                else if (idx === -1 && modes.length > 0)
-                                    root.stageDisplay(monBlock.mon.name, "mode", modes[0]);
-                            }
-                        }
-
-                        // Scale steps through only the LEGAL scales
-                        // for the shown mode's resolution (integer
-                        // logical pixels — see DisplayManager).
-                        SettingsComponents.StepperRow {
-                            label: "Scale"
-                            valueText: DisplayManager.fmtScale(root.shownDispScale(monBlock.mon)) + "×"
-                            staged: root.stagedDisplays[monBlock.mon.name] !== undefined
-                                    && root.stagedDisplays[monBlock.mon.name].scale !== undefined
-                            onMinus: {
-                                const p = DisplayManager.parseMode(root.shownDispMode(monBlock.mon));
-                                if (!p) return;
-                                const scales = DisplayManager.validScalesFor(
-                                    p.w, p.h, root.shownDispScale(monBlock.mon));
-                                const cur = root.shownDispScale(monBlock.mon);
-                                for (let i = scales.length - 1; i >= 0; i--) {
-                                    if (scales[i] < cur - 0.001) {
-                                        root.stageDisplay(monBlock.mon.name, "scale", scales[i]);
-                                        break;
-                                    }
-                                }
-                            }
-                            onPlus: {
-                                const p = DisplayManager.parseMode(root.shownDispMode(monBlock.mon));
-                                if (!p) return;
-                                const scales = DisplayManager.validScalesFor(
-                                    p.w, p.h, root.shownDispScale(monBlock.mon));
-                                const cur = root.shownDispScale(monBlock.mon);
-                                for (let i = 0; i < scales.length; i++) {
-                                    if (scales[i] > cur + 0.001) {
-                                        root.stageDisplay(monBlock.mon.name, "scale", scales[i]);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // The page's own diff + apply (see the page comment).
-                // These rows still appear/disappear as you step — but
-                // they sit BELOW the steppers, and the card is
-                // top-anchored (v0.6), so stepping never moves the
-                // stepper itself; only the buttons below shift, once.
-                Repeater {
-                    model: root.displayChanges
-
-                    Text {
-                        required property var modelData
-                        text: "  " + modelData.label + ":  "
-                              + modelData.from + "  →  " + modelData.to
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                        color: Theme.colorAccent
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-                    }
-                }
-
-                Text {
-                    visible: root.displayError !== ""
-                    text: "Error: " + root.displayError
-                    color: Theme.colorUrgent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Math.round(Theme.fontSize * 0.8)
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.spacingMedium
-
-                    Text {
-                        visible: ConfigManager.revertPending
-                        text: "Reverting in " + Math.max(0, ConfigManager.revertSecondsLeft) + " s…"
-                        color: Theme.colorAccent
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    Rectangle {
-                        visible: ConfigManager.revertPending
-                        implicitWidth: dispRevertText.implicitWidth + Theme.spacingLarge * 2
-                        implicitHeight: dispRevertText.implicitHeight + Theme.spacingSmall * 2
-                        radius: Theme.radiusMedium
-                        color: dispRevertMouse.containsMouse ? Theme.colorHover : Theme.colorSurface
-                        Text {
-                            id: dispRevertText
-                            anchors.centerIn: parent
-                            text: "Revert Now"
-                            color: Theme.colorForeground
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize
-                        }
-                        MouseArea {
-                            id: dispRevertMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: ConfigManager.revertNow()
-                        }
-                    }
-
-                    Rectangle {
-                        visible: ConfigManager.revertPending
-                        implicitWidth: dispKeepText.implicitWidth + Theme.spacingLarge * 2
-                        implicitHeight: dispKeepText.implicitHeight + Theme.spacingSmall * 2
-                        radius: Theme.radiusMedium
-                        color: dispKeepMouse.containsMouse ? Theme.colorHover : Theme.colorAccent
-                        Text {
-                            id: dispKeepText
-                            anchors.centerIn: parent
-                            text: "Keep"
-                            color: Theme.colorBackground
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize
-                            font.bold: true
-                        }
-                        MouseArea {
-                            id: dispKeepMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: ConfigManager.confirmKeep()
-                        }
-                    }
-
-                    Rectangle {
-                        readonly property bool enabled_: root.displayChanges.length > 0
-                                                         && ConfigManager.busy === ""
-                                                         && !ConfigManager.revertPending
-                        visible: !ConfigManager.revertPending
-                        implicitWidth: dispApplyText.implicitWidth + Theme.spacingLarge * 2
-                        implicitHeight: dispApplyText.implicitHeight + Theme.spacingSmall * 2
-                        radius: Theme.radiusMedium
-                        color: dispApplyMouse.containsMouse && enabled_ ? Theme.colorHover : Theme.colorAccent
-                        opacity: enabled_ ? 1.0 : 0.4
-                        Text {
-                            id: dispApplyText
-                            anchors.centerIn: parent
-                            text: "Apply Displays"
-                            color: Theme.colorBackground
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize
-                            font.bold: true
-                        }
-                        MouseArea {
-                            id: dispApplyMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: parent.enabled_ ? Qt.PointingHandCursor : Qt.ArrowCursor
-                            onClicked: if (parent.enabled_) root.applyDisplays()
-                        }
-                    }
-                }
-
-                Text {
-                    text: "Applies immediately with an auto-revert countdown — unless you\nconfirm Keep (on any monitor, or `qs ipc call displays keep`),\nthe previous settings come back on their own."
-                    color: Theme.colorMuted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Math.round(Theme.fontSize * 0.8)
-                }
-            } // ================ end Displays ================
-            */
 
             SettingsComponents.SettingsPendingFooter {
                 Layout.fillWidth: true

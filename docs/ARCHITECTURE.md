@@ -10,22 +10,19 @@ codebase — human or AI — before making structural changes.
 The top-bar border and Hyprland active-window border are separate settings
 paths, even though they may intentionally share theme tokens. The Appearance
 page stages the bar border source/color; the Hyprland page stages the
-compositor active-border source/color. During the current Settings-window
-refactor, changing one does not reliably update the other in the same Apply
-transaction. A later change/revert can make them match because both saved
-values are then regenerated together.
+compositor active-border source/color. Since the Settings transaction split,
+`SettingsTransaction.resolvedHyprBorderForApply()` resolves one immutable final
+border state from the complete staged transaction before any files are written.
 
-Do not add another ad-hoc binding inside a page to force synchronization. The
-correct fix belongs in the future settings store/apply transaction, where both
-staged values can be resolved from one explicit rule before any file is
-written:
+Do not add ad-hoc page bindings or read partially saved values during Apply.
+The centralized rule is:
 
 - Hyprland “Use theme color” enabled: follow the effective Appearance border
   (theme gradient or custom solid color).
 - Hyprland “Use theme color” disabled: keep its independent custom value.
 
-Until that store-level fix exists, treat the mismatch as a known deferred bug,
-not as proof that either individual color control is broken.
+This centralized resolution is also reused by the UI Profiles post-restore
+Hyprland reapply path.
 
 
 ```
@@ -436,6 +433,62 @@ tested revision that updates every page consumer.
 
 The SDDM page keeps its separate preview/install workflow. Do not silently fold
 root-owned SDDM installation into the normal desktop Apply transaction.
+
+
+## UI Profiles restore-point architecture (Rev 22–24)
+
+The current UI Profiles implementation is intentionally one restore point, not
+yet a full named-profile manager. Its pieces are separated by responsibility:
+
+- `widgets/Settings/pages/UiProfilesPage.qml` owns buttons, confirmations,
+  status text, and restore orchestration.
+- `scripts/settings-profile.sh` owns user-level snapshot file I/O and current
+  wallpaper capture/restore.
+- `SettingsTransaction.reapplyCurrentHyprland()` owns the post-restore bridge
+  into the existing Hyprland generator.
+- `ConfigManager` remains the only normal Settings apply/generation engine.
+
+The saved snapshot lives outside the repository at
+`~/.local/state/quickshell/ui-profiles/my-default/`. It contains the complete
+persisted `user-prefs.json` plus a wallpaper path. Wallpaper image data is not
+copied, so the original image library still needs its own backup.
+
+Restoring the JSON alone is insufficient for compositor visuals because
+Hyprland consumes a separately generated appearance file. The page therefore
+waits for `UserPrefs` to reload and requests the controller's reapply function.
+Do not move that generator into the shell script or simulate user input to make
+it fire.
+
+UI Profiles does not capture or install SDDM. SDDM remains a separate
+root-owned, manually applied snapshot boundary.
+
+
+## UI Profiles restore synchronization (Rev 25)
+
+UI Profiles stores one user-owned known-good restore point. Restoring is a cross-component operation and must preserve this ownership chain:
+
+```text
+settings-profile.sh
+    atomically replaces user-prefs.json and restores wallpaper
+        ↓
+UiProfilesPage.qml
+    discards open staged values and calls UserPrefs.reloadFromDisk()
+        ↓
+core/UserPrefs.qml
+    reloads the FileView and emits preferencesReloaded() on the next event-loop turn
+        ↓
+UiProfilesPage.qml
+    calls SettingsWindow.reapplyCurrentHyprland() only while awaiting that restore
+        ↓
+SettingsTransaction.qml / ConfigManager.qml
+    regenerate and apply the normal Hyprland appearance output
+```
+
+Do not replace this with a fixed timeout. Do not move preference-file copying into QML, and do not duplicate Hyprland generation in the profile helper. SDDM remains outside this user-owned restore path.
+
+## Displays feature boundary (Rev 25)
+
+The old disabled Displays prototype was removed from `SettingsWindow.qml`. Displays is not currently implemented. Future work must start with a real display-management service and a fresh page built against current Hyprland monitor behavior; the removed block-commented prototype is not a valid implementation parent.
 
 ## Adding a new widget — checklist
 

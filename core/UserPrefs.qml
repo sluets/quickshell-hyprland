@@ -215,6 +215,13 @@ import QtQuick
 Singleton {
     id: root
 
+    signal preferencesReloaded()
+
+    function reloadFromDisk(): void {
+        prefsFile.reload();
+        Qt.callLater(function() { root.preferencesReloaded(); });
+    }
+
     readonly property string stateDir: {
         const base = Quickshell.env("XDG_STATE_HOME");
         return (base && base.length > 0 ? base : Quickshell.env("HOME") + "/.local/state") + "/quickshell";
@@ -553,9 +560,10 @@ Singleton {
     }
 
     FileView {
+        id: prefsFile
         path: root.stateDir + "/user-prefs.json"
         watchChanges: true
-        onFileChanged: reload()
+        onFileChanged: root.reloadFromDisk()
         onAdapterUpdated: writeAdapter()
 
         adapter: JsonAdapter {

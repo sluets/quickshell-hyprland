@@ -29,6 +29,7 @@ ColumnLayout {
     property string statusText: "Save your current working setup before stress-testing the Settings menu."
     property string processOutput: ""
     property string processError: ""
+    property bool awaitingProfileReload: false
 
     readonly property string helperPath: Quickshell.env("HOME") + "/.config/quickshell/scripts/settings-profile.sh"
 
@@ -224,19 +225,22 @@ ColumnLayout {
         }
     }
 
-    // GPT Rev 24: JsonAdapter reloads the restored file first; then the normal
-    // Settings transaction path regenerates Hyprland's generated appearance.
-    // The small delay avoids reading the old in-memory values in the same event.
-    Timer {
-        id: restoredHyprApplyTimer
-        interval: 250
-        repeat: false
-        onTriggered: {
+    // GPT Rev 25: profile restore waits for UserPrefs to confirm that the
+    // restored JSON has been loaded before rebuilding Hyprland appearance.
+    Connections {
+        target: UserPrefs
+
+        function onPreferencesReloaded(): void {
+            if (!page.awaitingProfileReload)
+                return;
+
+            page.awaitingProfileReload = false;
             if (!page.settingsRoot.reapplyCurrentHyprland()) {
                 page.statusText = "Profile restored, but Hyprland could not be reapplied while ConfigManager was busy.";
                 return;
             }
             page.statusText = "My Default restored; Hyprland settings are being reapplied.";
+            page.refreshStatus();
         }
     }
 
@@ -249,12 +253,14 @@ ColumnLayout {
             page.busy = false;
             if (code === 0) {
                 page.settingsRoot.discardStaged();
-                page.statusText = page.processOutput || "My Default restored.";
-                restoredHyprApplyTimer.restart();
+                page.awaitingProfileReload = true;
+                page.statusText = page.processOutput || "My Default restored; reloading settings…";
+                UserPrefs.reloadFromDisk();
             } else {
+                page.awaitingProfileReload = false;
                 page.statusText = "Could not restore My Default (exit " + code + ").";
+                page.refreshStatus();
             }
-            page.refreshStatus();
         }
     }
 

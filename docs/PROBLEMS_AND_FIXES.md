@@ -1,3 +1,29 @@
+## 2026-07-19 — UI Profiles depended on a fixed 250 ms reload delay
+
+**Symptoms / risk:** Rev 24 worked in live testing, but profile restore waited a hardcoded 250 ms after replacing `user-prefs.json` before reading the restored Hyprland values. On a sufficiently delayed reload, Hyprland generation could have read the old in-memory values and produced stale output.
+
+**Diagnosis:** The restore order was logically correct but synchronized by elapsed time rather than by an explicit preference reload event. The setting file watcher and property propagation normally completed well inside the delay, which made the race unlikely and difficult to reproduce.
+
+**Fix:** Rev 25 added `UserPrefs.reloadFromDisk()` and `UserPrefs.preferencesReloaded()`. `UiProfilesPage.qml` marks the restore as awaiting reload, explicitly reloads the `FileView`, and waits for the singleton signal before calling the existing Hyprland reapply bridge. The signal is emitted with `Qt.callLater()` so dependent bindings receive an event-loop turn before their values are consumed.
+
+**Live result:** The user changed a large set of UI/Hyprland values and restored the saved default. Everything returned correctly with no warnings and no control-jiggling workaround.
+
+**Do not reintroduce:** Do not replace the handshake with a longer timer. A larger guessed delay only makes the race less likely; it does not establish correctness.
+
+---
+
+## 2026-07-19 — Disabled Displays prototype obscured the real Settings architecture
+
+**Problem:** `SettingsWindow.qml` carried hundreds of lines for a block-commented Displays page plus dummy staged state, reset logic, and apply hooks. The required `services/DisplayManager.qml` never existed, so none of it was a functioning feature.
+
+**Fix:** Rev 25 removed the dormant implementation and kept only a short note that Displays is deferred until a real service exists. `SettingsWindow.qml` fell from 1,866 to 1,487 lines, a 379-line reduction.
+
+**Live result:** Quickshell loaded cleanly and all tested Settings/profile behavior continued to work.
+
+**Do not reintroduce:** Do not restore the old commented block as a shortcut. Build Displays as a new service-backed feature from current monitor APIs and test it independently.
+
+---
+
 ## 2026-07-18 — Settings transaction split troubleshooting map (Rev 21)
 
 **Change:** The staged transaction moved from `SettingsWindow.qml` into `SettingsTransaction.qml`. The window now forwards the old API through compatibility aliases so the page files did not need to change in the same revision.
@@ -17,6 +43,30 @@ Then confirm `SettingsWindow.qml` still exposes the matching compatibility alias
 **Hyprland border special case:** The controller resolves the complete final border state before writes. Do not reintroduce page-local saved-value lookups or make Apply depend on which page staged its value first.
 
 **Do not do this while debugging:** Do not move transaction logic into `SettingsPendingFooter.qml`; it remains presentation-only. Do not remove all compatibility aliases as part of an unrelated bug fix. Page migration must be its own revision with a full multi-tab regression test.
+
+---
+
+## 2026-07-19 — UI profile restored Hyprland values but did not apply them
+
+**Symptoms:** Restoring `My Default` returned persisted Hyprland values to their saved numbers, but the compositor did not visually adopt them. Changing any Hyprland control by one step caused all restored values to apply; changing that control back then returned the intended UI.
+
+**Diagnosis:** The profile helper replaced `user-prefs.json`, but Hyprland visuals are produced by a separate generated `appearance.lua`. That generator normally runs during the Settings Apply transaction, so replacing the JSON alone never triggered the side effect. Touching a control created a normal Apply transaction and incidentally rebuilt the complete file.
+
+**Fix:** Rev 24 added `SettingsTransaction.reapplyCurrentHyprland()`. After a successful restore, `UiProfilesPage` waits briefly for `UserPrefs` to reload and then submits the restored Hyprland subset through the existing `ConfigManager.applyChanges()` path.
+
+**Do not use the old workaround:** Do not fake a one-step slider change, write `appearance.lua` directly from `UiProfilesPage`, or duplicate the Hyprland generator in `settings-profile.sh`. Keep one generator path.
+
+---
+
+## 2026-07-19 — UI Profiles page referenced a nonexistent theme color
+
+**Symptoms:** Quickshell loaded, but startup logged `Unable to assign [undefined] to QColor` at `UiProfilesPage.qml`.
+
+**Diagnosis:** The page used `Theme.colorBorder`, which is not part of this project's Theme singleton interface.
+
+**Fix:** Rev 23 changed the card border to the existing `Theme.colorMuted` token.
+
+**Lesson:** A plausible token name is not proof that the property exists. Check `core/Theme.qml` before using a new theme property.
 
 ---
 

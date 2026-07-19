@@ -1,3 +1,89 @@
+## 2026-07-19 — Confirmed profile reload handshake and Displays cleanup, Rev 25 (GPT)
+
+**Context:** Static review identified two worthwhile cleanup targets after Rev 24: UI Profiles waited a fixed 250 ms before reapplying Hyprland, and `SettingsWindow.qml` still carried a large disabled Displays prototype for a service that did not exist.
+
+**What changed:**
+
+- Added `UserPrefs.preferencesReloaded()` and `UserPrefs.reloadFromDisk()` as the explicit restore synchronization boundary.
+- Removed the fixed 250 ms profile-restore timer. After `settings-profile.sh` replaces `user-prefs.json`, `UiProfilesPage.qml` now calls `UserPrefs.reloadFromDisk()`, waits for `preferencesReloaded`, and only then calls `reapplyCurrentHyprland()`.
+- `reloadFromDisk()` reloads the watched preference file and emits confirmation on the next Qt event-loop turn so restored properties and their bindings can propagate before Hyprland values are read.
+- Preserved the normal `SettingsTransaction` / `ConfigManager` generator path; UI Profiles still does not duplicate Hyprland file generation.
+- Removed the disabled Displays page prototype, its staged state, dummy change/apply paths, reset hooks, old monitor-refresh wiring, and the large block-commented UI.
+- Left one short architectural note in `SettingsWindow.qml`: Displays remains deferred until a real `services/DisplayManager.qml` exists.
+- Reduced `SettingsWindow.qml` from 1,866 lines to 1,487 lines, removing 379 lines without deleting a functioning feature.
+
+**Live-test status:**
+
+- Quickshell loaded with no errors or warnings.
+- The user changed a large set of UI and Hyprland settings, applied them, and restored `My Default`.
+- General UI settings, wallpaper, and Hyprland visuals all restored correctly.
+- No manual control movement or timing workaround was required.
+- Removing the dormant Displays implementation caused no observed regression.
+
+**Known constraints / follow-up:**
+
+- `preferencesReloaded` confirms the explicit reload request and waits one Qt event-loop turn; future asynchronous preference backends would need a true backend-completion signal rather than assuming `FileView.reload()` remains synchronous.
+- Displays is not implemented. Do not resurrect the removed prototype; build the future page around a real display service and current Hyprland monitor APIs.
+- The large computed `SettingsTransaction.changes` binding remains intentionally unchanged because no Settings-window lag has been observed.
+- SDDM snapshot digest enforcement remains intentionally strict; generated snapshot files must be regenerated after manual edits.
+
+## 2026-07-19 — UI Profiles restore-point stabilization, Rev 24 (GPT)
+
+**Context:** The first UI Profiles restore point correctly replaced persisted settings and wallpaper, but Hyprland visual settings were only written back to `UserPrefs`; the generated compositor appearance file was not rebuilt until the user touched another Hyprland control.
+
+**What changed:**
+
+- Added `SettingsTransaction.reapplyCurrentHyprland()` as the single post-restore bridge into the already-tested normal Hyprland generator/apply path.
+- Added a compatibility wrapper in `SettingsWindow.qml` so `UiProfilesPage.qml` can request the reapply without owning transaction details.
+- Added a short post-restore delay in `UiProfilesPage.qml`, allowing `UserPrefs` to reload the restored JSON before the current Hyprland values are submitted.
+- Restore now regenerates the separate Hyprland `generated/appearance.lua` side effect automatically; no slider movement is required.
+- The reapply path refuses to start while `ConfigManager` is busy and reports that condition to the page instead of silently overlapping transactions.
+
+**Live-test status:**
+
+- The user heavily changed most UI settings, applied them, and successfully restored the saved default.
+- Wallpaper and broad UI state restored correctly.
+- Hyprland settings now regenerate and apply automatically after restore.
+- The prior workaround of changing a Hyprland value by one step and changing it back is no longer required.
+
+**Known constraints / follow-up:**
+
+- Testing was broad and intentionally aggressive, but not every obscure setting combination was exhaustively covered.
+- UI Profiles currently provides one manually managed `My Default` restore point. Named profiles, `Save As`, profile import/export, and automatic previous-Apply rollback remain future work.
+- SDDM remains outside UI Profiles and keeps its separate privileged snapshot/install workflow.
+
+## 2026-07-19 — UI Profiles color warning fix, Rev 23 (GPT)
+
+**Context:** Rev 22 loaded successfully but logged `Unable to assign [undefined] to QColor` from `UiProfilesPage.qml`.
+
+**What changed:**
+
+- Replaced the nonexistent `Theme.colorBorder` reference with the existing `Theme.colorMuted` token for the profile card border.
+- Removed the startup warning without changing profile behavior.
+
+## 2026-07-19 — UI Profiles restore point, Rev 22 (GPT)
+
+**Context:** Aggressive Settings testing had become risky because returning hundreds of UI values to the user's preferred configuration was slow and error-prone. The first UI Profiles phase was deliberately limited to one known-good restore point.
+
+**What changed:**
+
+- Added a dedicated **UI Profiles** Settings tab through `widgets/Settings/pages/UiProfilesPage.qml`.
+- Added `scripts/settings-profile.sh` with `save`, `restore`, and `status` operations.
+- Added **Set Current as My Default / Overwrite My Default** and **Restore My Default** actions with confirmation dialogs.
+- The snapshot copies the complete persisted `~/.local/state/quickshell/user-prefs.json` into `~/.local/state/quickshell/ui-profiles/my-default/`.
+- The helper also records the current wallpaper reported by `awww query` and restores it when the saved file still exists.
+- Writes use temporary files followed by `mv` so an interrupted copy does not leave a partially written live preference file.
+- Restore discards any settings still staged in the open window after replacing the live preference file.
+- Added saved timestamp and wallpaper-name status to the page.
+- Kept the main-window integration small: the page is hosted by `SettingsWindow.qml`, while snapshot I/O stays in the helper script.
+
+**Explicitly not included in this phase:**
+
+- no named profiles or `Save As`;
+- no profile browser, rename, duplicate, delete, import, or export;
+- no automatic `Previous Apply` snapshot;
+- no SDDM capture or root-owned writes.
+
 ## 2026-07-18 — Settings transaction-controller extraction, Rev 21 (GPT)
 
 **Context:** After Rev 20 separated the fixed pending footer, the next structural target was the large staged-settings transaction still embedded in `SettingsWindow.qml`.
