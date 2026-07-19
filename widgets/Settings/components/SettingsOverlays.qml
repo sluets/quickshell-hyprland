@@ -17,6 +17,7 @@ Item {
 
     required property var settingsRoot
     required property Item appearancePage
+    required property Item wallpaperPage
 
     anchors.fill: parent
     z: 100
@@ -233,14 +234,14 @@ Rectangle {
     visible: settingsRoot.wallpaperTransitionTypeDropdownOpen
 
     readonly property point anchorPos: settingsRoot.wallpaperTransitionTypeDropdownOpen
-        ? appearancePage.wallpaperTransitionTypeDropdownAnchor.mapToItem(overlayRoot, 0, 0)
+        ? wallpaperPage.wallpaperTransitionTypeDropdownAnchor.mapToItem(overlayRoot, 0, 0)
         : Qt.point(0, 0)
     readonly property int rowHeight: Theme.fontSize + Theme.spacingSmall * 2 + 2
     readonly property int visibleRows: Math.min(settingsRoot.wallpaperTransitionTypeOptions.length, 6)
 
     x: anchorPos.x
-    y: anchorPos.y + appearancePage.wallpaperTransitionTypeDropdownAnchor.height - 1
-    width: Math.min(appearancePage.wallpaperTransitionTypeDropdownAnchor.width, overlayRoot.width - x - settingsRoot.pageScrollGutter - Theme.spacingLarge)
+    y: anchorPos.y + wallpaperPage.wallpaperTransitionTypeDropdownAnchor.height - 1
+    width: Math.min(wallpaperPage.wallpaperTransitionTypeDropdownAnchor.width, overlayRoot.width - x - settingsRoot.pageScrollGutter - Theme.spacingLarge)
     height: visibleRows * rowHeight + Theme.spacingSmall * 2
     radius: Theme.radiusMedium
     topLeftRadius: 0

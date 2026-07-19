@@ -486,6 +486,9 @@ Singleton {
             case "launcherOffsetX": UserPrefs.setLauncherOffsetX(ch.value); n++; break;
             case "launcherOffsetY": UserPrefs.setLauncherOffsetY(ch.value); n++; break;
             case "launcherShowAppsOnOpen": UserPrefs.setLauncherShowAppsOnOpen(ch.value); n++; break;
+            case "wallpaperPickerPlacement": UserPrefs.setWallpaperPickerPlacement(ch.value); n++; break;
+            case "wallpaperPickerOffsetX": UserPrefs.setWallpaperPickerOffsetX(ch.value); n++; break;
+            case "wallpaperPickerOffsetY": UserPrefs.setWallpaperPickerOffsetY(ch.value); n++; break;
             case "notifShowAppName": UserPrefs.setNotifShowAppName(ch.value); n++; break;
             case "notifIconSize": UserPrefs.setNotifIconSize(ch.value); n++; break;
             case "notifBodyLines": UserPrefs.setNotifBodyLines(ch.value); n++; break;

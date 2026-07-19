@@ -10,7 +10,7 @@
 //
 // Date and time in the bar (separated by the shared "|" divider), driven
 // by UserPrefs.clockUse24Hour and UserPrefs.clockShowSeconds (persisted,
-// toggled live from the gear-icon SettingsMenu). Left-click opens a
+// configured from Settings → Desktop). Left-click opens a
 // month calendar popout, with prev/today/next
 // navigation and today highlighted.
 //

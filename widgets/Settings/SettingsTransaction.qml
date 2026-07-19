@@ -17,6 +17,12 @@ Item {
     property var stagedLauncherOffsetX: null
     property var stagedLauncherOffsetY: null
     property var stagedLauncherShowAppsOnOpen: null
+    property var stagedWallpaperPickerPlacement: null
+    property var stagedWallpaperPickerOffsetX: null
+    property var stagedWallpaperPickerOffsetY: null
+    property var stagedWallpaperCachingEnabled: null
+    property var stagedClockUse24Hour: null
+    property var stagedClockShowSeconds: null
     property var stagedHyprGapsIn: null
     property var stagedHyprGapsOut: null
     property var stagedHyprBorderSize: null
@@ -89,6 +95,12 @@ Item {
     readonly property int shownLauncherOffsetX: stagedLauncherOffsetX !== null ? stagedLauncherOffsetX : UserPrefs.launcherOffsetX
     readonly property int shownLauncherOffsetY: stagedLauncherOffsetY !== null ? stagedLauncherOffsetY : UserPrefs.launcherOffsetY
     readonly property bool shownLauncherShowAppsOnOpen: stagedLauncherShowAppsOnOpen !== null ? stagedLauncherShowAppsOnOpen : UserPrefs.launcherShowAppsOnOpen
+    readonly property string shownWallpaperPickerPlacement: stagedWallpaperPickerPlacement !== null ? stagedWallpaperPickerPlacement : UserPrefs.wallpaperPickerPlacement
+    readonly property int shownWallpaperPickerOffsetX: stagedWallpaperPickerOffsetX !== null ? stagedWallpaperPickerOffsetX : UserPrefs.wallpaperPickerOffsetX
+    readonly property int shownWallpaperPickerOffsetY: stagedWallpaperPickerOffsetY !== null ? stagedWallpaperPickerOffsetY : UserPrefs.wallpaperPickerOffsetY
+    readonly property bool shownWallpaperCachingEnabled: stagedWallpaperCachingEnabled !== null ? stagedWallpaperCachingEnabled : UserPrefs.wallpaperCachingEnabled
+    readonly property bool shownClockUse24Hour: stagedClockUse24Hour !== null ? stagedClockUse24Hour : UserPrefs.clockUse24Hour
+    readonly property bool shownClockShowSeconds: stagedClockShowSeconds !== null ? stagedClockShowSeconds : UserPrefs.clockShowSeconds
     readonly property int shownHyprGapsIn: stagedHyprGapsIn !== null ? stagedHyprGapsIn : UserPrefs.hyprGapsIn
     readonly property int shownHyprGapsOut: stagedHyprGapsOut !== null ? stagedHyprGapsOut : UserPrefs.hyprGapsOut
     readonly property int shownHyprBorderSize: stagedHyprBorderSize !== null ? stagedHyprBorderSize : UserPrefs.hyprBorderSize
@@ -180,6 +192,12 @@ Item {
             c.push({ key: "launcherOffsetY", label: "Launcher Offset Y", from: UserPrefs.launcherOffsetY + " px", to: stagedLauncherOffsetY + " px", value: stagedLauncherOffsetY });
         if (stagedLauncherShowAppsOnOpen !== null && stagedLauncherShowAppsOnOpen !== UserPrefs.launcherShowAppsOnOpen)
             c.push({ key: "launcherShowAppsOnOpen", label: "Show Apps on Open", from: UserPrefs.launcherShowAppsOnOpen ? "on" : "off", to: stagedLauncherShowAppsOnOpen ? "on" : "off", value: stagedLauncherShowAppsOnOpen });
+        if (stagedWallpaperPickerPlacement !== null && stagedWallpaperPickerPlacement !== UserPrefs.wallpaperPickerPlacement)
+            c.push({ key: "wallpaperPickerPlacement", label: "Wallpaper Picker Placement", from: UserPrefs.wallpaperPickerPlacement, to: stagedWallpaperPickerPlacement, value: stagedWallpaperPickerPlacement });
+        if (stagedWallpaperPickerOffsetX !== null && stagedWallpaperPickerOffsetX !== UserPrefs.wallpaperPickerOffsetX)
+            c.push({ key: "wallpaperPickerOffsetX", label: "Wallpaper Picker Offset X", from: UserPrefs.wallpaperPickerOffsetX + " px", to: stagedWallpaperPickerOffsetX + " px", value: stagedWallpaperPickerOffsetX });
+        if (stagedWallpaperPickerOffsetY !== null && stagedWallpaperPickerOffsetY !== UserPrefs.wallpaperPickerOffsetY)
+            c.push({ key: "wallpaperPickerOffsetY", label: "Wallpaper Picker Offset Y", from: UserPrefs.wallpaperPickerOffsetY + " px", to: stagedWallpaperPickerOffsetY + " px", value: stagedWallpaperPickerOffsetY });
         if (stagedNotifShowAppName !== null
                 && stagedNotifShowAppName !== UserPrefs.notifShowAppName)
             c.push({ key: "notifShowAppName", label: "Notif App Name",
@@ -270,6 +288,9 @@ Item {
             ["wallpaperTransitionAngle", "Transition Angle", UserPrefs.wallpaperTransitionAngle, stagedWallpaperTransitionAngle, fmtDeg],
             ["wallpaperTransitionPos", "Transition Position", UserPrefs.wallpaperTransitionPos, stagedWallpaperTransitionPos, fmtRaw],
             ["wallpapersPath", "Wallpaper Library", UserPrefs.wallpapersPath, stagedWallpapersPath, fmtRaw],
+            ["wallpaperCachingEnabled", "Cache Thumbnails", UserPrefs.wallpaperCachingEnabled, stagedWallpaperCachingEnabled, fmtOnOff],
+            ["clockUse24Hour", "24-Hour Time", UserPrefs.clockUse24Hour, stagedClockUse24Hour, fmtOnOff],
+            ["clockShowSeconds", "Show Seconds", UserPrefs.clockShowSeconds, stagedClockShowSeconds, fmtOnOff],
             ["settingsWindowDefaultWidth", "Settings Default Width", UserPrefs.settingsWindowDefaultWidth, stagedSettingsWindowDefaultWidth, fmtPx],
             ["settingsWindowDefaultHeight", "Settings Default Height", UserPrefs.settingsWindowDefaultHeight, stagedSettingsWindowDefaultHeight, fmtPx]
         ];
@@ -298,6 +319,12 @@ Item {
         stagedLauncherOffsetX = null;
         stagedLauncherOffsetY = null;
         stagedLauncherShowAppsOnOpen = null;
+        stagedWallpaperPickerPlacement = null;
+        stagedWallpaperPickerOffsetX = null;
+        stagedWallpaperPickerOffsetY = null;
+        stagedWallpaperCachingEnabled = null;
+        stagedClockUse24Hour = null;
+        stagedClockShowSeconds = null;
         stagedHyprGapsIn = null;
         stagedHyprGapsOut = null;
         stagedHyprBorderSize = null;

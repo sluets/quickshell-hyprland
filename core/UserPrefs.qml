@@ -238,6 +238,9 @@ Singleton {
     readonly property int launcherOffsetX: adapter.launcherOffsetX
     readonly property int launcherOffsetY: adapter.launcherOffsetY
     readonly property bool launcherShowAppsOnOpen: adapter.launcherShowAppsOnOpen
+    readonly property string wallpaperPickerPlacement: adapter.wallpaperPickerPlacement
+    readonly property int wallpaperPickerOffsetX: adapter.wallpaperPickerOffsetX
+    readonly property int wallpaperPickerOffsetY: adapter.wallpaperPickerOffsetY
     readonly property var launcherFavoriteIds: adapter.launcherFavoriteIds
     readonly property var launcherHiddenIds: adapter.launcherHiddenIds
     readonly property var launcherUsage: adapter.launcherUsage
@@ -467,6 +470,12 @@ Singleton {
     function setLauncherOffsetX(v: int): void { adapter.launcherOffsetX = _clampOffset(v); }
     function setLauncherOffsetY(v: int): void { adapter.launcherOffsetY = _clampOffset(v); }
     function setLauncherShowAppsOnOpen(v: bool): void { adapter.launcherShowAppsOnOpen = v; }
+    function setWallpaperPickerPlacement(v: string): void {
+        if (["attached", "centered"].indexOf(v) !== -1)
+            adapter.wallpaperPickerPlacement = v;
+    }
+    function setWallpaperPickerOffsetX(v: int): void { adapter.wallpaperPickerOffsetX = _clampOffset(v); }
+    function setWallpaperPickerOffsetY(v: int): void { adapter.wallpaperPickerOffsetY = _clampOffset(v); }
 
     function launcherIsFavorite(id: string): bool {
         return adapter.launcherFavoriteIds.indexOf(id) !== -1;
@@ -669,6 +678,9 @@ Singleton {
         property int launcherOffsetX: 0
         property int launcherOffsetY: 0
         property bool launcherShowAppsOnOpen: false
+        property string wallpaperPickerPlacement: "attached"
+        property int wallpaperPickerOffsetX: 0
+        property int wallpaperPickerOffsetY: 0
         property var launcherFavoriteIds: []
         property var launcherHiddenIds: []
         property var launcherUsage: ({})

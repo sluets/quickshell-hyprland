@@ -371,6 +371,7 @@ PanelWindow {
         // only one popout is open at a time.
         WallpaperPicker {
             id: wallpaperPicker
+            modelData: topBar.modelData
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
         }

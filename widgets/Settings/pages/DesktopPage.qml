@@ -20,6 +20,28 @@ ColumnLayout {
     spacing: Theme.spacingMedium
 
     Text {
+        text: "Bar Clock"
+        color: Theme.colorForeground
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        font.bold: true
+    }
+
+    SettingsComponents.ToggleSettingRow {
+        label: "24-hour time"
+        value: settingsRoot.shownClockUse24Hour
+        staged: settingsRoot.stagedClockUse24Hour !== null
+        onToggled: settingsRoot.stagedClockUse24Hour = !settingsRoot.shownClockUse24Hour
+    }
+
+    SettingsComponents.ToggleSettingRow {
+        label: "Show seconds"
+        value: settingsRoot.shownClockShowSeconds
+        staged: settingsRoot.stagedClockShowSeconds !== null
+        onToggled: settingsRoot.stagedClockShowSeconds = !settingsRoot.shownClockShowSeconds
+    }
+
+    Text {
         text: "Desktop Clock"
         color: Theme.colorForeground
         font.family: Theme.fontFamily

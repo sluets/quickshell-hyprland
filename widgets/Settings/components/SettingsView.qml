@@ -289,6 +289,12 @@ Item {
                 settingsRoot: viewRoot.settingsRoot
             }
 
+            // ================ WALLPAPER PAGE ================
+            SettingsPages.WallpaperPage {
+                id: wallpaperPage
+                settingsRoot: viewRoot.settingsRoot
+            }
+
             // ================ NOTIFICATIONS PAGE ================
             SettingsPages.NotificationsPage {
                 id: notificationsPage
@@ -379,6 +385,7 @@ Item {
             anchors.fill: parent
             settingsRoot: viewRoot.settingsRoot
             appearancePage: appearancePage
+            wallpaperPage: wallpaperPage
         }
     }
 }

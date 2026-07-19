@@ -27,7 +27,7 @@ Item {
     property bool wallpaperTransitionTypeDropdownOpen: false
     // Displays remains a future feature. Its disabled prototype was removed
     // in Rev 25; rebuild it around a real services/DisplayManager.qml.
-    readonly property var pages: ["Appearance", "Launcher", "Notifications", "Desktop", "Hyprland", "UI Profiles", "SDDM"]
+    readonly property var pages: ["Appearance", "Launcher", "Wallpaper", "Notifications", "Desktop", "Hyprland", "UI Profiles", "SDDM"]
 
     // ---- Shared preset-color-picker overlay state (2026-07-11, Opus) ----
     // The swatch popup can't live inside its HexColorRow: the popup is
@@ -92,6 +92,12 @@ Item {
     property alias stagedLauncherOffsetX: settingsTransaction.stagedLauncherOffsetX
     property alias stagedLauncherOffsetY: settingsTransaction.stagedLauncherOffsetY
     property alias stagedLauncherShowAppsOnOpen: settingsTransaction.stagedLauncherShowAppsOnOpen
+    property alias stagedWallpaperPickerPlacement: settingsTransaction.stagedWallpaperPickerPlacement
+    property alias stagedWallpaperPickerOffsetX: settingsTransaction.stagedWallpaperPickerOffsetX
+    property alias stagedWallpaperPickerOffsetY: settingsTransaction.stagedWallpaperPickerOffsetY
+    property alias stagedWallpaperCachingEnabled: settingsTransaction.stagedWallpaperCachingEnabled
+    property alias stagedClockUse24Hour: settingsTransaction.stagedClockUse24Hour
+    property alias stagedClockShowSeconds: settingsTransaction.stagedClockShowSeconds
     property alias stagedHyprGapsIn: settingsTransaction.stagedHyprGapsIn
     property alias stagedHyprGapsOut: settingsTransaction.stagedHyprGapsOut
     property alias stagedHyprBorderSize: settingsTransaction.stagedHyprBorderSize
@@ -144,6 +150,12 @@ Item {
     readonly property int shownLauncherOffsetX: settingsTransaction.shownLauncherOffsetX
     readonly property int shownLauncherOffsetY: settingsTransaction.shownLauncherOffsetY
     readonly property bool shownLauncherShowAppsOnOpen: settingsTransaction.shownLauncherShowAppsOnOpen
+    readonly property string shownWallpaperPickerPlacement: settingsTransaction.shownWallpaperPickerPlacement
+    readonly property int shownWallpaperPickerOffsetX: settingsTransaction.shownWallpaperPickerOffsetX
+    readonly property int shownWallpaperPickerOffsetY: settingsTransaction.shownWallpaperPickerOffsetY
+    readonly property bool shownWallpaperCachingEnabled: settingsTransaction.shownWallpaperCachingEnabled
+    readonly property bool shownClockUse24Hour: settingsTransaction.shownClockUse24Hour
+    readonly property bool shownClockShowSeconds: settingsTransaction.shownClockShowSeconds
     readonly property int shownBarBorderWidthOverride: settingsTransaction.shownBarBorderWidthOverride
     readonly property bool shownBarBorderUseThemeColor: settingsTransaction.shownBarBorderUseThemeColor
     readonly property string shownBarBorderCustomColor: settingsTransaction.shownBarBorderCustomColor
@@ -207,6 +219,10 @@ Item {
     // (project convention: plain unicode over Nerd glyphs where
     // possible) — self-evident for corners, compact enough that five
     // cells + a label fit the fixed content width at fontScale 1.0.
+    readonly property var wallpaperPickerPlacementOptions: [
+        { value: "attached", text: "Attached" },
+        { value: "centered", text: "Centered" }
+    ]
     readonly property var launcherPlacementOptions: [
         { value: "attached", text: "Attached" },
         { value: "centered", text: "Centered" }
@@ -220,13 +236,10 @@ Item {
         { value: "bottom-left", text: "↙" }, { value: "bottom-right", text: "↘" },
         { value: "centered", text: "◎" }
     ]
-    // Full awww/swww --transition-type set (verified against swww
-    // source — see UserPrefs.qml's DESIGN NOTES on this same list).
-    // Flat string array, same shape as Theme.themeNames — the dropdown
-    // recipe below was written generically enough to reuse as-is.
+    // User-facing wallpaper transition effects. Keep direction/origin
+    // values out of this list; those belong to the separate position control.
     readonly property var wallpaperTransitionTypeOptions: [
-        "simple", "fade", "wipe", "wave", "grow", "outer", "any", "random",
-        "left", "right", "top", "bottom", "center", "none"
+        "fade", "wipe", "wave", "grow", "random"
     ]
     // Same 5-symbol vocabulary as clockCornerOptions (center included,
     // since grow/outer's circle can start dead-center same as any
