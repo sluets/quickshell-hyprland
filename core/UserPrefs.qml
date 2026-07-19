@@ -258,6 +258,10 @@ Singleton {
     readonly property int hyprBorderSize: adapter.hyprBorderSize
     readonly property int hyprRounding: adapter.hyprRounding
     readonly property string hyprAnimationPreset: adapter.hyprAnimationPreset
+    readonly property string hyprWindowAnimationStyle: adapter.hyprWindowAnimationStyle
+    readonly property string hyprWorkspaceAnimationStyle: adapter.hyprWorkspaceAnimationStyle
+    readonly property string hyprLayerAnimationStyle: adapter.hyprLayerAnimationStyle
+    readonly property string hyprFadeAnimationPreset: adapter.hyprFadeAnimationPreset
     // Hyprland active-window border color (settings window, Hyprland
     // page, 2026-07-12) — same use-theme-or-custom-hex pattern as
     // barBorderUseThemeColor/barBorderCustomColor. "Theme" here means
@@ -327,6 +331,26 @@ Singleton {
     function setHyprAnimationPreset(v: string): void {
         const allowed = ["off", "snappy", "smooth", "bouncy"];
         adapter.hyprAnimationPreset = allowed.indexOf(v) >= 0 ? v : "smooth";
+    }
+
+    function setHyprWindowAnimationStyle(v: string): void {
+        const allowed = ["follow", "popin", "slide", "gnomed"];
+        adapter.hyprWindowAnimationStyle = allowed.indexOf(v) >= 0 ? v : "follow";
+    }
+
+    function setHyprWorkspaceAnimationStyle(v: string): void {
+        const allowed = ["follow", "slide", "slidevert", "fade", "slidefade", "slidefadevert"];
+        adapter.hyprWorkspaceAnimationStyle = allowed.indexOf(v) >= 0 ? v : "follow";
+    }
+
+    function setHyprLayerAnimationStyle(v: string): void {
+        const allowed = ["follow", "fade", "popin", "slide"];
+        adapter.hyprLayerAnimationStyle = allowed.indexOf(v) >= 0 ? v : "follow";
+    }
+
+    function setHyprFadeAnimationPreset(v: string): void {
+        const allowed = ["follow", "off", "quick", "balanced", "soft"];
+        adapter.hyprFadeAnimationPreset = allowed.indexOf(v) >= 0 ? v : "follow";
     }
 
     function setHyprActiveBorderUseThemeColor(v: bool): void {
@@ -635,6 +659,13 @@ Singleton {
         // Hyprland animation preset. "smooth" reproduces the pre-managed
         // animation block from user/look.lua.  // GPT Rev 30
         property string hyprAnimationPreset: "smooth"
+        // Optional style overrides. "follow" keeps the selected overall preset's
+        // built-in choices. These are intentionally preset-only for now; sliders
+        // and raw timing controls belong to a later advanced phase.  // GPT Rev 40
+        property string hyprWindowAnimationStyle: "follow"
+        property string hyprWorkspaceAnimationStyle: "follow"
+        property string hyprLayerAnimationStyle: "follow"
+        property string hyprFadeAnimationPreset: "follow"
         // Hyprland active border color (Hyprland page, 2026-07-12).
         // Defaults to "follow theme" — true/empty custom means this
         // pref writes nothing different until someone turns it on;

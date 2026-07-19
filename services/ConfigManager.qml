@@ -518,12 +518,11 @@ Singleton {
             case "hyprGapsOut": UserPrefs.setHyprGapsOut(ch.value); n++; _hyprDirty = true; break;
             case "hyprBorderSize": UserPrefs.setHyprBorderSize(ch.value); n++; _hyprDirty = true; break;
             case "hyprRounding": UserPrefs.setHyprRounding(ch.value); n++; _hyprDirty = true; break;
-            case "hyprAnimationPreset":
-                UserPrefs.setHyprAnimationPreset(ch.value);
-                n++;
-                _hyprDirty = true;
-                _hyprAnimationDirty = true;
-                break;
+            case "hyprAnimationPreset": UserPrefs.setHyprAnimationPreset(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
+            case "hyprWindowAnimationStyle": UserPrefs.setHyprWindowAnimationStyle(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
+            case "hyprWorkspaceAnimationStyle": UserPrefs.setHyprWorkspaceAnimationStyle(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
+            case "hyprLayerAnimationStyle": UserPrefs.setHyprLayerAnimationStyle(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
+            case "hyprFadeAnimationPreset": UserPrefs.setHyprFadeAnimationPreset(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
             default:
                 lastError = (lastError ? lastError + "\n" : "") + "unknown key: " + ch.key;
             }
@@ -587,6 +586,10 @@ Singleton {
                 hasGradient ? "1" : "0",
                 hyprGeneratedAnimations,
                 UserPrefs.hyprAnimationPreset,
+                UserPrefs.hyprWindowAnimationStyle,
+                UserPrefs.hyprWorkspaceAnimationStyle,
+                UserPrefs.hyprLayerAnimationStyle,
+                UserPrefs.hyprFadeAnimationPreset,
                 animationChanged ? "1" : "0"
             ]);
         }
@@ -629,11 +632,13 @@ Singleton {
     }
 
     // $1 = generated/appearance.lua; $2..$9 appearance values;
-    // $10 = generated/animations.lua; $11 = preset; $12 = live-eval flag.  // GPT Rev 37
+    // $10 = generated/animations.lua; $11 = overall preset; $12..$15 = branch overrides;
+    // $16 = normal-reload flag.  // GPT Rev 40
     readonly property string hyprGenScript: `
 set -eu
 out="$1"; gin="$2"; gout="$3"; bs="$4"; rnd="$5"; ab="$6"; ab2="$7"; angle="$8"; grad="$9"
-animout="\${10}"; preset="\${11}"; eval_anim="\${12}"
+animout="\${10}"; preset="\${11}"; window_style="\${12}"; workspace_style="\${13}"
+layer_style="\${14}"; fade_preset="\${15}"; eval_anim="\${16}"
 mkdir -p "$(dirname "$out")"
 if [ "$grad" = 1 ] && [ -n "$ab2" ]; then
 cat > "$out" <<LUAEOF
@@ -744,6 +749,88 @@ hl.animation({ leaf = "workspaces",    enabled = true, speed = 1.94, bezier = "a
 hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 1.21, bezier = "almostLinear", style = "slide" })
 hl.animation({ leaf = "workspacesOut", enabled = true, speed = 1.94, bezier = "almostLinear", style = "slide" })
 hl.animation({ leaf = "zoomFactor",    enabled = true, speed = 7,    bezier = "quick" })
+LUAEOF
+        ;;
+    esac
+
+    # Optional branch-specific style overrides. These are written after the
+    # overall feel so the child leaves intentionally take precedence.  // GPT Rev 40
+    case "$window_style" in
+      popin)
+        cat <<'LUAEOF'
+hl.animation({ leaf = "windows",    enabled = true, speed = 4.0, spring = "easy", style = "popin 85%" })
+hl.animation({ leaf = "windowsIn",  enabled = true, speed = 3.5, spring = "easy", style = "popin 85%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 2.0, bezier = "quick", style = "popin 85%" })
+LUAEOF
+        ;;
+      slide)
+        cat <<'LUAEOF'
+hl.animation({ leaf = "windows",    enabled = true, speed = 4.0, spring = "easy", style = "slide" })
+hl.animation({ leaf = "windowsIn",  enabled = true, speed = 3.5, spring = "easy", style = "slide" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 2.0, bezier = "quick", style = "slide" })
+LUAEOF
+        ;;
+      gnomed)
+        cat <<'LUAEOF'
+hl.animation({ leaf = "windows",    enabled = true, speed = 4.5, spring = "easy", style = "gnomed" })
+hl.animation({ leaf = "windowsIn",  enabled = true, speed = 4.0, spring = "easy", style = "gnomed" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 2.5, bezier = "quick", style = "gnomed" })
+LUAEOF
+        ;;
+    esac
+
+    case "$workspace_style" in
+      slide|slidevert|fade|slidefade|slidefadevert)
+        if [ "$workspace_style" = slidefade ] || [ "$workspace_style" = slidefadevert ]; then
+          ws_style="$workspace_style 35%"
+        else
+          ws_style="$workspace_style"
+        fi
+        cat <<LUAEOF
+hl.animation({ leaf = "workspaces",    enabled = true, speed = 3.2, bezier = "almostLinear", style = "$ws_style" })
+hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 3.0, bezier = "almostLinear", style = "$ws_style" })
+hl.animation({ leaf = "workspacesOut", enabled = true, speed = 3.2, bezier = "almostLinear", style = "$ws_style" })
+LUAEOF
+        ;;
+    esac
+
+    case "$layer_style" in
+      fade|popin|slide)
+        layer_arg="$layer_style"
+        [ "$layer_style" = popin ] && layer_arg="popin 85%"
+        cat <<LUAEOF
+hl.animation({ leaf = "layers",    enabled = true, speed = 3.0, bezier = "easeOutQuint", style = "$layer_arg" })
+hl.animation({ leaf = "layersIn",  enabled = true, speed = 3.0, bezier = "easeOutQuint", style = "$layer_arg" })
+hl.animation({ leaf = "layersOut", enabled = true, speed = 1.8, bezier = "quick", style = "$layer_arg" })
+LUAEOF
+        ;;
+    esac
+
+    case "$fade_preset" in
+      off)
+        cat <<'LUAEOF'
+hl.animation({ leaf = "fade", enabled = false })
+LUAEOF
+        ;;
+      quick)
+        cat <<'LUAEOF'
+hl.animation({ leaf = "fade", enabled = true, speed = 1.2, bezier = "quick" })
+hl.animation({ leaf = "fadeIn", enabled = true, speed = 1.2, bezier = "quick" })
+hl.animation({ leaf = "fadeOut", enabled = true, speed = 1.0, bezier = "quick" })
+LUAEOF
+        ;;
+      balanced)
+        cat <<'LUAEOF'
+hl.animation({ leaf = "fade", enabled = true, speed = 2.5, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeIn", enabled = true, speed = 2.2, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeOut", enabled = true, speed = 1.8, bezier = "almostLinear" })
+LUAEOF
+        ;;
+      soft)
+        cat <<'LUAEOF'
+hl.animation({ leaf = "fade", enabled = true, speed = 4.5, bezier = "easeOutQuint" })
+hl.animation({ leaf = "fadeIn", enabled = true, speed = 4.0, bezier = "easeOutQuint" })
+hl.animation({ leaf = "fadeOut", enabled = true, speed = 3.2, bezier = "almostLinear" })
 LUAEOF
         ;;
     esac

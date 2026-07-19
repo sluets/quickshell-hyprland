@@ -85,7 +85,7 @@ ColumnLayout {
 
 
     Text {
-        text: "Animation Preset"
+        text: "Animations"
         color: Theme.colorForeground
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSize
@@ -93,7 +93,7 @@ ColumnLayout {
     }
 
     SettingsComponents.OptionPickerRow {
-        label: "Preset"
+        label: "Overall Feel"
         options: [
             { text: "Off", value: "off" },
             { text: "Snappy", value: "snappy" },
@@ -103,6 +103,72 @@ ColumnLayout {
         shownValue: settingsRoot.shownHyprAnimationPreset
         staged: settingsRoot.stagedHyprAnimationPreset !== null
         onPicked: value => settingsRoot.stagedHyprAnimationPreset = value
+    }
+
+    SettingsComponents.OptionPickerRow {
+        label: "Window Style"
+        options: [
+            { text: "Follow Feel", value: "follow" },
+            { text: "Pop In", value: "popin" },
+            { text: "Slide", value: "slide" },
+            { text: "GNOME-like", value: "gnomed" }
+        ]
+        shownValue: settingsRoot.shownHyprWindowAnimationStyle
+        staged: settingsRoot.stagedHyprWindowAnimationStyle !== null
+        onPicked: value => settingsRoot.stagedHyprWindowAnimationStyle = value
+    }
+
+    SettingsComponents.OptionPickerRow {
+        label: "Workspace Style"
+        options: [
+            { text: "Follow Feel", value: "follow" },
+            { text: "Horizontal Slide", value: "slide" },
+            { text: "Vertical Slide", value: "slidevert" },
+            { text: "Fade", value: "fade" },
+            { text: "Slide + Fade", value: "slidefade" },
+            { text: "Vertical + Fade", value: "slidefadevert" }
+        ]
+        shownValue: settingsRoot.shownHyprWorkspaceAnimationStyle
+        staged: settingsRoot.stagedHyprWorkspaceAnimationStyle !== null
+        onPicked: value => settingsRoot.stagedHyprWorkspaceAnimationStyle = value
+    }
+
+    SettingsComponents.OptionPickerRow {
+        label: "Layer Style"
+        options: [
+            { text: "Follow Feel", value: "follow" },
+            { text: "Fade", value: "fade" },
+            { text: "Pop In", value: "popin" },
+            { text: "Slide", value: "slide" }
+        ]
+        shownValue: settingsRoot.shownHyprLayerAnimationStyle
+        staged: settingsRoot.stagedHyprLayerAnimationStyle !== null
+        onPicked: value => settingsRoot.stagedHyprLayerAnimationStyle = value
+    }
+
+    SettingsComponents.OptionPickerRow {
+        label: "Fade Behavior"
+        options: [
+            { text: "Follow Feel", value: "follow" },
+            { text: "Off", value: "off" },
+            { text: "Quick", value: "quick" },
+            { text: "Balanced", value: "balanced" },
+            { text: "Soft", value: "soft" }
+        ]
+        shownValue: settingsRoot.shownHyprFadeAnimationPreset
+        staged: settingsRoot.stagedHyprFadeAnimationPreset !== null
+        onPicked: value => settingsRoot.stagedHyprFadeAnimationPreset = value
+    }
+
+    Text {
+        text: "Overall Feel controls timing and curves. The style rows override "
+            + "only their own animation branch. Follow Feel keeps the built-in "
+            + "choice from Off, Snappy, Smooth, or Bouncy."
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        color: Theme.colorMuted
+        font.family: Theme.fontFamily
+        font.pixelSize: Math.round(Theme.fontSize * 0.8)
     }
 
     Text {

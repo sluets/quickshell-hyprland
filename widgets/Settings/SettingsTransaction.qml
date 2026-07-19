@@ -18,6 +18,10 @@ Item {
     property var stagedHyprBorderSize: null
     property var stagedHyprRounding: null
     property var stagedHyprAnimationPreset: null
+    property var stagedHyprWindowAnimationStyle: null
+    property var stagedHyprWorkspaceAnimationStyle: null
+    property var stagedHyprLayerAnimationStyle: null
+    property var stagedHyprFadeAnimationPreset: null
     property var stagedHyprActiveBorderUseThemeColor: null
     property var stagedHyprActiveBorderCustomColor: null
     property var stagedBarBorderWidthOverride: null
@@ -82,6 +86,10 @@ Item {
     readonly property int shownHyprBorderSize: stagedHyprBorderSize !== null ? stagedHyprBorderSize : UserPrefs.hyprBorderSize
     readonly property int shownHyprRounding: stagedHyprRounding !== null ? stagedHyprRounding : UserPrefs.hyprRounding
     readonly property string shownHyprAnimationPreset: stagedHyprAnimationPreset !== null ? stagedHyprAnimationPreset : UserPrefs.hyprAnimationPreset
+    readonly property string shownHyprWindowAnimationStyle: stagedHyprWindowAnimationStyle !== null ? stagedHyprWindowAnimationStyle : UserPrefs.hyprWindowAnimationStyle
+    readonly property string shownHyprWorkspaceAnimationStyle: stagedHyprWorkspaceAnimationStyle !== null ? stagedHyprWorkspaceAnimationStyle : UserPrefs.hyprWorkspaceAnimationStyle
+    readonly property string shownHyprLayerAnimationStyle: stagedHyprLayerAnimationStyle !== null ? stagedHyprLayerAnimationStyle : UserPrefs.hyprLayerAnimationStyle
+    readonly property string shownHyprFadeAnimationPreset: stagedHyprFadeAnimationPreset !== null ? stagedHyprFadeAnimationPreset : UserPrefs.hyprFadeAnimationPreset
     readonly property bool shownHyprActiveBorderUseThemeColor: stagedHyprActiveBorderUseThemeColor !== null ? stagedHyprActiveBorderUseThemeColor : UserPrefs.hyprActiveBorderUseThemeColor
     readonly property string shownHyprActiveBorderCustomColor: stagedHyprActiveBorderCustomColor !== null ? stagedHyprActiveBorderCustomColor : UserPrefs.hyprActiveBorderCustomColor
     readonly property string shownNotifCorner: stagedNotifCorner !== null ? stagedNotifCorner : UserPrefs.notifCorner
@@ -185,7 +193,11 @@ Item {
             ["hyprGapsOut", "Gaps Out", UserPrefs.hyprGapsOut, stagedHyprGapsOut],
             ["hyprBorderSize", "Border Size", UserPrefs.hyprBorderSize, stagedHyprBorderSize],
             ["hyprRounding", "Rounding", UserPrefs.hyprRounding, stagedHyprRounding],
-            ["hyprAnimationPreset", "Animation Preset", UserPrefs.hyprAnimationPreset, stagedHyprAnimationPreset]
+            ["hyprAnimationPreset", "Animation Feel", UserPrefs.hyprAnimationPreset, stagedHyprAnimationPreset],
+            ["hyprWindowAnimationStyle", "Window Animation", UserPrefs.hyprWindowAnimationStyle, stagedHyprWindowAnimationStyle],
+            ["hyprWorkspaceAnimationStyle", "Workspace Animation", UserPrefs.hyprWorkspaceAnimationStyle, stagedHyprWorkspaceAnimationStyle],
+            ["hyprLayerAnimationStyle", "Layer Animation", UserPrefs.hyprLayerAnimationStyle, stagedHyprLayerAnimationStyle],
+            ["hyprFadeAnimationPreset", "Fade Animation", UserPrefs.hyprFadeAnimationPreset, stagedHyprFadeAnimationPreset]
         ];
         for (let i = 0; i < hyprPairs.length; i++) {
             const [key, label, live, staged] = hyprPairs[i];
@@ -271,6 +283,10 @@ Item {
         stagedHyprBorderSize = null;
         stagedHyprRounding = null;
         stagedHyprAnimationPreset = null;
+        stagedHyprWindowAnimationStyle = null;
+        stagedHyprWorkspaceAnimationStyle = null;
+        stagedHyprLayerAnimationStyle = null;
+        stagedHyprFadeAnimationPreset = null;
         stagedHyprActiveBorderUseThemeColor = null;
         stagedHyprActiveBorderCustomColor = null;
         stagedBarBorderWidthOverride = null;
@@ -351,6 +367,10 @@ Item {
             { key: "hyprBorderSize", value: UserPrefs.hyprBorderSize },
             { key: "hyprRounding", value: UserPrefs.hyprRounding },
             { key: "hyprAnimationPreset", value: UserPrefs.hyprAnimationPreset },
+            { key: "hyprWindowAnimationStyle", value: UserPrefs.hyprWindowAnimationStyle },
+            { key: "hyprWorkspaceAnimationStyle", value: UserPrefs.hyprWorkspaceAnimationStyle },
+            { key: "hyprLayerAnimationStyle", value: UserPrefs.hyprLayerAnimationStyle },
+            { key: "hyprFadeAnimationPreset", value: UserPrefs.hyprFadeAnimationPreset },
             { key: "hyprActiveBorderUseThemeColor", value: UserPrefs.hyprActiveBorderUseThemeColor },
             { key: "hyprActiveBorderCustomColor", value: UserPrefs.hyprActiveBorderCustomColor }
         ];
