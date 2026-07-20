@@ -345,8 +345,71 @@ Scope {
     IpcHandler {
         target: "settings"
 
-        function toggle(): void {
-            settingsWindow.toggle();
+        function toggle(): string {
+            // GPT: Settings is Loader-owned. Route IPC through the same
+            // signal path used by the gear menu instead of referencing the
+            // removed pre-split settingsWindow id.
+            Signals.toggleSettingsWindow();
+            return "ok: settings toggle requested";
+        }
+    }
+
+    // Safe external torture-test surface. This deliberately exposes only
+    // visual/runtime settings and never calls UI-profile save/delete/restore.
+    // The Python harness in testing/ uses it to exercise the live shell. // GPT
+    IpcHandler {
+        target: "soak"
+
+        function _bool(value: string): bool {
+            return value === "1" || value === "true" || value === "on";
+        }
+
+        function set(key: string, value: string): string {
+            switch (key) {
+            case "themeName": UserPrefs.setThemeName(value); break;
+            case "fontScale": UserPrefs.setFontScale(Number(value)); break;
+            case "clockUse24Hour": UserPrefs.setClockUse24Hour(_bool(value)); break;
+            case "clockShowSeconds": UserPrefs.setClockShowSeconds(_bool(value)); break;
+            case "launcherPlacement": UserPrefs.setLauncherPlacement(value); break;
+            case "launcherOffsetX": UserPrefs.setLauncherOffsetX(Number(value)); break;
+            case "launcherOffsetY": UserPrefs.setLauncherOffsetY(Number(value)); break;
+            case "launcherShowAppsOnOpen": UserPrefs.setLauncherShowAppsOnOpen(_bool(value)); break;
+            case "wallpaperPickerPlacement": UserPrefs.setWallpaperPickerPlacement(value); break;
+            case "wallpaperPickerOffsetX": UserPrefs.setWallpaperPickerOffsetX(Number(value)); break;
+            case "wallpaperPickerOffsetY": UserPrefs.setWallpaperPickerOffsetY(Number(value)); break;
+            case "wallpaperTransitionType": UserPrefs.setWallpaperTransitionType(value); break;
+            case "wallpaperTransitionDuration": UserPrefs.setWallpaperTransitionDuration(Number(value)); break;
+            case "notifPresentation": UserPrefs.setNotifPresentation(value); break;
+            case "notifBarPosition": UserPrefs.setNotifBarPosition(value); break;
+            case "notifBarOffsetX": UserPrefs.setNotifBarOffsetX(Number(value)); break;
+            case "notifBarShowCardBorders": UserPrefs.setNotifBarShowCardBorders(_bool(value)); break;
+            case "notifShowAppName": UserPrefs.setNotifShowAppName(_bool(value)); break;
+            case "notifIconSize": UserPrefs.setNotifIconSize(Number(value)); break;
+            case "notifBodyLines": UserPrefs.setNotifBodyLines(Number(value)); break;
+            case "notifFontScale": UserPrefs.setNotifFontScale(Number(value)); break;
+            case "notifCorner": UserPrefs.setNotifCorner(value); break;
+            case "notifOffsetX": UserPrefs.setNotifOffsetX(Number(value)); break;
+            case "notifOffsetY": UserPrefs.setNotifOffsetY(Number(value)); break;
+            case "desktopClockEnabled": UserPrefs.setDesktopClockEnabled(_bool(value)); break;
+            case "desktopClockCorner": UserPrefs.setDesktopClockCorner(value); break;
+            case "desktopClockOffsetX": UserPrefs.setDesktopClockOffsetX(Number(value)); break;
+            case "desktopClockOffsetY": UserPrefs.setDesktopClockOffsetY(Number(value)); break;
+            case "desktopClockScale": UserPrefs.setDesktopClockScale(Number(value)); break;
+            case "desktopClockShadowEnabled": UserPrefs.setDesktopClockShadowEnabled(_bool(value)); break;
+            case "desktopClockShadowStrength": UserPrefs.setDesktopClockShadowStrength(Number(value)); break;
+            case "desktopClockShadowOffsetX": UserPrefs.setDesktopClockShadowOffsetX(Number(value)); break;
+            case "desktopClockShadowOffsetY": UserPrefs.setDesktopClockShadowOffsetY(Number(value)); break;
+            case "desktopClockShowWeatherIcon": UserPrefs.setDesktopClockShowWeatherIcon(_bool(value)); break;
+            case "desktopClockShowTemperature": UserPrefs.setDesktopClockShowTemperature(_bool(value)); break;
+            case "barBorderWidthOverride": UserPrefs.setBarBorderWidthOverride(Number(value)); break;
+            case "barBorderUseThemeColor": UserPrefs.setBarBorderUseThemeColor(_bool(value)); break;
+            case "barBorderCustomColor": UserPrefs.setBarBorderCustomColor(value); break;
+            case "barPaddingTopOverride": UserPrefs.setBarPaddingTopOverride(Number(value)); break;
+            case "barPaddingSideOverride": UserPrefs.setBarPaddingSideOverride(Number(value)); break;
+            case "barPaddingBottomOverride": UserPrefs.setBarPaddingBottomOverride(Number(value)); break;
+            default: return "rejected: unsupported soak key " + key;
+            }
+            return "ok: " + key + "=" + value;
         }
     }
 

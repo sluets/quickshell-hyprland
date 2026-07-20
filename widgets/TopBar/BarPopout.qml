@@ -238,9 +238,32 @@ PopupWindow {
         if (!visible && open)
             open = false;
     }
-    // Popup width can settle after open (it's the content column's
-    // size, computed once mapped) — keep the gap in sync.
-    onWidthChanged: if (open) _updateGap()
+    // Popup geometry can change while the surface is already visible. This is
+    // especially easy to trigger with notification position/offset fuzzing:
+    // the Wayland anchor moves immediately, but without refreshing the bar gap
+    // the old x-range remains cut out until some unrelated width/open event.
+    // Re-registering the same key atomically replaces the old range. // GPT Rev 69
+    function _refreshVisibleGap(): void {
+        if (visible)
+            Qt.callLater(() => root._updateGap());
+    }
+
+    // Popup width can settle after open (it's the content column's size,
+    // computed once mapped), and alignment/offset/anchor can all change live.
+    onWidthChanged: _refreshVisibleGap()
+    onAlignmentChanged: _refreshVisibleGap()
+    onXOffsetChanged: _refreshVisibleGap()
+    onAnchorItemChanged: _refreshVisibleGap()
+
+    // Loader deactivation can destroy a visible popup without completing its
+    // normal reveal-to-zero lifecycle (for example bar -> detached notification
+    // presentation changes). Always release this instance's unique gap key so
+    // a dead surface can never leave a permanent hole in the bar border. // GPT Rev 69
+    Component.onDestruction: {
+        const bar = _findBarHost();
+        if (bar)
+            bar.clearPopoutGap(_gapKey);
+    }
 
     // ---- Bar-border gap registration (2026-07-10) ----
     // The bar strokes a border around itself (TopBar.qml's Canvas)
