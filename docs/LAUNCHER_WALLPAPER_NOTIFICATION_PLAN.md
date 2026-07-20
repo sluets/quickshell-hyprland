@@ -1,278 +1,148 @@
-# Launcher, Wallpaper Picker, and Notification Expansion Plan
+# Launcher, Wallpaper Picker, and Notification Expansion
 
-**Status:** Planned / deferred  
-**Created:** 2026-07-18  
-**Author:** GPT  
+**Status:** Implemented and live-tested through Rev 64
+**Planned:** 2026-07-18
+**Completed:** 2026-07-20
+**Author:** GPT
 
 ## Purpose
 
-This document captures the next planned customization block for the app launcher, wallpaper picker, and notification popups.
+This document began as the implementation plan for a shared customization block covering the app launcher, wallpaper picker, and notification popups. The work is now complete and this file records the approved architecture, behavior, and constraints.
 
-The goal is to make all three surfaces support more consistent placement and visual behavior without turning `SettingsWindow.qml` into an even larger monolith.
+The structural prerequisite was completed first: `SettingsWindow.qml` was reduced to a window host, page-facing state moved to `SettingsContext.qml`, staged Apply/Cancel state moved to `SettingsTransaction.qml`, and feature controls were placed in dedicated Settings pages.
 
-No implementation should begin until the Settings structure is split enough that these controls can live in dedicated pages or components.
+## Final implementation
 
----
+### App launcher — Revs 41–46
 
-## Requested features
+The launcher now supports two presentation modes while sharing one content implementation:
 
-### 1. Notification popups that can grow out of the top bar
+- **Attached to bar** — opens through the connected `BarPopout` presentation.
+- **Centered on screen** — opens as a detached floating surface on the selected monitor.
 
-Add an optional notification presentation mode that visually connects the popup to the top bar.
+Persisted and staged controls include:
 
-In this mode:
+- placement mode;
+- horizontal and vertical offsets;
+- show applications immediately when the launcher opens;
+- favorites;
+- launch-count ordering;
+- hidden applications and maintenance controls.
 
-- The notification should appear to expand from the bar rather than float as a separate card.
-- The top-bar border should flow around the notification surface.
-- The visual treatment should match the existing connected behavior used by the app launcher and wallpaper picker.
-- Existing detached corner-positioned notifications must remain available.
+The launcher model receives an explicit refresh when the shell starts so the initial application list does not remain empty until another model change occurs. Search, keyboard navigation, launching, favorites, usage tracking, and hidden-app filtering use the same shared content regardless of presentation mode.
 
-Suggested setting:
+The launcher row and maintenance-button radius fixes from Revs 44–45 are part of the approved baseline.
 
-- `Notification presentation`
-  - `Detached popup`
-  - `Connected to bar`
+### Wallpaper picker — Revs 47–51
 
-The connected mode will likely need:
+The wallpaper picker now uses the same attached/centered presentation model as the launcher:
 
-- A shared bar-popout border/background component.
-- Knowledge of which monitor and bar instance spawned the notification.
-- Configurable horizontal alignment or attachment point.
-- Correct clipping and corner radii where the notification joins the bar.
-- A fallback to detached mode when no suitable bar instance exists.
+- **Attached to bar** — connected `BarPopout` surface.
+- **Centered on screen** — detached floating surface.
+- X/Y offsets apply to the selected presentation.
 
-This should reuse the existing top-bar popout language rather than creating a third unrelated border implementation.
+The wallpaper body remains shared. Both modes use the same:
 
----
+- configured wallpaper-library path;
+- `.thumbs` cache;
+- current-wallpaper marker;
+- random/shuffle behavior;
+- `awww` application path;
+- transition configuration.
 
-### 2. App launcher placement modes
+Wallpaper controls were consolidated into `widgets/Settings/pages/WallpaperPage.qml`. The old gear-menu wallpaper settings were removed; the gear now opens the full Settings window directly.
 
-The app launcher should support both its current bar-connected position and a floating screen-centered position.
+The approved transition list is intentionally limited to:
 
-Suggested settings:
+- Fade
+- Wipe
+- Wave
+- Grow
+- Random
 
-- `Launcher placement`
-  - `Attached to bar`
-  - `Centered on screen`
-- `Launcher horizontal offset`
-- `Launcher vertical offset`
+### Notifications — Revs 52–64
 
-Behavior:
+Notifications now support two independent presentation modes:
 
-- Attached mode preserves the current launcher behavior and connected bar border.
-- Centered mode creates a detached floating launcher centered on the selected/current monitor.
-- Offsets apply after centering.
-- The launcher should open on the monitor associated with the active bar or pointer, depending on the existing project convention.
-- Search, keyboard navigation, closing behavior, and result selection must remain identical in both placement modes.
+- **Detached** — preserves the original corner-positioned floating cards and detached X/Y offsets.
+- **On Bar** — attaches a notification stack to the active monitor's top bar using the shared connected-border language.
 
-The placement logic should be separated from the launcher content so both modes render the same launcher body.
+On-bar controls include:
 
----
+- Left / Center / Right bar position;
+- horizontal offset;
+- optional attached card borders.
 
-### 3. Wallpaper picker placement modes
+The bar exposes dedicated left, center, and right notification anchor items. `shell.qml` routes the notification surface to the focused bar and selected anchor.
 
-The wallpaper picker should receive the same placement model as the launcher.
-
-Suggested settings:
-
-- `Wallpaper picker placement`
-  - `Attached to bar`
-  - `Centered on screen`
-- `Wallpaper picker horizontal offset`
-- `Wallpaper picker vertical offset`
-
-Behavior:
-
-- Attached mode preserves the existing bar-connected picker.
-- Centered mode displays the same wallpaper grid in a detached floating window.
-- Offsets apply after centering.
-- The existing shared wallpaper-library path and `.thumbs` cache remain authoritative.
-- Selection, shuffle, thumbnail loading, and wallpaper application behavior must not be duplicated between placement modes.
-
-The picker body should be extracted from the current positioning shell before adding the second placement mode.
-
----
-
-### 4. Launcher initial app visibility
-
-The launcher currently opens empty and shows no application results until typing begins. This was intentional, but it should become configurable.
-
-Suggested setting:
-
-- `Show applications when launcher opens`
-  - Off: preserve current blank-until-search behavior.
-  - On: show an initial application list immediately.
-
-The initial list should use the existing launcher model and filtering pipeline rather than a second application model.
-
-Possible initial ordering:
-
-1. Frequently used applications, if usage tracking is ever added.
-2. Alphabetical applications.
-3. Existing desktop-entry/model order as the simplest first implementation.
-
-For the first version, alphabetical or existing model order is sufficient. Usage tracking should not be added as part of this feature unless separately approved.
-
-The launcher must still reset the search field when opened unless a future setting explicitly changes that behavior.
-
----
-
-## Shared placement model
-
-The launcher and wallpaper picker should not each invent separate placement settings and geometry code.
-
-Create a shared placement concept with values such as:
-
-- `bar`
-- `center`
-
-And shared behavior for:
-
-- Target monitor selection.
-- Center calculation.
-- X/Y offsets.
-- Screen-edge clamping.
-- Detached versus connected corner radii.
-- Opening and closing animation origin.
-
-A reusable component or helper could own the detached window geometry while the existing `BarPopout` path continues to own attached mode.
-
-Do not force attached and centered modes into one giant component if that creates fragile conditional anchors. Prefer a shared content component hosted by two small presentation shells.
-
----
-
-## Settings organization
-
-These controls should not be added directly to the remaining 2,000+ line body of `SettingsWindow.qml`.
-
-Recommended pages:
-
-### Launcher page
-
-- Placement mode.
-- X/Y offsets.
-- Show applications on open.
-- Future launcher width and maximum-result settings.
-
-Suggested file:
+The attached implementation is split into:
 
 ```text
-widgets/Settings/pages/LauncherPage.qml
+widgets/Notifications/NotificationPopups.qml
+widgets/Notifications/DetachedNotificationSurface.qml
+widgets/Notifications/AttachedNotificationSurface.qml
+widgets/Notifications/NotificationCards.qml
 ```
 
-### Wallpaper page or Appearance subsection
+`NotificationPopups.qml` selects presentation. The two surfaces own geometry and window behavior. `NotificationCards.qml` owns shared card rendering and notification lifecycle behavior.
 
-The wallpaper-library path is currently part of Appearance. The picker-specific placement controls could either:
+Approved animation behavior:
 
-- Remain in a dedicated `WallpaperPage.qml`, or
-- Live in a smaller extracted `WallpaperSettingsSection.qml` hosted by Appearance.
+- New attached notifications reveal downward from the bar.
+- Multiple notifications stack and expand the connected surface.
+- Individual non-final cards fade and collapse upward before model removal.
+- The final card retracts with the host surface into the bar.
+- The bar-gap seam is released slightly before the host reaches zero height, allowing the bar border to rebuild underneath the final fillet instead of leaving visible empty frames.
+- A new notification arriving during close cancels the close and keeps the surface active.
 
-A dedicated page is preferable if more wallpaper controls are expected.
+Attached card borders are optional. When disabled, the `BarPopout` owns the normal outer border. Critical notifications retain their urgent visual treatment.
 
-Suggested file:
+## Settings ownership
 
-```text
-widgets/Settings/pages/WallpaperPage.qml
-```
+These features follow the current Settings architecture:
 
-### Notifications page
+- visible feature UI belongs in dedicated files under `widgets/Settings/pages/`;
+- staged values, diffs, discard, and Apply orchestration belong in `SettingsTransaction.qml`;
+- page-facing aliases and option models belong in `SettingsContext.qml`;
+- persisted values and setters belong in `core/UserPrefs.qml`;
+- writes are applied through `services/ConfigManager.qml`;
+- `SettingsWindow.qml` remains a lifecycle and hosting component only.
 
-Extend the existing:
+Do not move these controls or transaction rules back into `SettingsWindow.qml`.
 
-```text
-widgets/Settings/pages/NotificationsPage.qml
-```
+## Shared presentation rules
 
-Add:
+- Attached surfaces should reuse `widgets/TopBar/BarPopout.qml` and the bar-gap registration system rather than copying connected-border drawing code.
+- Detached and attached shells should share the same feature content whenever practical.
+- Placement logic must not duplicate application models, wallpaper scans, or notification models.
+- Bar attachment must route to the correct monitor-specific `TopBar` instance.
+- Edge-positioned notification popouts use a safe inset so both connection fillets can render; manual horizontal offset is applied after that baseline inset.
+- Closing animations must coordinate popup visibility and bar-gap lifetime. Hiding the popup first and rebuilding the bar afterward produces exposed seam frames.
 
-- Detached versus connected presentation.
-- Attachment/alignment controls only when connected mode is selected.
-- Preserve the existing corner and offset settings for detached mode.
+## Live-test status
 
----
+The user confirmed:
 
-## Estimated code growth
+- launcher attached and centered modes work;
+- launcher initial application visibility, favorites, launch counts, and hidden-app controls work;
+- wallpaper picker attached and centered modes work;
+- wallpaper settings consolidation and transition cleanup work;
+- detached notifications remain functional;
+- attached notifications stack and grow the bar border correctly;
+- Left / Center / Right attachment and horizontal offsets work;
+- both connection fillets render at every position;
+- optional attached card borders work;
+- individual card exits and final host retraction work;
+- the Rev 64 seam handoff substantially improves bar-border reconstruction during final retraction.
 
-The features themselves are not enormous, but they touch several presentation layers.
+## Future extensions
 
-Rough estimate:
+The following are not part of this completed block:
 
-| Area | Estimated added lines |
-|---|---:|
-| Shared placement/helper components | 150–300 |
-| Launcher placement and initial-list behavior | 150–300 |
-| Wallpaper picker dual presentation | 200–400 |
-| Connected notification presentation | 250–500 |
-| Settings controls and persistence | 250–450 |
-| Tests, comments, and compatibility handling | 100–250 |
-| **Likely total** | **1,100–2,200** |
+- notification history;
+- launcher width and maximum-result Settings controls;
+- named launcher groups or folders;
+- per-monitor independent placement preferences;
+- wallpaper-driven dynamic color generation.
 
-This does not mean `SettingsWindow.qml` should grow by that amount. With proper page extraction, most settings growth should land in dedicated page files and shared components.
-
-Without cleanup first, the Settings window could absorb another 300–600 lines of staging, Apply/Cancel plumbing, loaders, and controls. That would make future work substantially riskier.
-
----
-
-## Required structural work before implementation
-
-Before building this feature block:
-
-1. Finish extracting remaining page-specific controls and staged values from `SettingsWindow.qml`.
-2. Create `LauncherPage.qml` before adding launcher controls.
-3. Decide whether wallpaper controls become `WallpaperPage.qml` or a dedicated Appearance component.
-4. Keep notification controls in `NotificationsPage.qml` and move any remaining notification state there.
-5. Extract reusable popup content from `Launcher.qml` and `WallpaperPicker.qml` before adding centered presentation shells.
-6. Reuse or extend `BarPopout.qml` for connected notification visuals rather than copying its border logic.
-7. Add persisted properties to `UserPrefs.qml` and staging support through the normal Settings Apply/Cancel path.
-8. Implement and test one surface at a time.
-
-Recommended implementation order:
-
-1. Launcher initial-app visibility toggle.
-2. Shared detached placement helper.
-3. Centered launcher mode.
-4. Centered wallpaper picker mode.
-5. Connected notification mode.
-
-The notification work is last because it has the most interaction with monitor selection, timing, stacking, and bar geometry.
-
----
-
-## Acceptance criteria
-
-### Launcher
-
-- Can switch between attached and centered placement.
-- Centered placement honors X/Y offsets.
-- Existing keyboard navigation and search behavior remain unchanged.
-- Initial application visibility can be enabled or disabled.
-- No duplicate desktop-entry model is introduced.
-
-### Wallpaper picker
-
-- Can switch between attached and centered placement.
-- Centered placement honors X/Y offsets.
-- Uses the same wallpaper library and `.thumbs` cache in both modes.
-- No duplicate wallpaper scanning or application logic is introduced.
-
-### Notifications
-
-- Detached mode remains fully functional.
-- Connected mode visually grows from the bar.
-- Border/background connection matches launcher and wallpaper picker styling.
-- Multiple notifications stack correctly.
-- Notifications remain usable when the bar is hidden, missing, or on another monitor.
-
-### Settings
-
-- New controls live in dedicated pages/components.
-- Apply/Cancel behavior remains consistent.
-- `SettingsWindow.qml` does not materially grow as a result of this feature block.
-
----
-
-## Decision
-
-**Split the Settings structure further before implementing this block.**
-
-The requested features are reasonable and fit the project, but adding them directly to the current Settings monolith would create avoidable bloat. The correct next step is targeted structural extraction—not a full rewrite—followed by incremental implementation and live testing.
+Any future work should build from the current live-tested files rather than the original plan-era implementations.

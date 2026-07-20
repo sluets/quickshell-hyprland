@@ -28,14 +28,14 @@ than a demonstration config.
 
 - Floating multi-monitor top bar
 - Hyprland workspace controls
-- Application launcher
+- Application launcher with attached or centered presentation, offsets, favorites, usage ordering, and hidden-app controls
 - Power and session menu
 - Volume control and volume OSD
 - Wi-Fi scanning, status, and connection controls
 - Bluetooth status, device controls, and pairing support
 - Calendar and clock popouts
 - Media playback information and controls
-- Native Quickshell notification daemon and popup cards
+- Native Quickshell notification daemon with detached or bar-attached stacked cards
 - Desktop clock, date, weather, and temperature display
 - Per-monitor behavior where appropriate
 
@@ -45,7 +45,7 @@ than a demonstration config.
 - Theme selection without restarting the shell
 - Configurable font family and font scaling
 - Shared wallpaper-library directory
-- Wallpaper picker with cached `.thumbs` previews
+- Wallpaper picker with attached or centered presentation and cached `.thumbs` previews
 - Wallpaper transitions through `awww`
 - Configurable bar spacing, borders, sizing, and related appearance options
 - Persisted Settings window dimensions for different displays and workspaces
@@ -58,7 +58,7 @@ than a demonstration config.
 - Draggable scrollbars and resizable floating window behavior
 - Hyprland integration settings
 - Desktop clock and weather settings
-- Theme and wallpaper controls
+- Theme, launcher, wallpaper, and notification presentation controls
 - Backup, restore, and configuration snapshot tooling
 
 ### SDDM integration

@@ -25,18 +25,84 @@ TopBarComponents.BarPopout {
     xOffset: baselineOffset + UserPrefs.notifBarOffsetX
     dismissOnOutsideClick: false
 
-    Component.onCompleted: root.open = Notifs.count > 0
+    // Card removal happens after its collapse animation. Close the BarPopout
+    // when the final card STARTS collapsing, not after Notifs.count reaches
+    // zero, so the popout outline and the bar gap retract together. // GPT Rev 62
+    property bool closingForEmptyStack: false
+    property int lastNotifCount: 0
+
+    // A PopupWindow and the bar border live on separate compositor surfaces.
+    // Waiting until revealProgress reaches exactly zero to clear the bar gap
+    // leaves a visible frame where the popup surface is already gone but the
+    // bar Canvas has not rebuilt yet. Hand the seam back to the bar while the
+    // last fillet-height slice of the popup is still covering it. // GPT Rev 64
+    property bool gapReleasedEarly: false
+    readonly property real gapReleaseProgress: Math.min(
+        0.25,
+        Math.max(
+            0.03,
+            (Theme.barBorderFillet + Theme.barBorderWidth * 2)
+                / Math.max(1, implicitHeight)))
+
+    onRevealProgressChanged: {
+        if (open || revealProgress > gapReleaseProgress) {
+            gapReleasedEarly = false;
+            return;
+        }
+
+        if (!gapReleasedEarly && visible) {
+            const bar = _findBarHost();
+            if (bar)
+                bar.clearPopoutGap(_gapKey);
+            gapReleasedEarly = true;
+        }
+    }
+
+    Component.onCompleted: {
+        lastNotifCount = Notifs.count;
+        root.open = Notifs.count > 0;
+    }
+
+    onVisibleChanged: {
+        if (!visible)
+            closingForEmptyStack = false;
+    }
 
     Connections {
         target: Notifs
         function onCountChanged(): void {
-            root.open = Notifs.count > 0;
+            const nextCount = Notifs.count;
+
+            // A genuinely new notification arriving during retraction cancels
+            // the pending close and opens the surface again. Count decreases
+            // from animated removals must not reopen it.
+            if (nextCount > root.lastNotifCount) {
+                root.closingForEmptyStack = false;
+                root.open = true;
+            } else if (nextCount === 0) {
+                if (!root.closingForEmptyStack)
+                    root.open = false;
+            } else if (!root.closingForEmptyStack) {
+                root.open = true;
+            }
+
+            root.lastNotifCount = nextCount;
         }
     }
 
     NotificationComponents.NotificationCards {
         id: cards
         attached: true
+        // The final card stays fully rendered while the BarPopout itself
+        // scrolls back into the bar. This matches launcher/wallpaper close
+        // behavior and keeps the popup border covering the bar gap until the
+        // host reaches zero reveal. Remove the model only afterward. // GPT Rev 63
+        finalHostExitDuration: root.revealDuration + 40
+
+        onStackWillEmpty: {
+            root.closingForEmptyStack = true;
+            root.open = false;
+        }
 
         // Notifs.count can open this PopupWindow before the first delegate has
         // completed layout. Refresh the bar gap the moment the stack publishes

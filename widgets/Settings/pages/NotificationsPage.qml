@@ -69,6 +69,15 @@ ColumnLayout {
         }
     }
 
+    SettingsComponents.ToggleSettingRow {
+        visible: settingsRoot.shownNotifPresentation === "bar"
+        label: "Show Card Borders"
+        value: settingsRoot.shownNotifBarShowCardBorders
+        staged: settingsRoot.stagedNotifBarShowCardBorders !== null
+        onToggled: settingsRoot.stagedNotifBarShowCardBorders =
+            !settingsRoot.shownNotifBarShowCardBorders
+    }
+
     Text {
         visible: settingsRoot.shownNotifPresentation === "bar"
         text: "Offset is added after the safe edge inset. Extreme values may intentionally clip the connected fillet."

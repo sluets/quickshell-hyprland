@@ -1,3 +1,34 @@
+## 2026-07-20 — Launcher, wallpaper, and notification presentation completed, Revs 40–64 (GPT)
+
+**Context:** After the Settings monolith split, the next customization block added dual presentation modes for the launcher and wallpaper picker, then built a bar-attached notification system with correct stacking and close animation behavior.
+
+**Launcher and wallpaper:**
+
+- Rev 40 completed the animation-style preset polish that immediately preceded this block.
+- Revs 41–46 added launcher attached/centered placement, X/Y offsets, initial app visibility, favorites, launch counts, hidden-app maintenance, responsive Settings controls, radius fixes, and startup model refresh.
+- Revs 47–51 added wallpaper picker attached/centered placement and offsets, fixed sibling imports, consolidated wallpaper controls into the Wallpaper page, removed the old gear-menu controls, and reduced the transition menu to Fade, Wipe, Wave, Grow, and Random.
+- Both surfaces share one content implementation between attached and centered hosts.
+
+**Notifications:**
+
+- Rev 52 split notification presentation into detached and attached surfaces while preserving the original detached behavior.
+- Revs 53–56 added safe edge inset, Left/Center/Right anchors, horizontal offset, correct edge fillets, and responsive Settings layout.
+- Revs 57–61 added delayed removal for exit animation, individual card collapse, and an immediate writable stack width so the attached host can register its full bar gap before delegate layout. Rev 60 failed because `Column.implicitWidth` is read-only; Rev 61 corrected it with `width: Settings.notifWidth`.
+- Rev 62 added the optional attached card-border setting and began synchronizing final close behavior.
+- Rev 63 kept the final card intact while the complete host retracts, matching the launcher/wallpaper visual model.
+- Rev 64 moved bar-gap release into the final fillet-height portion of host retraction so the bar border rebuilds underneath the still-visible seam instead of leaving exposed empty frames.
+
+**Approved behavior:**
+
+- Detached notifications retain corner and X/Y placement.
+- Attached notifications route to the focused monitor's bar and can attach Left, Center, or Right with a manual horizontal offset.
+- Notifications stack dynamically and the connected border grows around them.
+- Optional attached card borders work; critical notifications retain urgent treatment.
+- Non-final cards animate out individually. The final card retracts with the host.
+- The Rev 64 seam handoff was live-tested and accepted as substantially improved.
+
+**Permanent architecture rule:** Presentation shells may differ, but launcher content, wallpaper content, and notification card rendering must remain shared. Attached surfaces must reuse `BarPopout` and its bar-gap system. Do not restore popup-specific geometry or transaction state to `SettingsWindow.qml`.
+
 ## 2026-07-19 — Hyprland animation presets stabilized, Revs 30–39 (GPT)
 
 **Context:** The first animation-preset implementation transferred animation ownership from `user/look.lua` into a manager-owned generated file. Live testing exposed several Hyprland Lua API, quoting, load-order, and reload-strategy mistakes before the safe final path was established.

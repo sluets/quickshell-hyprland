@@ -87,6 +87,7 @@ Item {
     property alias stagedNotifPresentation: settingsTransaction.stagedNotifPresentation
     property alias stagedNotifBarPosition: settingsTransaction.stagedNotifBarPosition
     property alias stagedNotifBarOffsetX: settingsTransaction.stagedNotifBarOffsetX
+    property alias stagedNotifBarShowCardBorders: settingsTransaction.stagedNotifBarShowCardBorders
     property alias stagedNotifShowAppName: settingsTransaction.stagedNotifShowAppName
     property alias stagedNotifIconSize: settingsTransaction.stagedNotifIconSize
     property alias stagedNotifBodyLines: settingsTransaction.stagedNotifBodyLines
@@ -177,6 +178,7 @@ Item {
     readonly property string shownNotifPresentation: settingsTransaction.shownNotifPresentation
     readonly property string shownNotifBarPosition: settingsTransaction.shownNotifBarPosition
     readonly property int shownNotifBarOffsetX: settingsTransaction.shownNotifBarOffsetX
+    readonly property bool shownNotifBarShowCardBorders: settingsTransaction.shownNotifBarShowCardBorders
     readonly property bool shownNotifShowAppName: settingsTransaction.shownNotifShowAppName
     readonly property int shownNotifIconSize: settingsTransaction.shownNotifIconSize
     readonly property int shownNotifBodyLines: settingsTransaction.shownNotifBodyLines

@@ -10,6 +10,10 @@ Column {
     id: root
 
     property bool attached: false
+    // Delay used when the final attached notification is carried back into
+    // the bar by the host BarPopout instead of collapsing its own card.
+    // Detached hosts and non-final cards keep the normal card animation. // GPT Rev 63
+    property int finalHostExitDuration: Theme.animationDuration + 40
 
     // Publish the stack width before the first Repeater delegate exists.
     // BarPopout uses its content width to carve the matching gap in the bar
@@ -25,6 +29,15 @@ Column {
     // Middle-click dismissal asks every visible delegate to run its own exit
     // animation before the notification service removes it. // GPT Rev 57
     signal closeAllRequested()
+    // Emitted when the final visible notification begins its exit so the
+    // attached BarPopout can retract in the same animation window instead of
+    // holding an empty border gap until model removal completes. // GPT Rev 62
+    signal stackWillEmpty()
+
+    onCloseAllRequested: {
+        if (attached)
+            stackWillEmpty();
+    }
 
     Repeater {
         model: Notifs.all
@@ -68,7 +81,9 @@ Column {
             // urgent border for critical notifications in attached mode. // GPT Rev 59
             border.width: card.critical
                 ? Math.max(2, Theme.barBorderWidth)
-                : (root.attached ? 0 : Theme.barBorderWidth)
+                : (root.attached
+                    ? (UserPrefs.notifBarShowCardBorders ? Theme.barBorderWidth : 0)
+                    : Theme.barBorderWidth)
             border.color: card.critical
                 ? Theme.colorUrgent : Theme.barBorderColor
 
@@ -90,9 +105,24 @@ Column {
                 if (closing)
                     return;
 
+                const finalAttachedCard = root.attached && Notifs.count === 1;
+
                 closing = true;
                 closeMode = mode || "dismiss";
-                revealProgress = 0;
+
+                if (finalAttachedCard) {
+                    // Do not collapse the final card separately. The host
+                    // BarPopout scrolls the complete card + connected border
+                    // back into the bar, then this timer removes the model.
+                    // Double-animating both heights exposed an empty bar gap
+                    // before the host finished closing. // GPT Rev 63
+                    root.stackWillEmpty();
+                    removalTimer.interval = root.finalHostExitDuration;
+                } else {
+                    revealProgress = 0;
+                    removalTimer.interval = Theme.animationDuration + 40;
+                }
+
                 removalTimer.restart();
             }
 

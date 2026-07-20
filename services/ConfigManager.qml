@@ -496,6 +496,7 @@ Singleton {
             case "notifPresentation": UserPrefs.setNotifPresentation(ch.value); n++; break;
             case "notifBarPosition": UserPrefs.setNotifBarPosition(ch.value); n++; break;
             case "notifBarOffsetX": UserPrefs.setNotifBarOffsetX(ch.value); n++; break;
+            case "notifBarShowCardBorders": UserPrefs.setNotifBarShowCardBorders(ch.value); n++; break;
             case "notifCorner": UserPrefs.setNotifCorner(ch.value); n++; break;
             case "notifOffsetX": UserPrefs.setNotifOffsetX(ch.value); n++; break;
             case "notifOffsetY": UserPrefs.setNotifOffsetY(ch.value); n++; break;

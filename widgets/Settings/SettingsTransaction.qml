@@ -12,6 +12,7 @@ Item {
     property var stagedNotifPresentation: null
     property var stagedNotifBarPosition: null
     property var stagedNotifBarOffsetX: null
+    property var stagedNotifBarShowCardBorders: null
     property var stagedNotifShowAppName: null
     property var stagedNotifIconSize: null
     property var stagedNotifBodyLines: null
@@ -93,6 +94,7 @@ Item {
     readonly property string shownNotifPresentation: stagedNotifPresentation !== null ? stagedNotifPresentation : UserPrefs.notifPresentation
     readonly property string shownNotifBarPosition: stagedNotifBarPosition !== null ? stagedNotifBarPosition : UserPrefs.notifBarPosition
     readonly property int shownNotifBarOffsetX: stagedNotifBarOffsetX !== null ? stagedNotifBarOffsetX : UserPrefs.notifBarOffsetX
+    readonly property bool shownNotifBarShowCardBorders: stagedNotifBarShowCardBorders !== null ? stagedNotifBarShowCardBorders : UserPrefs.notifBarShowCardBorders
     readonly property bool shownNotifShowAppName: stagedNotifShowAppName !== null ? stagedNotifShowAppName : UserPrefs.notifShowAppName
     readonly property int shownNotifIconSize: stagedNotifIconSize !== null ? stagedNotifIconSize : UserPrefs.notifIconSize
     readonly property int shownNotifBodyLines: stagedNotifBodyLines !== null ? stagedNotifBodyLines : UserPrefs.notifBodyLines
@@ -210,6 +212,8 @@ Item {
             c.push({ key: "notifBarPosition", label: "Notification Bar Position", from: UserPrefs.notifBarPosition, to: stagedNotifBarPosition, value: stagedNotifBarPosition });
         if (stagedNotifBarOffsetX !== null && stagedNotifBarOffsetX !== UserPrefs.notifBarOffsetX)
             c.push({ key: "notifBarOffsetX", label: "Notification Bar Offset X", from: UserPrefs.notifBarOffsetX + " px", to: stagedNotifBarOffsetX + " px", value: stagedNotifBarOffsetX });
+        if (stagedNotifBarShowCardBorders !== null && stagedNotifBarShowCardBorders !== UserPrefs.notifBarShowCardBorders)
+            c.push({ key: "notifBarShowCardBorders", label: "Attached Notification Card Borders", from: UserPrefs.notifBarShowCardBorders ? "shown" : "hidden", to: stagedNotifBarShowCardBorders ? "shown" : "hidden", value: stagedNotifBarShowCardBorders });
         if (stagedNotifShowAppName !== null
                 && stagedNotifShowAppName !== UserPrefs.notifShowAppName)
             c.push({ key: "notifShowAppName", label: "Notif App Name",
@@ -326,6 +330,7 @@ Item {
         stagedNotifPresentation = null;
         stagedNotifBarPosition = null;
         stagedNotifBarOffsetX = null;
+        stagedNotifBarShowCardBorders = null;
         stagedNotifShowAppName = null;
         stagedNotifIconSize = null;
         stagedNotifBodyLines = null;

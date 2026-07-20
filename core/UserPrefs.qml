@@ -233,6 +233,7 @@ Singleton {
     readonly property string notifPresentation: adapter.notifPresentation
     readonly property string notifBarPosition: adapter.notifBarPosition
     readonly property int notifBarOffsetX: adapter.notifBarOffsetX
+    readonly property bool notifBarShowCardBorders: adapter.notifBarShowCardBorders
     readonly property bool notifShowAppName: adapter.notifShowAppName
     readonly property int notifIconSize: adapter.notifIconSize
     readonly property int notifBodyLines: adapter.notifBodyLines
@@ -527,6 +528,10 @@ Singleton {
         adapter.notifBarOffsetX = Math.min(2000, Math.max(-2000, v));
     }
 
+    function setNotifBarShowCardBorders(v: bool): void {
+        adapter.notifBarShowCardBorders = v;
+    }
+
     function setNotifShowAppName(v: bool): void {
         adapter.notifShowAppName = v;
     }
@@ -689,6 +694,7 @@ Singleton {
         property string notifPresentation: "detached"
         property string notifBarPosition: "right"
         property int notifBarOffsetX: 0
+        property bool notifBarShowCardBorders: false
         property bool notifShowAppName: false
         property int notifIconSize: 48
         property int notifBodyLines: 4

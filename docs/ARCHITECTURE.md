@@ -137,13 +137,17 @@ quickshell/
 │   │   │                  "don't wrap until shared" rule).
 │   │   ├── Clock.qml      Date/time + calendar popout (SystemClock).
 │   │   ├── Launcher.qml   Hotkeyed app launcher (SUPER+R /
-│   │   │                  shell:launcher): invisible centered anchor,
-│   │   │                  centered popout, typo-tolerant ranked search
-│   │   │                  over DesktopEntries.
+│   │   │                  shell:launcher). Shared launcher content can
+│   │   │                  be hosted either in a connected BarPopout or
+│   │   │                  a centered floating surface, with staged X/Y
+│   │   │                  offsets. Supports initial app visibility,
+│   │   │                  favorites, launch counts, hidden apps, and
+│   │   │                  typo-tolerant ranked DesktopEntries search.
 │   │   ├── WallpaperPicker.qml  Hotkeyed wallpaper grid (SUPER+W /
-│   │   │                  shell:wallpapers): thumbnails via sh/find
-│   │   │                  scan, applies via awww, current-wallpaper
-│   │   │                  badge, shuffle, Random, full IPC target.
+│   │   │                  shell:wallpapers). Shared picker content can
+│   │   │                  be attached to the bar or centered, using the
+│   │   │                  same library scan, .thumbs cache, current-
+│   │   │                  wallpaper marker, shuffle, and awww path.
 │   │   ├── DeviceRow.qml / SignalBars.qml  Rows/indicators shared by
 │   │   │                  the Wifi and Bluetooth popouts.
 │   │   ├── ToggleRow.qml / ToggleSwitch.qml / SectionLabel.qml
@@ -163,11 +167,18 @@ quickshell/
 │   │                      timer. First top-level window besides the
 │   │                      bar.
 │   ├── Notifications/
-│   │   └── NotificationPopups.qml  Top-right notification cards
-│   │                      rendering services/Notifs.qml's tracked
-│   │                      list: icon/image, summary/body, action
-│   │                      buttons, per-sender timeout policy,
-│   │                      critical = red border + never expires.
+│   │   ├── NotificationPopups.qml  Presentation router for detached
+│   │   │                  versus monitor-routed bar-attached mode.
+│   │   ├── DetachedNotificationSurface.qml  Original corner-positioned
+│   │   │                  floating notification host.
+│   │   ├── AttachedNotificationSurface.qml  BarPopout-based host with
+│   │   │                  left/center/right anchors, safe edge inset,
+│   │   │                  X offset, connected border-gap registration,
+│   │   │                  and close-seam handoff timing.
+│   │   └── NotificationCards.qml  Shared card stack: icon/image,
+│   │                      summary/body, actions, timeout policy,
+│   │                      optional attached borders, urgent treatment,
+│   │                      and delayed model removal for exit animation.
 │   ├── PowerMenu/
 │   │   └── PowerScreen.qml  Centered floating card (Restart Hyprland /
 │   │                      Restart / Shut Down) on the Overlay layer;
@@ -301,6 +312,15 @@ wasn't a concern under the old manual-instantiation pattern, so it's
 worth remembering now. (services/Notifs.qml sidesteps this naturally:
 NotificationPopups reads `Notifs.count` from its `visible` binding at
 load, which instantiates the service and registers the D-Bus name.)
+
+
+## Launcher, wallpaper, and notification presentation
+
+The launcher and wallpaper picker each use one shared content implementation hosted by either an attached `BarPopout` shell or a centered detached shell. Placement, offsets, and feature state are persisted through `UserPrefs` and staged through the normal Settings transaction. Do not fork their app model or wallpaper scan when adding another presentation mode.
+
+Attached notifications follow the same connected-border language but have a dedicated lifecycle because notifications can arrive, expire, stack, and disappear independently. `NotificationPopups.qml` chooses the surface, `AttachedNotificationSurface.qml` owns bar geometry and gap lifetime, and `NotificationCards.qml` owns card rendering and delayed dismissal.
+
+The final-notification close path has a compositor-sensitive seam handoff: the bar gap is released during the last part of host retraction while the remaining popup fillet still covers the seam. Moving gap release to the absolute end causes visible empty frames before the bar border repaints. Preserve this ordering when changing notification animation durations or `BarPopout` close behavior.
 
 ## Dropdown menu pattern
 

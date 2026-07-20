@@ -1,5 +1,5 @@
 =================================================================
-CURRENT PRIORITY ORDER — 2026-07-19 (GPT)
+CURRENT PRIORITY ORDER — 2026-07-20 (GPT)
 =================================================================
 
 Completed structural checkpoints:
@@ -8,6 +8,8 @@ Completed structural checkpoints:
 - Hyprland animation presets complete and live-tested through Rev 39.
 - Safe animation Apply uses generated files plus one ordinary `hyprctl reload`;
   `full-reset` and live-eval approaches are permanently rejected.
+- Launcher/wallpaper dual presentation and notification bar attachment are
+  complete and live-tested through notification Rev 64.
 
 1. Add automated smoke checks and QML tooling.
    - `.qmlls.ini` setup instructions and `.gitignore`.
@@ -20,14 +22,14 @@ Completed structural checkpoints:
    shell scripts where practical. Preserve the tested generated-file contracts.
 
 3. Continue small, low-risk requested features.
-   - Launcher width, maximum results, and initial app-list behavior.
+   - Launcher width and maximum results. Initial app-list behavior is complete.
    - Power menu Lock and Suspend.
    - Additional themes.
 
 4. Resume larger deferred features deliberately.
    - Named UI Profiles / Save As.
    - MPD local-library music client.
-   - Centered launcher and wallpaper picker options.
+   - Notification history.
    - Displays page only after a real display service and timed rollback exist.
 
 5. Continue documentation cleanup.
@@ -79,10 +81,16 @@ DONE THIS SESSION — no action needed
 - Wallpaper Transition section (Appearance page): type picker
   (14 real awww/swww values incl. random), position picker
   (grow/outer only), duration/fps/angle steppers.
-- Notification position/corner + offset X/Y — turned out to already
-  be built (2026-07-11, before this session) — see
-  NotificationPopups.qml. Flagged here only because it came up as if
-  it might still be missing; it isn't.
+- Detached notification corner + X/Y controls were already present.
+- Notification presentation expansion is now complete through Rev 64:
+  detached or attached-to-bar mode, left/center/right attachment,
+  horizontal offset, optional attached card borders, stacked growth,
+  individual exits, final host retraction, and synchronized bar-border
+  seam handoff. See docs/LAUNCHER_WALLPAPER_NOTIFICATION_PLAN.md.
+- Launcher and wallpaper picker attached/centered presentation modes are
+  complete, including offsets, shared content, launcher initial app list,
+  favorites/usage/hidden apps, wallpaper Settings consolidation, and the
+  approved transition list.
 - SDDM login theme major customization block complete: safe temporary preview, alternate themes/fonts, shared-library wallpaper thumbnails, time/date colors and shadows, login-panel sizing, and hash-aware Apply. See docs/SDDM_THEME_PLAN.md.
 
 =================================================================
