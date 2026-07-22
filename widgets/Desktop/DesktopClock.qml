@@ -136,6 +136,10 @@
 //
 //=============================================================================
 // REVISION HISTORY
+//
+// 2026-07-20  GPT Rev 72: isRealScreen also excludes QSWATCHDOG, the
+//             watchdog mitigation output, so no desktop-clock surface
+//             is instantiated on it during zero-output recovery.
 //=============================================================================
 //
 // 2026-07-15  (GPT-5.6) Rev 4: removed content-sized implicit window dimensions
@@ -192,8 +196,24 @@ Scope {
         precision: SystemClock.Minutes
     }
 
+    // Do not instantiate a clock surface for Qt's synthetic FALLBACK
+    // screen while all physical outputs are unavailable. // GPT Rev 71
+    // QSWATCHDOG is the output watchdog's mitigation headless output;
+    // do not create a desktop-clock surface on it. The name must stay
+    // aligned with qs-output-watchdog.py's --headless-name. // GPT Rev 72
+    function isRealScreen(screen): bool {
+        return screen !== null
+            && screen !== undefined
+            && screen.name !== undefined
+            && screen.name !== ""
+            && screen.name !== "FALLBACK"
+            && screen.name !== "QSWATCHDOG"
+            && screen.width > 0
+            && screen.height > 0;
+    }
+
     Variants {
-        model: Quickshell.screens
+        model: Quickshell.screens.filter(screen => root.isRealScreen(screen))
 
         PanelWindow {
             id: win
@@ -204,6 +224,7 @@ Scope {
             // Off entirely, or filtered to one named monitor — see
             // DESIGN NOTES ("PER-MONITOR").
             visible: UserPrefs.desktopClockEnabled
+                     && modelData
                      && (UserPrefs.desktopClockMonitor === ""
                          || UserPrefs.desktopClockMonitor === modelData.name)
 
@@ -259,7 +280,7 @@ Scope {
                 // change. In that state, right/bottom calculations went negative
                 // and Wayland/Qt effectively pinned the clock to top-left.
                 x: {
-                    const screenWidth = win.modelData.width
+                    const screenWidth = win.modelData ? win.modelData.width : 0
                     if (win._corner === "centered")
                         return Math.max(0, Math.min(screenWidth - width, Math.round((screenWidth - width) / 2 + UserPrefs.desktopClockOffsetX)))
                     if (win._corner === "top-right" || win._corner === "bottom-right")
@@ -267,7 +288,7 @@ Scope {
                     return Math.max(0, Math.round(UserPrefs.desktopClockOffsetX))
                 }
                 y: {
-                    const screenHeight = win.modelData.height
+                    const screenHeight = win.modelData ? win.modelData.height : 0
                     if (win._corner === "centered")
                         return Math.max(0, Math.min(screenHeight - height, Math.round((screenHeight - height) / 2 + UserPrefs.desktopClockOffsetY)))
                     if (win._corner === "bottom-left" || win._corner === "bottom-right")

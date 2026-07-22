@@ -133,6 +133,10 @@
 //
 //=============================================================================
 // REVISION HISTORY
+//
+// 2026-07-20  GPT Rev 72: isRealScreen also excludes QSWATCHDOG, the
+//             watchdog mitigation output, so no per-monitor bar is
+//             instantiated on it during zero-output recovery.
 //=============================================================================
 //
 // 2026-07-09  (Fable 5) Phase 2: SettingsWindow instance + `settings`
@@ -196,6 +200,23 @@ Scope {
     // See services/ConfigManager.qml's DESIGN NOTES.
     readonly property bool _configManagerLoaded: ConfigManager.ready
 
+    // A Qt placeholder screen named FALLBACK appears while every real
+    // output is unavailable (for example, while both monitors are powered
+    // off). Never create layer-shell surfaces for that placeholder. // GPT Rev 71
+    // QSWATCHDOG is the output watchdog's mitigation headless output.
+    // Do not create a per-monitor bar on it; the name must stay aligned
+    // with qs-output-watchdog.py's --headless-name. // GPT Rev 72
+    function isRealScreen(screen): bool {
+        return screen !== null
+            && screen !== undefined
+            && screen.name !== undefined
+            && screen.name !== ""
+            && screen.name !== "FALLBACK"
+            && screen.name !== "QSWATCHDOG"
+            && screen.width > 0
+            && screen.height > 0;
+    }
+
     // ---- Focused-monitor routing (see DESIGN NOTES) ----
     // The bar whose screen matches Hyprland's focused monitor, falling
     // back to the first bar if Hyprland hasn't reported one yet (very
@@ -207,7 +228,7 @@ Scope {
             const bar = bars.instances[i];
             if (fallback === null)
                 fallback = bar;
-            if (focused && bar.modelData.name === focused.name)
+            if (focused && bar.modelData && bar.modelData.name === focused.name)
                 return bar;
         }
         return fallback;
@@ -251,7 +272,8 @@ Scope {
         id: bars
 
         model: Quickshell.screens.filter(s =>
-            !Settings.barExcludedScreens.some(p => new RegExp(p).test(s.name)))
+            shellScope.isRealScreen(s)
+            && !Settings.barExcludedScreens.some(p => new RegExp(p).test(s.name)))
 
         TopBar {} // receives its ShellScreen as required `modelData`
     }
