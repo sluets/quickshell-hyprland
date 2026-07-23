@@ -420,6 +420,8 @@ PanelWindow {
             Separator {}
             Bluetooth {}
             Separator {}
+            Clipboard {}
+            Separator {}
             Clock {}
             Separator {}
             SettingsMenu {}

@@ -195,6 +195,7 @@ import qs.widgets.OSD
 import qs.widgets.Notifications
 import qs.widgets.PowerMenu
 import qs.widgets.Desktop
+import qs.widgets.Calculator
 
 Scope {
     id: shellScope
@@ -398,6 +399,15 @@ Scope {
         }
     }
 
+    IpcHandler {
+        target: "calculator"
+
+        function toggle(): string {
+            Signals.toggleCalculatorWindow();
+            return "ok: calculator toggle requested";
+        }
+    }
+
     // Safe external torture-test surface. This deliberately exposes only
     // visual/runtime settings and never calls UI-profile save/delete/restore.
     // The Python harness in testing/ uses it to exercise the live shell. // GPT
@@ -571,6 +581,16 @@ Scope {
             } else {
                 win.open();
             }
+        }
+    }
+
+    CalculatorWindow { id: calculatorWindow }
+
+    Connections {
+        target: Signals
+
+        function onToggleCalculatorWindow(): void {
+            calculatorWindow.toggle();
         }
     }
 

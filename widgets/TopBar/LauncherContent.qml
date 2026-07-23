@@ -69,23 +69,51 @@ ColumnLayout {
         return a.entry.name.localeCompare(b.entry.name);
     }
 
+    function calculatorEntry(): var {
+        return {
+            id: "internal:calculator",
+            name: "Calculator",
+            comment: "Open the Quickshell calculator",
+            icon: "",
+            iconSource: Qt.resolvedUrl("../../assets/icons/calculator.svg"),
+            internalAction: "calculator",
+            searchAliases: ["calc", "calculator"],
+            noDisplay: false
+        };
+    }
+
+    function scoreInternalEntry(q: string, entry: var): int {
+        let score = root.scoreEntry(q, entry.name);
+        for (const alias of entry.searchAliases ?? [])
+            score = Math.max(score, root.scoreEntry(q, alias));
+        return score;
+    }
+
+    function appendCandidate(scored: var, entry: var, q: string): void {
+        if (entry.noDisplay || UserPrefs.launcherIsHidden(entry.id)) return;
+
+        if (q.length === 0) {
+            const favorite = UserPrefs.launcherIsFavorite(entry.id);
+            const used = usageCount(entry.id) > 0;
+            if (UserPrefs.launcherShowAppsOnOpen || favorite || used)
+                scored.push({ entry: entry, score: 0 });
+            return;
+        }
+
+        const score = entry.internalAction
+            ? root.scoreInternalEntry(q, entry)
+            : root.scoreEntry(q, entry.name);
+        if (score > 0) scored.push({ entry: entry, score: score });
+    }
+
     function computeResults(rawQuery: string): var {
         const q = rawQuery.trim().toLowerCase();
         const scored = [];
 
+        root.appendCandidate(scored, root.calculatorEntry(), q);
+
         for (const entry of DesktopEntries.applications.values) {
-            if (entry.noDisplay || UserPrefs.launcherIsHidden(entry.id)) continue;
-
-            if (q.length === 0) {
-                const favorite = UserPrefs.launcherIsFavorite(entry.id);
-                const used = usageCount(entry.id) > 0;
-                if (UserPrefs.launcherShowAppsOnOpen || favorite || used)
-                    scored.push({ entry: entry, score: 0 });
-                continue;
-            }
-
-            const s = root.scoreEntry(q, entry.name);
-            if (s > 0) scored.push({ entry: entry, score: s });
+            root.appendCandidate(scored, entry, q);
         }
 
         scored.sort((a, b) => root.compareRanked(a, b, q.length > 0));
@@ -105,8 +133,12 @@ ColumnLayout {
     }
 
     function launch(entry: var): void {
-        UserPrefs.recordLauncherUse(entry.id);
         closeRequested();
+        UserPrefs.recordLauncherUse(entry.id);
+        if (entry.internalAction === "calculator") {
+            Signals.toggleCalculatorWindow();
+            return;
+        }
         if (entry.runInTerminal)
             Quickshell.execDetached({
                 command: [...Settings.launcherTerminalCommand, ...entry.command],
@@ -199,7 +231,7 @@ ColumnLayout {
                     Layout.preferredHeight: Theme.fontSize * 2
                     sourceSize.width: Theme.fontSize * 2
                     sourceSize.height: Theme.fontSize * 2
-                    source: Quickshell.iconPath(row.modelData.icon, "image-missing")
+                    source: row.modelData.iconSource ?? Quickshell.iconPath(row.modelData.icon, "image-missing")
                     asynchronous: true
                 }
 

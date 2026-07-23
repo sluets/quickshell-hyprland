@@ -81,4 +81,7 @@ Singleton {
     // Emitted by the gear menu's "Open Settings…" entry; consumed by
     // widgets/Settings/SettingsWindow.qml. Added 2026-07-09 (Fable 5).
     signal toggleSettingsWindow()
+
+    // Open/close the single Quickshell-native calculator window. // GPT
+    signal toggleCalculatorWindow()
 }
