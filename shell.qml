@@ -134,6 +134,11 @@
 //=============================================================================
 // REVISION HISTORY
 //
+// 2026-07-22  GPT Memory stabilization Phase 4: added read-only tracked
+//             notification count reporting for controlled-test checkpoints.
+// 2026-07-22  GPT Memory stabilization Phase 2: added the `notifs`
+//             IPC cleanup endpoint, routed directly to the singleton's
+//             existing dismissAll() implementation.
 // 2026-07-20  GPT Rev 72: isRealScreen also excludes QSWATCHDOG, the
 //             watchdog mitigation output, so no per-monitor bar is
 //             instantiated on it during zero-output recovery.
@@ -234,9 +239,10 @@ Scope {
         return fallback;
     }
 
-    // Bar anchor used by the single notification renderer. It follows the
-    // focused monitor and the saved left/center/right attachment setting. // GPT Rev 54
-    readonly property var notificationAnchorItem: {
+    // Candidate bar anchor for notifications. The attached host latches this
+    // only when a popup session opens; focus changes cannot move a live popup
+    // between monitors. // GPT Memory stabilization Phase 3
+    readonly property var notificationCandidateAnchorItem: {
         const bar = shellScope.barForFocused();
         if (!bar)
             return null;
@@ -352,6 +358,22 @@ Scope {
 
         function toggle(): void {
             powerScreen.toggle();
+        }
+    }
+
+    // Notification-state cleanup for controlled tests:
+    //     qs ipc call notifs dismissAll
+    // Keep dismissal ownership in Notifs; this endpoint only exposes it. // GPT
+    IpcHandler {
+        target: "notifs"
+
+        function count(): string {
+            return "ok: count=" + Notifs.count;
+        }
+
+        function dismissAll(): string {
+            const dismissed = Notifs.dismissAll();
+            return "ok: dismissed " + dismissed + " notification(s)";
         }
     }
 
@@ -482,7 +504,9 @@ Scope {
     // notification daemon. The NotificationServer itself lives in
     // services/Notifs.qml (singleton — the D-Bus name can only have
     // one owner).
-    NotificationPopups { anchorItem: shellScope.notificationAnchorItem }
+    NotificationPopups {
+        candidateAnchorItem: shellScope.notificationCandidateAnchorItem
+    }
 
     // Power screen — fullscreen dimmed overlay, single instance (same
     // "default output only" limitation as VolumeOsd — see its DESIGN

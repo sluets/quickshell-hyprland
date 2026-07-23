@@ -1,4 +1,4 @@
-// Selects the historical detached host or the new bar-attached host. // GPT Rev 52
+// Keeps both notification hosts alive and selects which one is exposed. // GPT
 import QtQuick
 import Quickshell
 import qs.core
@@ -6,21 +6,14 @@ import "." as NotificationComponents
 
 Scope {
     id: root
-    property Item anchorItem: null
+    property Item candidateAnchorItem: null
 
-    Loader {
-        active: UserPrefs.notifPresentation === "detached"
-        sourceComponent: Component {
-            NotificationComponents.DetachedNotificationSurface {}
-        }
+    NotificationComponents.DetachedNotificationSurface {
+        presentationActive: UserPrefs.notifPresentation === "detached"
     }
 
-    Loader {
-        active: UserPrefs.notifPresentation === "bar" && root.anchorItem !== null
-        sourceComponent: Component {
-            NotificationComponents.AttachedNotificationSurface {
-                anchorItem: root.anchorItem
-            }
-        }
+    NotificationComponents.AttachedNotificationSurface {
+        presentationActive: UserPrefs.notifPresentation === "bar"
+        candidateAnchorItem: root.candidateAnchorItem
     }
 }

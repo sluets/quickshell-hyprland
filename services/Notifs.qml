@@ -93,6 +93,11 @@
 // REVISION HISTORY
 //=============================================================================
 //
+// 2026-07-22  (GPT) Memory stabilization Phase 2: hard-capped the
+//             tracked collection at 8. Overflow dismisses the oldest
+//             notification even when it is critical or timeout-zero.
+//             dismissAll() now returns the number removed for IPC test
+//             reporting; its cleanup behavior is unchanged.
 // 2026-07-09  (Fable 5) Header cleanup: migration-era notes about the
 //             previous daemon rewritten as a general D-Bus
 //             name-ownership note — the handoff finished 07-05 and
@@ -113,6 +118,16 @@ import Quickshell.Services.Notifications
 Singleton {
     id: root
 
+    // This bounds the Notification objects themselves, not merely the number
+    // of visible delegates. Critical and timeout-zero notifications remain
+    // persistent, but they cannot grow this collection without limit. // GPT
+    readonly property int maxTracked: 8
+
+    // Critical is a visual urgency level, not permission to retain a second
+    // unbounded queue. Two persistent critical alerts are enough to get the
+    // user's attention; newer critical alerts displace the oldest one. // GPT
+    readonly property int maxCriticalTracked: 2
+
     // The live list widgets render — an ObjectModel of Notification;
     // use `.values` for a plain JS array (same as Pipewire.nodes).
     readonly property var all: server.trackedNotifications
@@ -120,9 +135,35 @@ Singleton {
     // Convenience for "is there anything to show" bindings.
     readonly property int count: server.trackedNotifications.values.length
 
-    function dismissAll(): void {
+    function dismissAll(): int {
         // Iterate a COPY — dismiss() mutates the list underneath.
-        for (const n of [...server.trackedNotifications.values])
+        const tracked = [...server.trackedNotifications.values];
+        for (const n of tracked)
+            n.dismiss();
+        return tracked.length;
+    }
+
+    function enforceTrackedLimit(): void {
+        // Tracking updates the ObjectModel from inside onNotification. Defer
+        // enforcement until that delivery has completed, then snapshot once
+        // so dismiss()-driven model mutation cannot disturb iteration. Apply
+        // the critical sub-cap first, then the total cap to the survivors.
+        // Bursts may queue several checks; only calls with overflow do work.
+        const tracked = [...server.trackedNotifications.values];
+        const displaced = new Set();
+        const critical = tracked.filter(n =>
+            n.urgency === NotificationUrgency.Critical);
+        const criticalOverflow = critical.length - maxCriticalTracked;
+
+        for (let i = 0; i < criticalOverflow; ++i)
+            displaced.add(critical[i]);
+
+        const survivors = tracked.filter(n => !displaced.has(n));
+        const totalOverflow = survivors.length - maxTracked;
+        for (let i = 0; i < totalOverflow; ++i)
+            displaced.add(survivors[i]);
+
+        for (const n of displaced)
             n.dismiss();
     }
 
@@ -141,6 +182,7 @@ Singleton {
             // Without this the notification is dropped as soon as this
             // handler returns — see DESIGN NOTES ("TRACKED == VISIBLE").
             notif.tracked = true;
+            Qt.callLater(root.enforceTrackedLimit);
         }
     }
 }

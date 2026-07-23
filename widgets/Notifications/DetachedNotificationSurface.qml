@@ -8,6 +8,8 @@ import "." as NotificationComponents
 PanelWindow {
     id: root
 
+    property bool presentationActive: false
+
     readonly property string _corner: UserPrefs.notifCorner
     readonly property bool _top: _corner === "top-left" || _corner === "top-right"
     readonly property bool _left: _corner === "top-left" || _corner === "bottom-left"
@@ -28,12 +30,13 @@ PanelWindow {
 
     exclusiveZone: 0
     color: "transparent"
-    visible: Notifs.count > 0
+    visible: root.presentationActive && Notifs.count > 0
     implicitWidth: cards.implicitWidth
     implicitHeight: cards.implicitHeight
 
     NotificationComponents.NotificationCards {
         id: cards
+        active: root.presentationActive
         attached: false
     }
 }

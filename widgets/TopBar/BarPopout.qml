@@ -179,7 +179,10 @@ PopupWindow {
 
     // ---- Public interface ----
     // The bar item this popup hangs below.
-    required property Item anchorItem
+    // Null is a valid dormant state. PopupWindow will not expose a popup until
+    // its anchor is valid, which lets long-lived notification hosts survive a
+    // monitor/bar disappearing without destroying the QML window object. // GPT
+    property Item anchorItem: null
     // "left", "right", or "center" — which edge of anchorItem the panel
     // aligns to ("center" = centered under it; see DESIGN NOTES).
     property string alignment: "left"
@@ -244,7 +247,7 @@ PopupWindow {
     // the old x-range remains cut out until some unrelated width/open event.
     // Re-registering the same key atomically replaces the old range. // GPT Rev 69
     function _refreshVisibleGap(): void {
-        if (visible)
+        if (visible && anchorItem !== null)
             Qt.callLater(() => root._updateGap());
     }
 
@@ -253,7 +256,15 @@ PopupWindow {
     onWidthChanged: _refreshVisibleGap()
     onAlignmentChanged: _refreshVisibleGap()
     onXOffsetChanged: _refreshVisibleGap()
-    onAnchorItemChanged: _refreshVisibleGap()
+    onAnchorItemChanged: {
+        if (anchorItem === null && (open || visible)) {
+            open = false;
+            visible = false;
+            revealProgress = 0;
+        } else {
+            _refreshVisibleGap();
+        }
+    }
 
     // Loader deactivation can destroy a visible popup without completing its
     // normal reveal-to-zero lifecycle (for example bar -> detached notification
@@ -377,7 +388,7 @@ PopupWindow {
         // xOffset translates the whole rect, which moves the anchor
         // POINT by the same amount whichever edge is in use — so one
         // term here (+ its mirror in _updateGap) shifts any alignment.
-        rect: Qt.rect(
+        rect: root.anchorItem === null ? Qt.rect(0, 0, 1, 1) : Qt.rect(
             root._pixel(
                 root.xOffset
                 + ((root.flushToBarEdge && root.alignment === "left") ? -Theme.spacingMedium : 0)
@@ -613,4 +624,3 @@ PopupWindow {
         }
         }
     }
-

@@ -9,6 +9,10 @@ import qs.services
 Column {
     id: root
 
+    // Both presentation windows stay instantiated, but only the selected host
+    // owns delegates and expiry timers. Window lifetime is stable without
+    // duplicating every notification card in the inactive surface. // GPT
+    property bool active: true
     property bool attached: false
     // Delay used when the final attached notification is carried back into
     // the bar by the host BarPopout instead of collapsing its own card.
@@ -40,7 +44,7 @@ Column {
     }
 
     Repeater {
-        model: Notifs.all
+        model: root.active ? Notifs.all : null
 
         delegate: Rectangle {
             id: card

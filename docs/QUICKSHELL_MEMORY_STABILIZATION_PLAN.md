@@ -117,17 +117,22 @@ Correct the notification model before using notifications in another soak.
 ### Required behavior
 
 1. Add a hard cap to the **tracked notification collection**, not merely the visible delegates.
-2. Use a small default tracked limit, initially **8 notifications**.
-3. When the cap is exceeded:
+2. Use a small total tracked limit of **8 notifications**.
+3. Use a separate sub-cap of **2 critical notifications**.
+4. When the total cap is exceeded:
    - dismiss the oldest tracked notification;
    - retain the newest notifications.
-4. Critical notifications remain persistent unless:
+5. When the critical sub-cap is exceeded:
+   - dismiss the oldest tracked critical notification;
+   - retain the newest two critical notifications.
+6. Critical notifications remain persistent unless:
    - manually dismissed; or
-   - displaced as the oldest notification by the tracked cap.
-5. Notifications with `expireTimeout === 0` follow the same bounded policy.
-6. Keep the existing visible-count rule as a presentation limit only.
-7. Expose the existing `Notifs.dismissAll()` operation through IPC.
-8. Add explicit tests for:
+   - displaced by the critical sub-cap; or
+   - displaced as the oldest notification by the total tracked cap.
+7. Notifications with `expireTimeout === 0` follow the same bounded policy.
+8. Keep the existing visible-count rule as a presentation limit only.
+9. Expose the existing `Notifs.dismissAll()` operation through IPC.
+10. Add explicit tests for:
    - normal notifications;
    - critical notifications;
    - timeout-zero notifications;
@@ -170,7 +175,7 @@ A warning is not automatically harmless. Stop and inspect whether it:
 
 Record this in the revision history:
 
-> When the tracked-notification cap is exceeded, the oldest notification is dismissed, including critical notifications. A burst exceeding the cap therefore displaces the oldest critical notification by design.
+> The tracked collection is capped at eight total notifications and two critical notifications. A third critical alert displaces the oldest critical alert. The total cap remains oldest-first across all urgency levels, so an old critical notification can also be displaced by total queue pressure.
 
 ### Reason
 
@@ -268,8 +273,10 @@ Generate more than the tracked limit using:
 Pass conditions:
 
 - tracked notifications never exceed the configured hard cap;
+- tracked critical notifications never exceed two;
 - oldest notifications are dismissed first;
-- critical notifications are displaced only when they become the oldest beyond-cap item;
+- a third critical notification displaces the oldest critical notification;
+- total-cap overflow remains oldest-first across all urgency levels;
 - no unlimited delegate stack forms;
 - `dismissAll()` leaves zero tracked notifications;
 - no persistent teardown warnings or broken delegate state appears.
@@ -392,7 +399,7 @@ The stabilization phase is complete when:
 - continuous resource telemetry is available;
 - thread-name sampling handles `/proc` truncation correctly;
 - tracked notifications are strictly bounded;
-- critical and timeout-zero notifications cannot grow without limit;
+- critical notifications are capped at two and timeout-zero notifications cannot grow without limit;
 - `dismissAll()` works through IPC;
 - cap displacement behavior is documented;
 - notification presentation changes no longer destroy/recreate windows;

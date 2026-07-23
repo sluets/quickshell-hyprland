@@ -1,3 +1,77 @@
+## 2026-07-22 — Isolated Phase 5 soak modes (GPT)
+
+**Context:** The stabilization plan requires a notification-only soak and a clean no-action baseline. The harness could exclude notification or placement groups, but it could not select only notification generation or monitor an idle process without performing its startup setter IPC call and random actions.
+
+**What changed:**
+
+- Added `--notification-only`, which generates notification singles and bursts without settings mutations, presentation switching, test windows, or unrelated UI actions.
+- Added `--no-actions`, which records telemetry without test windows, IPC, notifications, cleanup dismissal, or preference mutations.
+- No-action runs skip notification count tracking and the soak-handler availability write so the baseline remains genuinely idle.
+- The two isolated modes are mutually exclusive; notification-only mode cannot also exclude notifications.
+
+**Permanent rule:** An isolation test must exercise only the action family named by the test. Do not label a broad random-action run as notification-only or an IPC-active run as a no-action baseline.
+
+## 2026-07-22 — Critical notification sub-cap, memory stabilization Phase 5 (GPT)
+
+**Context:** The eight-object total cap prevented an unbounded notification queue, but treating critical urgency as eight persistent diagnostic cards provided little practical value. Notifications are alerts; investigation belongs in application logs, crash reports, and system journals.
+
+**What changed:**
+
+- The total tracked-notification cap remains eight.
+- Critical notifications now have an additional two-object sub-cap.
+- A third critical notification dismisses the oldest tracked critical notification.
+- After applying the critical sub-cap, total overflow still dismisses the oldest remaining notification regardless of urgency.
+- Critical alerts remain persistent until manual dismissal or cap displacement.
+
+**Permanent rule:** Critical urgency may change visual treatment and timeout behavior, but it must never create an effectively separate unbounded queue. Keep the live critical set capped at two unless a future, bounded notification-history design provides a demonstrated reason to change it.
+
+## 2026-07-22 — Controlled notification cleanup telemetry, memory stabilization Phase 4 (GPT)
+
+**Context:** Notification-related soak runs generated bounded live objects but did not explicitly dismiss them before final telemetry. That mixed legitimate notification state with resources retained after cleanup.
+
+**What changed:**
+
+- The notification IPC target now exposes a read-only tracked count alongside `dismissAll()`.
+- Notification-enabled harness runs record process resources and tracked count before generation, at the highest observed count, immediately after dismissal, and after the cleanup wait.
+- Final teardown stops random activity, closes test windows, dismisses all tracked notifications, samples through the cleanup wait, and takes the final count query before the final telemetry sample.
+- Both post-dismissal counts must be zero; otherwise the harness marks the run failed.
+- Preference restoration remains after all cleanup IPC and final telemetry.
+
+**Permanent rule:** Notification-related tests must separate live-object memory from post-dismissal retained resources. Exact RSS return is not required; compare bounded count, RssAnon, worker threads, file descriptors, cleanup behavior, and repeated fresh-process runs.
+
+## 2026-07-22 — Stable notification-window lifecycle, memory stabilization Phase 3 (GPT)
+
+**Context:** Notification presentation used Loader activation to destroy one window and construct the other whenever the user switched between detached and bar-attached modes. The attached popup also followed a reactive focused-bar binding while it was live.
+
+**What changed:**
+
+- Detached and attached notification surfaces are now instantiated once for the Quickshell process lifetime.
+- Only the selected surface receives notification delegates, expiry timers, and count-driven animation behavior.
+- Inactive surfaces are hidden immediately, preventing presentation overlap during a switch.
+- The attached surface latches the focused-bar candidate when a notification session opens and keeps that anchor until the popup fully closes.
+- Focus changes no longer move an active notification popup between monitors.
+- If the latched bar is destroyed, the popup hides safely and reopens on a valid current candidate when one exists.
+- `BarPopout` now supports a null dormant anchor so a long-lived popup object can survive monitor and bar removal.
+- A focused live check covers repeated presentation switching, focus changes, single-surface exposure, and worker-thread stability.
+
+**Permanent rule:** Presentation selection may activate or deactivate notification delegates, but it must not destroy and recreate the notification window objects. A live attached popup uses a session-latched anchor, never the continuously changing focused-bar candidate.
+
+## 2026-07-22 — Notification tracked-state cap, memory stabilization Phase 2 (GPT)
+
+**Context:** The notification renderer's visible-count rule hid excess cards but did not remove their tracked Notification objects or QML delegates. Critical and timeout-zero notifications could therefore accumulate indefinitely.
+
+**What changed:**
+
+- The notification service now hard-caps the tracked collection at eight objects.
+- When the cap is exceeded, the oldest tracked notification is dismissed and the newest eight are retained.
+- The policy applies equally to normal, critical, and timeout-zero notifications.
+- `Notifs.dismissAll()` is exposed as `qs ipc call notifs dismissAll` for controlled cleanup and reports the number removed.
+- A focused live-check procedure covers normal, critical, timeout-zero, overflow, and cleanup behavior.
+
+**Deliberate behavior change:** When the tracked-notification cap is exceeded, the oldest notification is dismissed, including critical notifications. A burst exceeding the cap therefore displaces the oldest critical notification by design.
+
+**Permanent rule:** `Settings.notifMaxVisible` remains presentation-only. Any future notification history must use a separate bounded state layer and must not make the live tracked popup collection unbounded again.
+
 ## 2026-07-20 — Launcher, wallpaper, and notification presentation completed, Revs 40–64 (GPT)
 
 **Context:** After the Settings monolith split, the next customization block added dual presentation modes for the launcher and wallpaper picker, then built a bar-attached notification system with correct stacking and close animation behavior.
