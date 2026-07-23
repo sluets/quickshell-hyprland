@@ -12,14 +12,18 @@ unfamiliar API or layout in isolation before wiring it into `widgets/`. Nothing
 here is loaded by `shell.qml` unless a test feature is deliberately connected.
 Two settings-menu reference images were added here on 2026-07-13.
 
-## Stabilization restriction
+## Stabilization status
 
-Do not run another broad soak until the notification-state and notification-
-surface lifecycle fixes in `docs/QUICKSHELL_MEMORY_STABILIZATION_PLAN.md` are
-complete. A short harness/restoration check may exclude both implicated groups:
+Memory stabilization completed on 2026-07-23. Focused notification, idle,
+DPMS, seven-hour broad-soak, and preference-restoration checks passed. Broad
+soaks are allowed again, but should only be repeated for a new symptom or
+regression.
+
+The harness is executable. Run it from this directory:
 
 ```bash
-python testing/qs-soak-test.py --minutes 1 --speed 1 \
+cd ~/.config/quickshell/testing
+./qs-soak-test.py --minutes 1 --speed 1 \
   --exclude-group notifications --exclude-group placement
 ```
 
@@ -181,14 +185,14 @@ generates single notifications and bursts without changing preferences,
 switching presentation, opening test windows, or toggling unrelated UI:
 
 ```bash
-python testing/qs-soak-test.py --minutes 15 --speed 2 --notification-only
+./qs-soak-test.py --minutes 15 --speed 2 --notification-only
 ```
 
 The no-action baseline records process telemetry without test windows, IPC,
 notifications, or preference mutations:
 
 ```bash
-python testing/qs-soak-test.py --minutes 30 --no-actions
+./qs-soak-test.py --minutes 30 --no-actions
 ```
 
 `--notification-only` and `--no-actions` are mutually exclusive. A no-action
@@ -198,19 +202,19 @@ is not contaminated by count or dismissal IPC calls.
 Once broad soaks are allowed again, a five-minute run is:
 
 ```bash
-python testing/qs-soak-test.py --minutes 5
+./qs-soak-test.py --minutes 5
 ```
 
 Long run:
 
 ```bash
-python testing/qs-soak-test.py --hours 8
+./qs-soak-test.py --hours 8
 ```
 
 No duration means run until stopped:
 
 ```bash
-python testing/qs-soak-test.py
+./qs-soak-test.py
 ```
 
 Controls in the harness terminal:
@@ -225,9 +229,9 @@ default cleanup wait is ten seconds and can be changed with `--cleanup-wait`.
 Exclude notifications, placement mutations, or both without editing the script:
 
 ```bash
-python testing/qs-soak-test.py --minutes 5 --exclude-group notifications
-python testing/qs-soak-test.py --minutes 5 --exclude-group placement
-python testing/qs-soak-test.py --minutes 5 \
+./qs-soak-test.py --minutes 5 --exclude-group notifications
+./qs-soak-test.py --minutes 5 --exclude-group placement
+./qs-soak-test.py --minutes 5 \
   --exclude-group notifications --exclude-group placement
 ```
 
@@ -274,7 +278,7 @@ Install GDB and refresh the sudo credential immediately before the test:
 ```bash
 sudo pacman -S --needed gdb
 sudo -v
-python testing/qs-soak-test.py --minutes 30 --speed 3
+./qs-soak-test.py --minutes 30 --speed 3
 ```
 
 Change the failure threshold with `--failure-threshold 5`. Use

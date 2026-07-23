@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""qs-output-watchdog.py — external zero-output watchdog for Quickshell. (v2)
+"""qs-output-watchdog.py — external zero-output watchdog for Quickshell. (v2.3)
 
 WHY THIS EXISTS (short version — full story in docs/ZERO_OUTPUT_WATCHDOG.md):
 
@@ -7,21 +7,19 @@ When every physical monitor is powered off, Hyprland removes all wl_outputs
 and Qt Wayland creates a synthetic "FALLBACK" placeholder screen. After a
 few minutes in that state, Quickshell wedges: IPC and notifications stop
 responding, a Mesa worker (qs:gl0) and Qt's WaylandEventThread burn ~1 core
-between them, and only a restart recovers it. The thread evidence is
-CONSISTENT WITH frame-callback starvation blocking the GUI thread on a
-render sync (main thread parked in futex_do_wait at 0% CPU while the
-graphics/Wayland threads spin) — that is the working hypothesis, not a
-demonstrated stack trace; no backtrace has been captured during the active
-spin yet. Whatever the exact mechanism, it lives somewhere in the
-Qt Wayland / Qt Quick / Mesa / Quickshell window-lifecycle interaction —
-below QML, which is why in-shell guards reduced symptoms but could not
-prevent it, and why a wedged Quickshell cannot rescue itself.
+between them, and only a restart recovers it. Live GDB captures show
+QSGRenderThread blocked in QRhi::endFrame -> QWaylandGLContext::swapBuffers
+-> Mesa dri_flush while a Mesa qs:gl0 worker is inside an EGL-triggered
+wl_display_roundtrip_queue. Whatever the exact upstream ownership, the
+demonstrated failure lives in the Qt Wayland / Qt Quick / Mesa rendering
+interaction below QML. In-shell guards reduced symptoms but could not prevent
+it, and a wedged Quickshell cannot rescue itself.
 Hence: an EXTERNAL watchdog.
 
 TWO MITIGATION MODES:
 
   --mode restart    (DEFAULT — production workaround) After a sustained
-                    zero-output period (default 12s), cleanly stop
+                    zero-output period (default 3s), cleanly stop
                     Quickshell (SIGTERM, escalating to SIGKILL) well before
                     the ~120s wedge window closes, then relaunch it once a
                     real output has been back for a few seconds. Loses
@@ -47,9 +45,9 @@ DESIGN RULES (each one earned by the failure report or review):
     periodic re-verify backstops missed events. Every event triggers a
     fresh `hyprctl -j monitors` read — events mean "go look", never truth.
   * Debounced BOTH directions, with PER-MODE removal grace: restart mode
-    waits 12s because stopping the shell is disruptive and DPMS blips must
-    not thrash it; headless mode waits only 1s because creating an output
-    is cheap to do and undo, and every second shaved shortens placeholder
+    waits 3s, well before the observed wedge; headless mode waits only 1s
+    because creating an output is cheap to do and undo, and every second
+    shaved shortens placeholder
     exposure. Return grace (default 3s) covers monitors that renegotiate
     slowly on wake — Hyprland is known to briefly destroy/recreate
     slow-waking outputs (hyprwm/Hyprland#5752) — and covers the
@@ -81,7 +79,7 @@ USAGE:
                         [--return-grace SEC] [--headless-name NAME]
                         [--always-start] [--verbose]
 
-  --zero-grace defaults per mode: 12 (restart) / 1 (headless).
+  --zero-grace defaults per mode: 3 (restart) / 1 (headless).
 
 Hyprland lua integration (startup.lua):
 
@@ -93,6 +91,12 @@ Hyprland lua integration (startup.lua):
 Stdlib only. No jq, no external deps. Written for Hyprland 0.55+.
 
 REVISION HISTORY
+  2026-07-23  v2.3 (GPT post-live validation): corrected restart-mode
+              documentation to the implemented 3s zero-output grace. Physical
+              power-off testing captured the active wedge in three stable GDB
+              snapshots. Restart mode then stopped and relaunched Quickshell
+              successfully when a real monitor returned. Restart mode is the
+              validated production workaround.
   2026-07-20  v2.2 (GPT final pre-live review): distinguish named headless
               output states as absent / invalid / active. Disabled or
               zero-geometry QSWATCHDOG entries are removed before create or
@@ -733,7 +737,7 @@ def main() -> None:
                          "doc §7 validation before unattended use.")
     ap.add_argument("--zero-grace", type=float, default=None,
                     help="seconds of sustained zero-output before acting. "
-                         "Default is per-mode: 12 (restart) / 1 (headless).")
+                         "Default is per-mode: 3 (restart) / 1 (headless).")
     ap.add_argument("--return-grace", type=float, default=DEFAULT_RETURN_GRACE,
                     help=f"seconds a returned output must persist before "
                          f"restoring (default {DEFAULT_RETURN_GRACE:.0f})")

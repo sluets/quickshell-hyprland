@@ -24,46 +24,34 @@ worker thread (`qs:gl0`) burns ~50% CPU and Qt's `WaylandEventThread`
 reproducible via the soak harness (`testing/qs-soak-test.py`) plus
 physical power-off.
 
-## 2. Why it happens (working hypothesis — not yet proven)
+## 2. Why it happens (captured mechanism)
 
-The thread evidence from the failure report is CONSISTENT WITH the
-following story. It is the best available explanation, and the prior
-art in §3 fits it — but no backtrace has been captured DURING the
-active spin (the report's GDB grab came after the spike subsided), so
-this remains a working hypothesis, not a demonstrated mechanism. The
-exact responsibility could sit in Qt Wayland, Qt Quick, Mesa,
-Quickshell's window lifecycle, or their interaction. Keep this
-framing in any upstream report:
+The 2026-07-22 physical-power-off autocapture closed the earlier evidence gap.
+With `hyprctl monitors all` returning `[]`, Quickshell reached `80.7%`
+combined target-thread CPU:
 
-**Why the main thread would hang while doing nothing.** At failure the main
-thread sits at 0% CPU in `futex_do_wait`. With Qt Quick's threaded
-render loop, the GUI thread blocks on the render thread during every
-sync/swap cycle — and under Wayland, swap completion is throttled by
-frame callbacks from the compositor. A surface bound to a screen with no
-real output never receives one. So the first window that tries to render
-in the placeholder-only state COULD park the GUI thread on that futex
-indefinitely — which would match the observed symptoms exactly. Quickshell's IPC and notification handling live on the GUI
-thread, which is why *everything* times out even though the process
-looks mostly asleep.
+- `qs:gl0`: `43.8%`
+- `WaylandEventThread`: `36.9%`
 
-**The hot threads look like a retry loop, not a deadlock.** A frame-callback or rendering retry loop could account for the observed
-`qs:gl0` + `WaylandEventThread` churn — Qt Wayland has such retry paths
-and Mesa does per-cycle buffer work, but this is inference from thread
-names and CPU, not a captured stack. It also
-explains the report's GDB capture: taken after the spike subsided,
-every thread was politely sleeping with no mutex deadlock visible — yet
-the shell stayed wedged. Classic livelock-then-stall, not a crash.
+Three GDB snapshots taken about five seconds apart showed the same persistent
+stacks:
 
-**Why it takes ~2 minutes.** The Rev 71 guards stopped the bar and
-desktop clock from binding to `FALLBACK`, but the soak harness kept
-toggling launcher, settings, power screen, wallpaper picker, and
-notification popups — none of which have screen guards. The wedge
-triggers when *some* window gets created or rendered against the
-placeholder (or a half-torn-down surface), not at the moment outputs
-disappear. Corollary worth knowing: a truly idle shell with monitors off
-might survive much longer — but NowPlaying polling, the clock, and any
-incoming notification make "truly idle" unrealistic in practice, so
-severity in real use is unchanged.
+- `QSGRenderThread` was stuck in
+  `QRhi::endFrame -> QWaylandGLContext::swapBuffers -> Mesa dri_flush`.
+- A Mesa `qs:gl0` worker was inside
+  `wl_display_roundtrip_queue -> EGL Mesa -> Gallium`.
+- The main Qt thread was blocked while processing a Wayland window
+  configure/expose event.
+
+This demonstrates a rendering-path wedge in the Qt Wayland / Qt Quick / Mesa
+interaction while no real output exists. It does not identify which upstream
+project owns the defect, but it rules out a QML loop and memory exhaustion as
+the cause. All three captures were unchanged, so this was a persistent wedge,
+not a momentary burst.
+
+The Rev 71 guards still matter: they stop the bar and desktop clock from
+binding to `FALLBACK` and remove real QML errors. They cannot repair the
+lower-level swap/Wayland/Mesa path.
 
 ## 3. This is a known Qt Wayland failure class (research, 2026-07-20)
 
@@ -100,12 +88,11 @@ all plumbing.
 
 ### `--mode restart` (default — production workaround)
 
-After a sustained zero-output period (default 12 s), SIGTERM Quickshell
+After a sustained zero-output period (default 3 s), SIGTERM Quickshell
 *before* the ~120 s wedge window closes, escalating to SIGKILL after 5 s
-if ignored (shouldn't happen — at 12 s qs is still healthy and exits
-cleanly). When a real output has been back for a few seconds, relaunch.
-The 12 s debounce is sized for the destructiveness of the action:
-killing the shell on a DPMS blip or cable renegotiation is unacceptable.
+if ignored. When a real output has been back for three seconds, relaunch.
+The short removal grace prioritizes stopping QS while it is still healthy;
+the three-second return grace absorbs slow wake and cable renegotiation.
 
 Cost: in-memory state is lost — open popouts, notification popups,
 anything not persisted. All settings live in user-prefs.json /
@@ -164,9 +151,8 @@ the outage is ongoing, removed if stale.
   re-verify backstops any missed event.
 - **Debounced both directions, with per-mode removal grace.** The
   debounce is sized to the destructiveness of the action: restart mode
-  waits 12 s (killing the shell on a blip is unacceptable; safe because
-  the wedge needs ~120 s and the script refuses restart-mode
-  `--zero-grace` ≥ 100), headless mode waits 1 s (create/remove is
+  waits 3 s (short enough to stop qs while healthy; the script refuses
+  restart-mode `--zero-grace` ≥ 100), headless mode waits 1 s (create/remove is
   cheaply reversible, and every second shaved shortens placeholder
   exposure). Return side: 3 s for both, because of the Hyprland
   slow-wake destroy/recreate behavior (#5752) and the noisy-cable case.
@@ -268,16 +254,17 @@ proven boring in manual foreground runs. Order:
    the wedge the way physical power-off did, soak harness running.
 3. **Restart mode, foreground + `--verbose`, blip test (5 s)** — expect
    ZERO_PENDING → "false alarm", no action.
-4. **Restart mode, 150 s** — expect stop at ~12 s, clean SIGTERM (no
+4. **Restart mode, 150 s** — expect stop at ~3 s, clean SIGTERM (no
    SIGKILL escalation in the log), relaunch ~3 s after re-enable, soak
    harness recovers (its timeouts during the stopped window are
    expected).
 5. **Restart mode, one real physical power-off** — the simulation is
    close but not identical (a physically-off monitor also drops
    DDC/hotplug and renegotiates slowly on wake).
-6. **Restart mode, a normal overnight cycle.** If it stays boring:
-   promote to startup.lua autostart. Restart mode is now the production
-   workaround.
+6. **Restart mode, physical power-off and return — PASSED 2026-07-22.**
+   Quickshell was stopped before the wedge and relaunched after a real monitor
+   returned. Exactly one `qs` process and one watchdog process remained.
+   Restart mode is the validated production workaround.
 7. **Only then: headless mode, 150 s + soak harness.** Acceptance
    criteria, all of them:
    - qs PID unchanged across the whole outage;
@@ -293,25 +280,18 @@ proven boring in manual foreground runs. Order:
 
 ## 8. Upstream reporting
 
-Section 18 of the failure report is a solid issue body as-is. File
+Section 18 of the failure report is the starting issue body. Include the newer
+autocapture evidence and stacks from §2. File
 against **Quickshell first** (quickshell-mirror on GitHub) and let
 outfoxxed route it toward Qt Wayland — he's responsive and #503 shows
 the class is on his radar. Reference qutebrowser #5828 and QTBUG-98010
 as prior art showing the fake-screen + CPU-spin pattern predates
 Quickshell entirely.
 
-One gap to close before filing, ideally: a `thread apply all bt full`
-captured **during** the spin, not after. The report's automated GDB grab
-failed on `sudo -n` losing authorization. Two fixes:
-
-- Scoped sudoers rule (safest): `youruser ALL=(root) NOPASSWD:
-  /usr/bin/gdb` in a `/etc/sudoers.d/` drop-in, so the harness can
-  attach unattended.
-- Or temporarily `sysctl kernel.yama.ptrace_scope=0` so gdb can attach
-  same-user without root at all. Revert after.
-
-Without an in-spike stack, upstream will (fairly) say the post-spike
-capture proves little.
+The previous missing in-spin stack is no longer a blocker. The
+`quickshell-zero-output-capture-2026-07-22-220817.tar.gz` archive contains
+three stable GDB snapshots plus monitor state, process memory, thread CPU,
+maps, versions, and trigger metadata.
 
 ## 9. Operational notes / gotchas
 
@@ -339,6 +319,11 @@ capture proves little.
 
 ## REVISION HISTORY
 
+- 2026-07-23  v2.3, post-live validation (GPT). Corrected the documented
+  restart grace from the obsolete 12 seconds to the implemented 3 seconds.
+  Recorded the physical zero-output GDB capture and the successful watchdog
+  stop/relaunch test. Restart mode is now the validated production workaround;
+  headless mode remains experimental.
 - 2026-07-20  v2.2, final pre-live GPT review. The watchdog now
   distinguishes the named headless output as absent, invalid, or active.
   Disabled and zero-geometry `QSWATCHDOG` entries are removed before

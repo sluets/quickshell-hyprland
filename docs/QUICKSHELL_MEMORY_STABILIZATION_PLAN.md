@@ -4,6 +4,39 @@
 **Canonical parent:** Latest clean project ZIP supplied after Git commit/push  
 **Scope:** Fix only issues that interfere with memory testing, corrupt test state, or are directly implicated in resource retention.
 
+**Status:** Complete and technically approved, 2026-07-23.
+
+## Final result
+
+The stabilization work is complete. The notification state is bounded, the
+notification surfaces no longer churn window objects, the harness restores and
+verifies preferences, and all focused and broad validation runs passed.
+
+Final evidence:
+
+- Notification-only soak: RSS `420.0 -> 405.5 MiB`.
+- Thirty-minute no-action baseline: RSS `419.6 -> 401.2 MiB`.
+- Twenty full-shell DPMS cycles: RSS `412.1 -> 395.7 MiB`,
+  RssAnon `230.6 -> 214.3 MiB`, threads `53 -> 48`, and file descriptors
+  `66 -> 58`. Render and Mesa worker families remained bounded.
+- Seven-hour broad soak at `--speed 8`: 85,511 actions, zero failures, and the
+  original QS PID remained alive. RSS was `444.2 -> 618.4 MiB` after a
+  `709.1 MiB` peak; RssAnon was `255.7 -> 415.2 MiB` after a `497.0 MiB`
+  peak. Notifications remained capped at eight and returned to zero after
+  cleanup. Preferences were restored and verified byte-for-byte.
+- The broad soak ended with total threads `55 -> 64` and file descriptors
+  `60 -> 67`. `qs:sh*` changed from `3 -> 10`, but total threads stayed
+  bounded, render/GL/driver workers decreased, memory fell substantially from
+  its peak, and no corresponding resource ratchet or failure occurred. Record
+  the shell-worker shift, but do not mislabel it as a demonstrated leak.
+- During the separate prolonged physical zero-output failure, memory remained
+  stable around `409 MiB`. GDB proved that failure is a Qt Wayland / Qt Quick /
+  Mesa rendering-path wedge, not memory exhaustion or notification growth.
+
+Conclusion: there is no evidence of a remaining cumulative Quickshell memory
+leak under the tested workloads. No additional soak testing is warranted
+without a new symptom or regression.
+
 ## Objective
 
 Before running additional memory-leak experiments, correct the known notification-state problem, remove destructive notification-window churn, and make the soak harness safe and diagnostically useful.
@@ -325,24 +358,23 @@ Purpose:
 
 ---
 
-## Phase 6 — Resume actual memory-leak isolation
+## Phase 6 — Broader isolation results
 
-Only after Phases 1–5 pass do we resume broader investigation.
+Phase 6 passed.
 
-The next isolation tests will be:
+1. Twenty DPMS cycles on the full shell produced no memory, thread, worker, or
+   file-descriptor ratchet.
+2. The conditional minimal-shell DPMS test was unnecessary because the full
+   shell passed.
+3. The final seven-hour broad soak survived nearly three times the previous
+   2.5-hour failure point, completed 85,511 actions with zero failures, and
+   ended below its RSS and RssAnon peaks.
+4. `QSG_RENDER_LOOP=basic` was unnecessary because the simpler tests did not
+   reproduce a leak.
 
-1. DPMS-only cycles on the full shell.
-2. DPMS-only cycles on a minimal shell if the full shell leaks.
-3. One action family at a time:
-   - settings window;
-   - wallpaper picker;
-   - launcher;
-   - power screen;
-   - wallpaper switching;
-   - settings families.
-4. Optional `QSG_RENDER_LOOP=basic` diagnostic only after simpler tests.
-
-Every family run starts from a fresh QS process.
+The prolonged physical zero-output wedge was isolated separately and is
+documented in `Quickshell-zero-output-failure-report.md` and
+`ZERO_OUTPUT_WATCHDOG.md`.
 
 ---
 
@@ -409,6 +441,7 @@ The stabilization phase is complete when:
 - a notification-only soak completes with bounded state;
 - a clean no-action baseline has been recorded.
 
-Only then will broader memory-leak isolation resume.
+All completion criteria were met. Memory stabilization was closed on
+2026-07-23 after the final seven-hour broad soak and watchdog recovery test.
 
 — GPT

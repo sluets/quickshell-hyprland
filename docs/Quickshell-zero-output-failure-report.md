@@ -111,8 +111,8 @@ qs &
 ### 4.2 Start the soak harness
 
 ```bash
-cd ~/.config/quickshell
-python testing/qs-soak-test.py --minutes 10 --speed 3
+cd ~/.config/quickshell/testing
+./qs-soak-test.py --minutes 10 --speed 3
 ```
 
 Optional:
@@ -407,6 +407,8 @@ The hot Wayland thread is part of Qt Wayland client event handling.
 
 ## 11. GDB evidence
 
+### 11.1 Original post-spike capture
+
 A manual GDB backtrace from the earlier failure was successfully collected after the hottest CPU spike had subsided.
 
 At capture time:
@@ -435,7 +437,35 @@ The automatic GDB attempt failed with:
 sudo: a password is required
 ```
 
-Therefore, no stack was captured at the exact hottest instant.
+Therefore, that original attempt did not capture a stack at the exact hottest
+instant. The later capture below closed this gap.
+
+### 11.2 Active-wedge capture, 2026-07-22
+
+The later physical-power-off autocapture successfully attached during the
+active failure. At trigger time:
+
+```text
+hyprctl monitors all: []
+qs:gl0:               43.8%
+WaylandEventThread:   36.9%
+combined:             80.7%
+RSS:                  ~409 MiB
+```
+
+Three GDB snapshots taken about five seconds apart showed the same persistent
+stacks:
+
+- `QSGRenderThread` was stuck in
+  `QRhi::endFrame -> QWaylandGLContext::swapBuffers -> Mesa dri_flush`.
+- A Mesa `qs:gl0` worker was inside
+  `wl_display_roundtrip_queue -> EGL Mesa -> Gallium`.
+- The main Qt thread was blocked while processing a Wayland window
+  configure/expose event.
+
+The repeated, unchanged stacks prove that the process was persistently wedged
+in the Qt Wayland / Qt Quick / Mesa rendering path. Memory remained stable, so
+the failure was not caused by runaway allocation.
 
 ---
 
@@ -491,7 +521,9 @@ Possible layers involved:
 - Mesa/Gallium graphics context handling
 - Hyprland output removal/reappearance behavior
 
-The evidence does not yet identify a single faulty function or project with certainty.
+The active-wedge backtraces identify the failing path but do not assign sole
+ownership to one upstream project. The defect may belong to Qt Wayland, Qt
+Quick, Mesa, Quickshell, or their interaction.
 
 ---
 
@@ -633,13 +665,18 @@ Swap: 0
 
 Before adding QML guards, screen-bound layer-shell surfaces attempted to use the placeholder screen and DesktopClock dereferenced a null screen. Those bugs were fixed locally. The warnings disappeared, but the underlying prolonged zero-output hang remained.
 
+Later active-wedge GDB captures showed `QSGRenderThread` in
+`QRhi::endFrame -> QWaylandGLContext::swapBuffers -> Mesa dri_flush` and a
+Mesa `qs:gl0` worker in an EGL-triggered `wl_display_roundtrip_queue`. Three
+captures remained unchanged, while RSS stayed near `409 MiB`.
+
 ---
 
 ## 19. Recommended additional diagnostics for upstream developers
 
 For a deeper upstream investigation:
 
-1. Capture GDB backtraces during the active CPU spike, not afterward.
+1. Use the three existing active-wedge GDB captures as the primary evidence.
 2. Install debug symbols for:
    - Quickshell
    - Qt 6 Core
@@ -691,6 +728,7 @@ quickshell-backtrace(1).txt
 resources(9).csv
 run(1).json
 unresponsive-trigger(1).txt
+quickshell-zero-output-capture-2026-07-22-220817.tar.gz
 ```
 
 Earlier failing-run evidence:
@@ -719,7 +757,13 @@ The investigation has established a repeatable and measurable zero-output failur
 - after a delay, Qt Wayland and Mesa/OpenGL threads become highly active;
 - IPC and notifications stop responding;
 - Quickshell remains alive but functionally wedged.
+- active GDB captures place the wedge in Qt Quick frame completion,
+  `QWaylandGLContext::swapBuffers`, Mesa flushing, and a Wayland roundtrip.
 
 The initial QML bugs around fake-screen handling were real and have been mitigated, but they were not sufficient to prevent the deeper failure.
 
-Until the underlying Qt/Quickshell/Wayland interaction is fixed upstream, an external monitor watchdog that stops Quickshell when zero real outputs exist and restarts it when a monitor returns is the safest operational workaround.
+Until the underlying Qt/Quickshell/Wayland/Mesa interaction is fixed upstream,
+the validated production workaround is the external restart watchdog. Its
+current default stops Quickshell after three seconds of sustained zero real
+outputs and relaunches it after a real output remains available for three
+seconds.

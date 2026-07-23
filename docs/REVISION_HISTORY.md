@@ -1,3 +1,45 @@
+## 2026-07-23 — Memory stabilization completed and zero-output watchdog validated (GPT)
+
+**Context:** Focused notification, idle, DPMS, physical zero-output, and final
+broad-soak testing completed the stabilization plan. The watchdog
+documentation still described an obsolete 12-second restart grace even though
+production code uses three seconds, and the soak harness had lost its
+executable bit.
+
+**Validation:**
+
+- Notification-only soak: RSS `420.0 -> 405.5 MiB`.
+- Thirty-minute no-action baseline: RSS `419.6 -> 401.2 MiB`.
+- Twenty full-shell DPMS cycles: RSS `412.1 -> 395.7 MiB`, threads
+  `53 -> 48`, file descriptors `66 -> 58`, and stable render/Mesa worker
+  families.
+- Seven-hour `--speed 8` soak: 85,511 actions, zero failures, QS alive,
+  notifications capped at eight and cleaned to zero, and preferences restored
+  byte-for-byte. RSS ended at `618.4 MiB` after a `709.1 MiB` peak.
+- A physical zero-output autocapture recorded three stable GDB snapshots with
+  `QSGRenderThread` in `QWaylandGLContext::swapBuffers` / Mesa flush and a
+  Mesa worker in `wl_display_roundtrip_queue`. Memory remained stable around
+  `409 MiB`.
+- Restart-mode watchdog recovery passed: QS stopped before the wedge and
+  relaunched after a real monitor returned, leaving one QS and one watchdog
+  process.
+
+**What changed:**
+
+- Closed `QUICKSHELL_MEMORY_STABILIZATION_PLAN.md` with final measurements and
+  technical approval.
+- Updated the zero-output failure report and watchdog guide with the captured
+  mechanism and live recovery result.
+- Corrected every current restart-mode grace reference from 12 seconds to the
+  actual three seconds.
+- Restored `testing/qs-soak-test.py` to executable mode and documented the
+  established `./qs-soak-test.py` workflow.
+
+**Permanent rule:** Do not resume generic soak testing without a new symptom or
+regression. Treat the zero-output wedge as a separate Qt Wayland / Qt Quick /
+Mesa rendering-path failure handled operationally by the external restart
+watchdog.
+
 ## 2026-07-22 — Isolated Phase 5 soak modes (GPT)
 
 **Context:** The stabilization plan requires a notification-only soak and a clean no-action baseline. The harness could exclude notification or placement groups, but it could not select only notification generation or monitor an idle process without performing its startup setter IPC call and random actions.
