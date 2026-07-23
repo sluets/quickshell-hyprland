@@ -2,13 +2,30 @@
 FILE
 =================================================================
 
-docs/MUSIC_PLAYER_PLAN.md   (v2 — supersedes MUSIC_LIBRARY_PLAN.md's
-                             phasing; §OWNERSHIP and file structure
-                             carried forward from v1)
+docs/MUSIC_PLAYER_PLAN.md   (v3 — approved build specification;
+                             supersedes v2 where amended by the
+                             reviewed builder packet)
 
 =================================================================
 STATUS
 =================================================================
+
+APPROVED 2026-07-23 after three adversarial review passes between
+Claude/Fable and GPT. The authoritative execution details and v3
+artist-mode recovery amendments are preserved in
+`docs/music-builders-packet-v3.zip`.
+
+Key v3 decisions over the original v2 text:
+
+- Unix-socket-only initial transport.
+- Reentrancy-guarded reconnect teardown.
+- Stored-playlist staging before destructive queue replacement.
+- One callback-confirmed restore/cleanup pipeline for normal exit,
+  automatic recovery, and abort-after-save cleanup.
+- Queue-integrity failures are hard; seek/re-pause fidelity failures
+  are reported as soft warnings after the queue is safely restored.
+- Refcounted multi-monitor elapsed ticker.
+- Bar item and minimal panel shell ship together.
 
 Claude: v1's "not part of the current work order" gate is now OPEN —
 the Settings split shipped, the memory stabilization plan closed
@@ -334,6 +351,10 @@ Phase 0 numbers force it.
 REVISION HISTORY
 =================================================================
 
+2026-07-23  Claude/GPT: v3 approved after builder-packet revisions.
+            Shared restoration/cleanup pipeline, abort cleanup,
+            callback-confirmed restore, temp-playlist cleanup,
+            random/play-state restoration, and recovery tests added.
 2026-07-23  Claude: v2. Scope narrowed to bar item + panel + queue
             view + artist mode per owner request (reference
             screenshot). Transport decided: Quickshell Socket, raw

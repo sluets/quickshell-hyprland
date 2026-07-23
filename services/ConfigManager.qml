@@ -8,7 +8,7 @@
 // PURPOSE
 //=============================================================================
 //
-// Phase 1 of the settings-manager plan (notes/settings-manager-plan.md):
+// Phase 1 of the settings-manager plan (docs/history/settings-manager-plan-v1.md):
 // the snapshot/restore engine, standalone — built and trusted BEFORE
 // anything writes configuration. Provides: a one-time Original Backup
 // (full copy of the quickshell + hypr config dirs, taken once, never
@@ -190,7 +190,7 @@
 //             writes; snapshot failure aborts the write). Used by
 //             widgets/Settings/SettingsWindow.qml.
 // 2026-07-09  (Fable 5) Created — Phase 1 of
-//             notes/settings-manager-plan.md. Written offline (the
+//             docs/history/settings-manager-plan-v1.md. Written offline (the
 //             established pattern for build sessions without machine
 //             access) — NOT yet run live. First-run bugs go in
 //             docs/PROBLEMS_AND_FIXES.md. Test procedure is in the

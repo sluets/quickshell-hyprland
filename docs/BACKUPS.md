@@ -51,7 +51,7 @@ back to their snapshot-time states).
 
 Snapshots capture the MANAGED file set only — `user-prefs.json` (all
 settings-window values) and, once the Hyprland restructure is done
-(docs/HYPR_RESTRUCTURE.md), `hypr/generated/appearance.lua`. They do
+(docs/history/HYPR_RESTRUCTURE.md), `hypr/generated/appearance.lua`. They do
 NOT capture QML files, themes, wallpapers, or your user-owned
 Hyprland files. As the
 settings project grows (settings.json, generated Hyprland modules),

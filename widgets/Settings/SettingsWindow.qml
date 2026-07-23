@@ -379,7 +379,7 @@
 //             changes deliberately SURVIVE tab switches — the pending
 //             panel is global; only close/Cancel discards.
 // 2026-07-09  (Fable 5) Created — Phase 2 of
-//             notes/settings-manager-plan.md. Written offline against
+//             docs/history/settings-manager-plan-v1.md. Written offline against
 //             PowerScreen's proven window recipe; the transaction path
 //             beneath it (ConfigManager.applyChanges) is new and
 //             live-untested. First-run bugs go in

@@ -3,7 +3,7 @@
 Destination: `docs/ZERO_OUTPUT_WATCHDOG.md`
 Companion files: `qs-output-watchdog.py` (quickshell root),
 `testing/simulate-zero-output.sh`, `rev72-qswatchdog-guard-patch.md`
-Source material: `Quickshell-zero-output-failure-report.md` (the full
+Source material: `history/Quickshell-zero-output-failure-report.md` (the full
 soak-harness investigation, 2026-07-20) plus the web research below.
 
 This doc exists so a future session doesn't have to re-derive any of

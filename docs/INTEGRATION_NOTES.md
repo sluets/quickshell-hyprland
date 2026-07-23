@@ -41,6 +41,21 @@ end)
 Bonus: awww-daemon restores the last-set wallpaper from its cache on
 startup, so this also gets wallpaper-persists-across-reboot for free.
 
+## Clipboard backend autostart
+
+The clipboard UI requires persistent watchers:
+
+```lua
+hl.on("hyprland.start", function()
+    hl.exec_cmd("awww-daemon")
+    hl.exec_cmd("setsid -f wl-clip-persist --clipboard regular")
+    hl.exec_cmd("setsid -f sh -c 'wl-paste --type text --watch cliphist store'")
+    hl.exec_cmd("setsid -f sh -c 'wl-paste --type image --watch cliphist store'")
+end)
+```
+
+A config reload does not rerun this event. Verify the processes and `cliphist list` before debugging the Quickshell clipboard UI. Full details: `CLIPBOARD_SETUP.md`.
+
 ## Media-key binds (Volume OSD hardware triggers)
 
 The changes flow through PipeWire, so the shell's Audio service and the
@@ -65,4 +80,5 @@ qs ipc call wallpapers get
 qs ipc call wallpapers list
 qs ipc call wallpapers random
 qs ipc call power toggle
+qs ipc call calculator toggle
 ```

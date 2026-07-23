@@ -35,7 +35,7 @@ responsibly.
    `hypr/generated/`, `user-prefs.json`, and files this repo creates.
    This holds even during installation/migration — restructures are
    designed as by-hand procedures the human executes
-   (docs/HYPR_RESTRUCTURE.md is the model).
+   (docs/history/HYPR_RESTRUCTURE.md is the model).
 2. **One source of truth.** Settings live in `user-prefs.json` via
    UserPrefs/ConfigManager. Do not create a second store, a cache of
    it, or a file pair that must agree (a dir-name pair that had to

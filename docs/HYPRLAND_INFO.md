@@ -44,30 +44,14 @@ settings-GUI project should use (see below).
   **SUPER+Q** (terminal), **SUPER+R** (run), **SUPER+M** (exit) — a
   genuine safety net against a config error locking you out entirely
 
-### Relevant if we ever build the settings-menu project
+### Current managed/user Settings architecture
 
-**Proposed safe architecture (not yet built, just designed):** a
-Quickshell-based settings GUI should NEVER parse or rewrite your actual
-hand-written `hyprland.lua` directly — text-munging someone's live
-compositor config is much higher-stakes than any of the widget work
-we've done (a broken bar restarts `qs`; a broken Hyprland config can
-affect the whole session). Instead: the GUI manages its OWN dedicated
-file (e.g. `~/.config/hypr/gui-managed/monitors.lua`), and the real
-`hyprland.lua` just has one line: `require("gui-managed.monitors")`.
-The GUI only ever reads/writes a file it fully owns and controls the
-format of. Live-apply (e.g. dragging a monitor into place) can also go
-straight through Hyprland's IPC for instant feedback, with the managed
-file updated separately for persistence across restarts — same
-"apply now, persist separately" pattern as the wallpaper picker
-(`awww img` now, thumbnail state separate).
+The Settings system now follows the safe architecture that was originally proposed here: it never rewrites the owner's hand-written compositor file wholesale. Quickshell generates and owns dedicated files under the managed Hyprland tree, while user-owned Lua files remain separate. Ordinary Apply uses one normal `hyprctl reload`; `full-reset` is explicitly unsafe for repeated Settings changes.
 
-**Existing community tooling worth knowing about** (found via search,
-not verified hands-on): a Python library called `hyprland-config`
-exists with `load_any()`/`serialize_any()` (format-dispatches on file
-suffix, `.conf` vs `.lua`) and dedicated `load_lua()`/`serialize_lua()`
-for the new format — could be worth investigating if we ever need
-programmatic parsing of an EXISTING hand-written config (as opposed to
-just generating our own managed file, which doesn't need a parser at
-all). Also a Go-based `hyprlang2lua` CLI converter exists for migrating
-old-format configs. Neither of these has been tried in this project —
-noting them as leads, not endorsements.
+See:
+
+- `SETTINGS_ARCHITECTURE.md`;
+- `PROBLEMS_AND_FIXES.md`;
+- `history/HYPR_RESTRUCTURE.md` for the completed one-time migration procedure.
+
+External parser/converter projects mentioned in older research were never adopted and are not project dependencies.

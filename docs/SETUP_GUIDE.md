@@ -30,13 +30,12 @@ A personal Hyprland desktop shell built with
 happens to cover similar ground. What you get:
 
 - A floating, per-monitor top bar: workspaces, now-playing, and
-  slide-out popouts for volume / wifi / bluetooth / clock+calendar /
-  wallpapers / settings.
+  slide-out popouts for volume / wifi / bluetooth / date+calendar /
+  timer+stopwatch+alarm / clipboard / wallpapers / settings.
 - A settings **window** (theme picker, font family + scale, bar
   border/padding, notification and desktop-clock options, Hyprland
   gaps/border/rounding) with a staged **Apply** and snapshot/undo.
-- An app launcher, a centered power screen, a volume OSD, a desktop
-  clock with weather, and the shell's **own** notification daemon.
+- An app launcher, launcher-integrated calculator, centered power screen, volume OSD, desktop clock with weather, timer/stopwatch/alarm tools, bounded clipboard history with image thumbnails, and the shell's **own** notification daemon.
 - ~20 built-in themes, live-switchable.
 
 ### System context it was built on
@@ -78,13 +77,14 @@ the parts you don't want.
 ### 1a. Required — the shell will not work without these
 
 ```bash
-sudo pacman -S quickshell networkmanager pipewire
+sudo pacman -S quickshell networkmanager pipewire libnotify wl-clipboard wl-clip-persist cliphist
 ```
 
 - **quickshell** — the runtime that loads the config. If it's not in
   your official repos yet, it's on the AUR as `quickshell` /
   `quickshell-git`; the git version tracks features the shell may rely
   on. Verify with `quickshell --version` after installing.
+- **libnotify** — provides `notify-send`, used by timer, stopwatch, and alarm notifications.
 - **networkmanager** — Quickshell's only supported network backend. The
   wifi popout drives `nmcli` under the hood; without NetworkManager
   running (`systemctl enable --now NetworkManager`) the wifi widget is
@@ -343,7 +343,7 @@ principle it **never** rewrites `hyprland.lua` or anything you
 hand-wrote. To make that safe, your Hyprland config gets split once, by
 hand, into a manager-owned `generated/` part and an untouchable `user/`
 part. The full step-by-step (with the exact commands and a verification
-checklist) is in **`docs/HYPR_RESTRUCTURE.md`**. It's a one-time,
+checklist) is in **`docs/history/HYPR_RESTRUCTURE.md`**. It's a one-time,
 by-hand procedure — do it only if you want that feature, and read that
 doc in full before running it.
 
@@ -459,7 +459,7 @@ See `docs/SDDM_BACKUP_AND_TRANSFER.md` for the complete transfer and recovery pr
 
 ```bash
 # 1. Deps (adjust font picks at the nerd-fonts prompt; swap wallpaper daemon if needed)
-sudo pacman -S quickshell networkmanager pipewire wireplumber imagemagick nerd-fonts awww
+sudo pacman -S quickshell networkmanager pipewire libnotify wl-clipboard wl-clip-persist cliphist wireplumber imagemagick nerd-fonts awww
 systemctl enable --now NetworkManager
 fc-cache -f
 

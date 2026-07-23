@@ -1,3 +1,47 @@
+## 2026-07-23 — Dependency health must be checked before repeated Quickshell revisions
+
+**Trying to do:** Repair clipboard-history refresh behavior after the list appeared stale or empty.
+
+**What went wrong:** Several UI/process-lifecycle revisions were attempted while the actual `wl-paste ... cliphist store` watchers were no longer running. `cliphist list` was empty, so no Quickshell refresh strategy could display new entries.
+
+**What fixed it:** Verify the backend first: package present, watcher processes alive, and raw command output populated. Restarting the three clipboard processes immediately restored history behavior.
+
+**Do not reintroduce:** Before repeated revisions to any daemon/socket/process-backed feature, check that the external dependency is installed, running, reachable, and returning expected data.
+
+---
+
+## 2026-07-23 — `hyprctl reload` does not rerun `hyprland.start`
+
+**Trying to do:** Test clipboard watcher autostart after editing `startup.lua`.
+
+**What went wrong:** `hyprctl reload` successfully reloaded configuration but did not invoke the one-time `hyprland.start` event, so no watcher processes appeared. Manually started watchers also died when tied to a terminal/process group.
+
+**What fixed it:** Restart the Hyprland session for startup-event testing and launch long-running helpers with `setsid -f`.
+
+---
+
+## 2026-07-23 — `Date.now()` did not make timer/stopwatch display bindings reactive
+
+**Trying to do:** Display live timer remaining time and stopwatch elapsed time.
+
+**What went wrong:** Completion checks fired and notifications appeared, but displayed values stayed frozen because calling `Date.now()` inside a readonly binding does not create a changing QML dependency.
+
+**What fixed it:** `ClockTools.qml` owns a reactive `nowMs` property updated by its timer. Visible elapsed/remaining bindings depend on that property.
+
+---
+
+## 2026-07-23 — Optional model roles and nonexistent theme tokens produced repeated warnings
+
+**Trying to do:** Style calculator keys and clock-tool controls.
+
+**What went wrong:** Optional roles such as `equal` evaluated to `undefined` when assigned to `bool`, and references to a nonexistent color token evaluated to `undefined` when assigned to `QColor`.
+
+**What fixed it:** Coerce optional roles explicitly (`role === true`) and reuse verified theme tokens already present in the project.
+
+**Do not reintroduce:** Treat dynamic model roles and theme-property names as untrusted until confirmed in the current model/theme API.
+
+---
+
 ## 2026-07-19 — Animation preset Apply crashed Hyprland because full-reset was used
 
 **Trying to do:** Apply manager-generated Hyprland animation presets immediately after writing `generated/animations.lua`.

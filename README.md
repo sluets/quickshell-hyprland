@@ -33,8 +33,11 @@ than a demonstration config.
 - Volume control and volume OSD
 - Wi-Fi scanning, status, and connection controls
 - Bluetooth status, device controls, and pairing support
-- Calendar and clock popouts
+- Split date/calendar and time-tools popouts
 - Media playback information and controls
+- Quickshell-native calculator opened from the launcher, with favorites, usage ranking, keyboard input, and session history
+- Timer, stopwatch, alarm, interval notifications, and selectable alert sounds
+- Clipboard persistence/history with bounded entries, delete/clear actions, and image thumbnails
 - Native Quickshell notification daemon with detached or bar-attached stacked cards
 - Desktop clock, date, weather, and temperature display
 - Per-monitor behavior where appropriate
@@ -117,11 +120,13 @@ git clone https://github.com/sluets/quickshell-hyprland ~/.config/quickshell
 Install the primary runtime dependencies:
 
 ```bash
-sudo pacman -S quickshell networkmanager pipewire
+sudo pacman -S quickshell networkmanager pipewire libnotify wl-clipboard wl-clip-persist cliphist
 ```
 
 Install `awww` using the appropriate package source for your system, then make
 sure `awww-daemon` starts with Hyprland.
+
+Clipboard persistence/history also requires three long-running session processes. See `docs/CLIPBOARD_SETUP.md` before testing the clipboard popout.
 
 Launch the shell:
 
@@ -167,15 +172,15 @@ See `docs/HYPRLAND_WINDOW_RULES.md` for the complete current rules.
 ```text
 shell.qml                  Main Quickshell entry point
 core/                      Shared singletons and global settings
-services/                  Audio, network, notifications, weather, and helpers
+services/                  Audio, network, notifications, weather, clock tools, clipboard history, and helpers
 widgets/                   Bar, launcher, settings, desktop widgets, OSDs, menus
 themes/                    QML theme definitions
-assets/                    Icons and images
+assets/                    Runtime icons, weather assets, and alert sounds
 scripts/                   Maintenance and apply helpers
 sddm-project/              SDDM source theme, snapshots, and installer tooling
 docs/                      Setup, architecture, changelog, fixes, and plans
 testing/                   Standalone test files
-notes/                     Non-runtime project notes and reference material
+notes/                     Active non-runtime scratch notes and reference material
 ```
 
 ### Important shared singletons
@@ -212,6 +217,7 @@ qs ipc call wallpapers list
 qs ipc call wallpapers random
 qs ipc call power toggle
 qs ipc call settings toggle
+qs ipc call calculator toggle
 qs ipc call config status
 qs ipc call config snapshot my-backup
 qs ipc call config list
@@ -287,15 +293,16 @@ See `docs/BACKUPS.md` and `docs/SDDM_BACKUP_AND_TRANSFER.md` for details.
 ## Documentation
 
 - `docs/SETUP_GUIDE.md` — installation and first-run setup
-- `docs/PROJECT_README.md` — broader project overview
 - `docs/PROJECT_VISION.md` — long-term direction
 - `docs/ARCHITECTURE.md` — code organization and design decisions
 - `docs/REVISION_HISTORY.md` — detailed project changelog
 - `docs/PROBLEMS_AND_FIXES.md` — known issues and verified solutions
 - `docs/HYPRLAND_WINDOW_RULES.md` — required and recommended Lua rules
 - `docs/BACKUPS.md` — snapshot and restore workflow
-- `docs/FEATURE_BACKLOG.md` — planned future work
-- `docs/MUSIC_LIBRARY_PLAN.md` — planned local-library music client
+- `docs/FEATURE_BACKLOG.md` — canonical future-work list
+- `docs/SMALL_ADDITIONS_BACKLOG.md` — focused small-utility ideas
+- `docs/CLIPBOARD_SETUP.md` — required clipboard backend setup
+- `docs/MUSIC_PLAYER_PLAN.md` — approved phased MPD player plan
 - `sddm-project/README.md` — SDDM theme management and installation
 
 ## Development approach

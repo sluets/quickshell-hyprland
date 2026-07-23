@@ -7,13 +7,7 @@ This list is for small, self-contained Quickshell utilities that improve the des
 
 ## Immediate checkpoint
 
-Before starting another feature:
-
-1. Finish live-testing the calculator, clock tools, and clipboard history.
-2. Merge the approved revisions into the canonical project tree.
-3. Update documentation and revision history.
-4. Commit and push from the desktop.
-5. Restore/pull the clean canonical tree on the work laptop.
+Calculator, clock tools, and clipboard history are now merged into the canonical project tree. Finish this documentation pass, commit/push from the desktop, then restore/pull the clean tree on the work laptop before beginning another major feature.
 
 ## 1. Calculator unit converter
 
@@ -171,7 +165,7 @@ Keep diagnostics lightweight and avoid turning it into a full network manager.
 
 ## Features completed during the current work block
 
-These are implemented in test revisions but are not canonical until merged, documented, committed, and pushed:
+These are present in the canonical project tree and await the final documentation/commit checkpoint:
 
 - Quickshell calculator opened from launcher as an internal app;
 - calculator favorites and launcher usage ranking;

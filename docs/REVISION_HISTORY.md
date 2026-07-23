@@ -1,3 +1,28 @@
+# Revision History
+
+## 2026-07-23 — Calculator, clock tools, clipboard history, and documentation checkpoint (GPT-5.6 Thinking)
+
+**What was added:**
+
+- Quickshell-native basic calculator with keyboard/numpad input, session history, launcher aliases (`calc`, `calculator`), favorites, hidden-app behavior, and usage ranking.
+- Split date/time click targets: date keeps the calendar; time opens timer, stopwatch, and alarm tools.
+- Timer near-finish/completion notifications, stopwatch laps and interval alerts, one active alarm, selectable Soft/Double/Urgent sounds, sound preview, and sound-disable control.
+- Clipboard persistence/history popout backed by `wl-clip-persist`, `wl-paste`, and `cliphist`, capped at 25 items, with restore/delete/wipe and image thumbnails decoded sequentially into a bounded runtime cache.
+- Approved `MUSIC_PLAYER_PLAN.md` v3 retained as the next large-feature specification.
+
+**Live results:**
+
+- Calculator, timer, stopwatch, alarm, notifications, clipboard restore/delete/clear, and image thumbnails tested without QML warnings.
+- Clipboard troubleshooting established the dependency-health-first rule after stopped watchers made a working UI appear broken.
+
+**Documentation cleanup:**
+
+- Current setup, architecture, services, assets, backlogs, fixes, and integration notes updated.
+- Completed plans/reviews/incidents moved to `docs/history/`.
+- No failed intermediate calculator/clock/clipboard revisions are recorded individually.
+
+---
+
 ## 2026-07-23 — Memory stabilization completed and zero-output watchdog validated (GPT)
 
 **Context:** Focused notification, idle, DPMS, physical zero-output, and final

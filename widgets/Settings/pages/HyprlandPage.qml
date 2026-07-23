@@ -233,7 +233,7 @@ ColumnLayout {
 
     Text {
         text: "Writes hypr/generated/appearance.lua — Hyprland reloads it live.\n"
-            + "Requires the one-time restructure: docs/HYPR_RESTRUCTURE.md"
+            + "Requires the one-time restructure: docs/history/HYPR_RESTRUCTURE.md"
         color: Theme.colorMuted
         font.family: Theme.fontFamily
         font.pixelSize: Math.round(Theme.fontSize * 0.8)

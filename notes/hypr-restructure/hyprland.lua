@@ -1,4 +1,4 @@
--- Managed/user split — see docs/HYPR_RESTRUCTURE.md in the quickshell
+-- Managed/user split — see docs/history/HYPR_RESTRUCTURE.md in the quickshell
 -- repo for what owns what. Short version:
 --   generated/  belongs to the shell's ConfigManager. Regenerated
 --               whole-file on settings Apply. NEVER hand-edit.

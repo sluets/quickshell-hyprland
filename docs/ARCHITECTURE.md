@@ -626,3 +626,30 @@ Settings is now split into five explicit layers:
 - `components/SettingsOverlays.qml`: shared dropdown and color-picker popup layer.
 
 `SettingsWindow.qml` fell from the historical 2,400+ line monolith to 495 lines by Rev 29. Future Settings features must start in a dedicated page/component/context/transaction/service boundary rather than being embedded in the window and split later. The detailed rules and regression checklist are in `docs/SETTINGS_ARCHITECTURE.md`.
+
+## Small native utility architecture (2026-07-23)
+
+### Calculator
+
+`widgets/Calculator/CalculatorWindow.qml` is one persistent application-style window instantiated once by `shell.qml`. `core/Signals.qml` carries the toggle request. The launcher exposes a normal internal entry (`internal:calculator`) so favorites, hidden state, usage counts, aliases, and ranking use the same machinery as desktop applications; only the final launch action differs. No Settings keys exist.
+
+### Clock tools
+
+`services/ClockTools.qml` owns all timer, stopwatch, lap, alarm, sound, and notification state. `widgets/TopBar/Clock.qml` is presentation and interaction only. The date and time retain one visual row but have independent hit targets and independent persistent popouts. Runtime elapsed/remaining values derive from timestamps plus the service's reactive `nowMs`, not from decrementing/incrementing counters.
+
+### Clipboard history
+
+`services/ClipboardHistory.qml` owns the bounded model and reusable `Process` objects for list, restore, delete, wipe, trim, and sequential thumbnail decode. `widgets/TopBar/Clipboard.qml` refreshes once when opened and mutates the visible model in place for delete/clear, preserving scroll position. The service depends on external session processes; verify them and `cliphist list` before changing QML. Thumbnail files use stable IDs under `$XDG_RUNTIME_DIR/qs-clipboard-thumbs/`, never the source-controlled assets directory.
+
+### Lifecycle rule
+
+All three utilities use persistent objects/windows/popouts. Runtime opening and closing changes visibility/state; it does not construct and destroy windows or spawn unbounded process instances.
+
+
+## Documentation hierarchy
+
+- `README.md`, setup, architecture, maintenance, and current plans are authoritative.
+- `FEATURE_BACKLOG.md` is the canonical active backlog.
+- `SMALL_ADDITIONS_BACKLOG.md` expands only the small-utility portion.
+- `docs/history/` contains completed plans, superseded designs, incident reports, and old reviews; those files are context, not active work orders.
+- `notes/` is temporary scratch space and must not become a second backlog.
