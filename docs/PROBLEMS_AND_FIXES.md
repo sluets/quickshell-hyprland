@@ -1,3 +1,21 @@
+## 2026-07-23 — Hyprland 0.56 made the managed window animation feel sluggish
+
+**Trying to do:** Keep the existing Smooth/Slide window animation feeling snappy after the system upgraded from Hyprland 0.55.4 to 0.56.0.
+
+**What went wrong:** The generated config was loading correctly, but the active window branch used `spring = "easy"` with `windows = 4.0` and `windowsIn = 3.5`. On 0.56 this looked like an approximately two-second GNOME-style settle even though there were no compositor or Lua errors. Initial live tests also used two stale interfaces: legacy `hyprctl keyword`, which cannot operate with the Lua parser, and `curve = "quick"`, which the Lua API rejected because `hl.animation()` requires `bezier` or `spring`.
+
+**What fixed it:** Verify the active tree with `hyprctl animations`, then live-test through `hyprctl eval` using `bezier = "quick"`. The final managed values use a slightly slower version of the successful test: balanced window branches use approximately `windows = 2.2`, `windowsIn = 1.8`, and `windowsOut = 1.5`, with the selected style preserved. Workspace, layer, and fade overrides were retuned in the same animation section so selecting an override does not reintroduce the older slow timings.
+
+**Do not diagnose this as a config-load failure:** If `hyprctl animations` shows the expected overridden leaves, the generator and load order are working. Check the actual active speed/curve before editing unrelated settings.
+
+**Current Lua test syntax:**
+
+```bash
+hyprctl eval 'hl.animation({ leaf = "windowsIn", enabled = true, speed = 1.8, bezier = "quick", style = "slide" })'
+```
+
+`speed` is duration in deciseconds (`1.0` = 100 ms), so lower is faster.
+
 ## 2026-07-23 — Dependency health must be checked before repeated Quickshell revisions
 
 **Trying to do:** Repair clipboard-history refresh behavior after the list appeared stale or empty.

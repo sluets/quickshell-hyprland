@@ -163,7 +163,8 @@ ColumnLayout {
     Text {
         text: "Overall Feel controls timing and curves. The style rows override "
             + "only their own animation branch. Follow Feel keeps the built-in "
-            + "choice from Off, Snappy, Smooth, or Bouncy."
+            + "choice from Off, Snappy, Smooth, or Bouncy. Timings are tuned for "
+            + "Hyprland 0.56, where speed is duration in deciseconds."
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         color: Theme.colorMuted
@@ -172,9 +173,10 @@ ColumnLayout {
     }
 
     Text {
-        text: "Smooth matches the original hand-owned animation block. "
-            + "Requires the one-time animation ownership migration documented "
-            + "in docs/HYPR_ANIMATIONS_PLAN.md."
+        text: "Smooth is the balanced daily-driver preset. Hyprland 0.56 made "
+            + "the old spring-based window timings feel substantially slower, "
+            + "so window entry now uses the quick Bézier. The one-time ownership "
+            + "migration is documented in docs/SETTINGS_ARCHITECTURE.md."
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         color: Theme.colorMuted

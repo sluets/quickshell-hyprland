@@ -1,3 +1,19 @@
+## 2026-07-23 — Hyprland 0.56 animation compatibility retune (GPT)
+
+**Context:** After upgrading the live system from Hyprland 0.55.4 to 0.56.0, the managed animation config still loaded cleanly but spring-based window entry became visibly sluggish. Runtime verification showed the active Slide override at `windows = 4.0`, `windowsIn = 3.5`, and `spring:easy`.
+
+**Changes:**
+
+- Retuned the full Hyprland Settings animation section for the 0.56 timing behavior.
+- Replaced Smooth and the Pop In/Slide/GNOME-like window overrides with the existing `quick` Bézier instead of `spring = "easy"`.
+- Set the balanced window timings to approximately 2.2 ds overall, 1.8 ds entry, and 1.5 ds exit; GNOME-like remains deliberately softer but no longer uses the long spring settle.
+- Shortened workspace, layer, Balanced fade, and Soft fade override timings so choosing a branch override cannot silently restore the pre-0.56 sluggish values.
+- Kept Bouncy spring-based by design.
+- Updated the one-time animation migration script so a fresh install generates the same current Smooth baseline.
+- Updated Settings help text and project/setup/version documentation to identify Hyprland 0.56.0 as the tested baseline.
+
+**Verification:** Live `hyprctl eval` testing confirmed that `windowsIn = 1.5`, `windows = 1.8`, and `bezier = "quick"` were extremely fast; the committed preset intentionally backs off to 1.8/2.2 for a snappy but visible transition.
+
 # Revision History
 
 ## 2026-07-23 — Calculator, clock tools, clipboard history, and documentation checkpoint (GPT-5.6 Thinking)

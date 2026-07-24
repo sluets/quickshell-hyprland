@@ -745,9 +745,9 @@ LUAEOF
 hl.config({ animations = { enabled = true } })
 hl.animation({ leaf = "global",        enabled = true, speed = 10,   bezier = "default" })
 hl.animation({ leaf = "border",        enabled = true, speed = 5.39, bezier = "easeOutQuint" })
-hl.animation({ leaf = "windows",       enabled = true, speed = 4.79, spring = "easy" })
-hl.animation({ leaf = "windowsIn",     enabled = true, speed = 4.1,  spring = "easy",         style = "popin 87%" })
-hl.animation({ leaf = "windowsOut",    enabled = true, speed = 1.49, bezier = "linear",       style = "popin 87%" })
+hl.animation({ leaf = "windows",       enabled = true, speed = 2.2, bezier = "quick" })
+hl.animation({ leaf = "windowsIn",     enabled = true, speed = 1.8, bezier = "quick", style = "popin 90%" })
+hl.animation({ leaf = "windowsOut",    enabled = true, speed = 1.5, bezier = "quick", style = "popin 90%" })
 hl.animation({ leaf = "fadeIn",        enabled = true, speed = 1.73, bezier = "almostLinear" })
 hl.animation({ leaf = "fadeOut",       enabled = true, speed = 1.46, bezier = "almostLinear" })
 hl.animation({ leaf = "fade",          enabled = true, speed = 3.03, bezier = "quick" })
@@ -769,23 +769,23 @@ LUAEOF
     case "$window_style" in
       popin)
         cat <<'LUAEOF'
-hl.animation({ leaf = "windows",    enabled = true, speed = 4.0, spring = "easy", style = "popin 85%" })
-hl.animation({ leaf = "windowsIn",  enabled = true, speed = 3.5, spring = "easy", style = "popin 85%" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 2.0, bezier = "quick", style = "popin 85%" })
+hl.animation({ leaf = "windows",    enabled = true, speed = 2.2, bezier = "quick", style = "popin 88%" })
+hl.animation({ leaf = "windowsIn",  enabled = true, speed = 1.8, bezier = "quick", style = "popin 88%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.5, bezier = "quick", style = "popin 88%" })
 LUAEOF
         ;;
       slide)
         cat <<'LUAEOF'
-hl.animation({ leaf = "windows",    enabled = true, speed = 4.0, spring = "easy", style = "slide" })
-hl.animation({ leaf = "windowsIn",  enabled = true, speed = 3.5, spring = "easy", style = "slide" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 2.0, bezier = "quick", style = "slide" })
+hl.animation({ leaf = "windows",    enabled = true, speed = 2.2, bezier = "quick", style = "slide" })
+hl.animation({ leaf = "windowsIn",  enabled = true, speed = 1.8, bezier = "quick", style = "slide" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.5, bezier = "quick", style = "slide" })
 LUAEOF
         ;;
       gnomed)
         cat <<'LUAEOF'
-hl.animation({ leaf = "windows",    enabled = true, speed = 4.5, spring = "easy", style = "gnomed" })
-hl.animation({ leaf = "windowsIn",  enabled = true, speed = 4.0, spring = "easy", style = "gnomed" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 2.5, bezier = "quick", style = "gnomed" })
+hl.animation({ leaf = "windows",    enabled = true, speed = 2.8, bezier = "quick", style = "gnomed" })
+hl.animation({ leaf = "windowsIn",  enabled = true, speed = 2.5, bezier = "quick", style = "gnomed" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.8, bezier = "quick", style = "gnomed" })
 LUAEOF
         ;;
     esac
@@ -798,9 +798,9 @@ LUAEOF
           ws_style="$workspace_style"
         fi
         cat <<LUAEOF
-hl.animation({ leaf = "workspaces",    enabled = true, speed = 3.2, bezier = "almostLinear", style = "$ws_style" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 3.0, bezier = "almostLinear", style = "$ws_style" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = 3.2, bezier = "almostLinear", style = "$ws_style" })
+hl.animation({ leaf = "workspaces",    enabled = true, speed = 2.4, bezier = "almostLinear", style = "$ws_style" })
+hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 2.2, bezier = "almostLinear", style = "$ws_style" })
+hl.animation({ leaf = "workspacesOut", enabled = true, speed = 2.4, bezier = "almostLinear", style = "$ws_style" })
 LUAEOF
         ;;
     esac
@@ -810,9 +810,9 @@ LUAEOF
         layer_arg="$layer_style"
         [ "$layer_style" = popin ] && layer_arg="popin 85%"
         cat <<LUAEOF
-hl.animation({ leaf = "layers",    enabled = true, speed = 3.0, bezier = "easeOutQuint", style = "$layer_arg" })
-hl.animation({ leaf = "layersIn",  enabled = true, speed = 3.0, bezier = "easeOutQuint", style = "$layer_arg" })
-hl.animation({ leaf = "layersOut", enabled = true, speed = 1.8, bezier = "quick", style = "$layer_arg" })
+hl.animation({ leaf = "layers",    enabled = true, speed = 2.2, bezier = "easeOutQuint", style = "$layer_arg" })
+hl.animation({ leaf = "layersIn",  enabled = true, speed = 2.0, bezier = "easeOutQuint", style = "$layer_arg" })
+hl.animation({ leaf = "layersOut", enabled = true, speed = 1.5, bezier = "quick", style = "$layer_arg" })
 LUAEOF
         ;;
     esac
@@ -832,16 +832,16 @@ LUAEOF
         ;;
       balanced)
         cat <<'LUAEOF'
-hl.animation({ leaf = "fade", enabled = true, speed = 2.5, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeIn", enabled = true, speed = 2.2, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeOut", enabled = true, speed = 1.8, bezier = "almostLinear" })
+hl.animation({ leaf = "fade", enabled = true, speed = 2.0, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeIn", enabled = true, speed = 1.8, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeOut", enabled = true, speed = 1.5, bezier = "almostLinear" })
 LUAEOF
         ;;
       soft)
         cat <<'LUAEOF'
-hl.animation({ leaf = "fade", enabled = true, speed = 4.5, bezier = "easeOutQuint" })
-hl.animation({ leaf = "fadeIn", enabled = true, speed = 4.0, bezier = "easeOutQuint" })
-hl.animation({ leaf = "fadeOut", enabled = true, speed = 3.2, bezier = "almostLinear" })
+hl.animation({ leaf = "fade", enabled = true, speed = 3.4, bezier = "easeOutQuint" })
+hl.animation({ leaf = "fadeIn", enabled = true, speed = 3.0, bezier = "easeOutQuint" })
+hl.animation({ leaf = "fadeOut", enabled = true, speed = 2.4, bezier = "almostLinear" })
 LUAEOF
         ;;
     esac

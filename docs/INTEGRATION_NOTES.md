@@ -2,7 +2,7 @@
 
 Everything the shell needs from the compositor config, in one place.
 This machine's Hyprland config is **hyprland.lua** (Lua config, Hyprland
-0.55+ — see HYPRLAND_INFO.md for the config-format background and the
+0.56+ — see HYPRLAND_INFO.md for the config-format background and the
 GUI-managed-config caveat before hand-editing anything).
 
 This file was originally a 2026-07-04 build-session handoff; everything

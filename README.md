@@ -96,7 +96,7 @@ kept separate from the portable theme installer.
 The project is developed and tested on:
 
 - Arch Linux
-- Hyprland 0.55.4 or newer using Lua configuration
+- Hyprland 0.56.0 or newer using Lua configuration
 - Quickshell
 - Wayland
 - AMD graphics

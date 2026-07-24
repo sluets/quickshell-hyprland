@@ -750,8 +750,9 @@ Singleton {
         property int hyprGapsOut: 10
         property int hyprBorderSize: 2
         property int hyprRounding: 10
-        // Hyprland animation preset. "smooth" reproduces the pre-managed
-        // animation block from user/look.lua.  // GPT Rev 30
+        // Hyprland animation preset. "smooth" is the balanced Hyprland 0.56
+        // daily-driver preset; it no longer reproduces the old spring-based
+        // window timing because that became visibly sluggish after 0.56.  // GPT
         property string hyprAnimationPreset: "smooth"
         // Optional style overrides. "follow" keeps the selected overall preset's
         // built-in choices. These are intentionally preset-only for now; sliders

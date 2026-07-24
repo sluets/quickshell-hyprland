@@ -1,10 +1,27 @@
-## Additional notes (verified via web search, 2026-07-06)
+## Current tested baseline (verified 2026-07-23)
 
-**Timing context:** Hyprland switched its config format to Lua in
-v0.55. This happened after Claude's Jan-2026 training cutoff, so it's
-not something a fresh Claude session will "know" by default — it has
-to be verified, not assumed. If a future session says "hyprland.lua"
-like it's unusual or a typo, point it here.
+The project is now developed and live-tested on **Hyprland 0.56.0**
+with Lua configuration. Hyprland switched its config format to Lua in
+v0.55, after the model training cutoffs used during much of this
+project, so current compositor behavior must be verified against the
+installed version and current official documentation rather than
+assumed from memory.
+
+Animation notes for 0.56:
+
+- `hl.animation()` requires either `bezier = "name"` or
+  `spring = "name"`; a generic `curve` field is not accepted.
+- animation `speed` is duration in deciseconds (`1.0` = 100 ms), so
+  lower values are faster;
+- the old `spring = "easy"` window-entry values that felt acceptable
+  before the upgrade became visibly sluggish on 0.56;
+- the managed Smooth/window-style presets therefore use the existing
+  `quick` Bézier with shorter durations, while Bouncy deliberately
+  remains spring-based.
+
+If a future session treats `hyprland.lua`, `hyprctl eval`, or the Lua
+animation API as unusual, outdated, or a typo, point it here and verify
+against the current Hyprland wiki first.
 
 ### The `hl` scripting API (what's actually available)
 

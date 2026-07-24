@@ -42,12 +42,16 @@ happens to cover similar ground. What you get:
 
 You don't need to match this exactly, but it's the tested baseline:
 
-- **Arch Linux + Hyprland (Wayland).** The Hyprland config on the
-  author's machine is **`hyprland.lua`** — Hyprland deprecated the old
-  `hyprlang` (`hyprland.conf`) in favor of Lua config in 0.55 (April
-  2026). All bind/autostart examples in these docs are the Lua form. If
-  you're still on `hyprland.conf`, the shell itself works fine; only the
-  optional Hyprland-restructure step (§7) assumes Lua.
+- **Arch Linux + Hyprland 0.56.0+ (Wayland).** The tested compositor
+  baseline is now **0.56.0** and the config is **`hyprland.lua`**.
+  Hyprland deprecated the old `hyprlang` (`hyprland.conf`) in favor of
+  Lua config in 0.55 (April 2026). All bind/autostart examples in these
+  docs are the Lua form. Animation speed values are durations in
+  deciseconds (`1.0` = 100 ms); the managed presets were retuned after
+  upgrading to 0.56 because the old spring-based window entry felt
+  substantially slower. If you're still on `hyprland.conf`, the shell
+  itself works fine; only the optional Hyprland-restructure step (§7)
+  assumes Lua.
 - **Quickshell 0.3.0+** (released 2026-05-04). Confirm yours with
   `quickshell --version`. Some APIs the shell uses (per-monitor
   `Variants`, `WlrLayershell`, `JsonAdapter`) want a reasonably current
