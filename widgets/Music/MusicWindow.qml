@@ -30,6 +30,14 @@ FloatingWindow {
 
     visible: shown
 
+    // Run CAVA only while this window is visible. Closing the window stops
+    // capture and clears the spectrum instead of leaving a background process.
+    Binding {
+        target: AudioVisualizer
+        property: "active"
+        value: root.shown
+    }
+
     readonly property var shownArtists: {
         const _revision = MusicLibrary.libraryRevision;
         const needle = searchText.trim().toLowerCase();
@@ -323,10 +331,24 @@ FloatingWindow {
             anchors.margins: Theme.spacingLarge
             spacing: Theme.spacingMedium
 
-            MusicPanel {
-                Layout.preferredWidth: 540
-                Layout.maximumWidth: 540
-                showLibraryButton: false
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.preferredHeight: nowPlayingPanel.implicitHeight
+                Layout.maximumHeight: nowPlayingPanel.implicitHeight
+                spacing: Theme.spacingLarge
+
+                MusicPanel {
+                    id: nowPlayingPanel
+                    Layout.preferredWidth: 540
+                    Layout.maximumWidth: 540
+                    showLibraryButton: false
+                }
+
+                AudioSpectrum {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.minimumWidth: 220
+                }
             }
 
             RowLayout {

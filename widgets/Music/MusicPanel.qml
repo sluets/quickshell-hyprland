@@ -87,9 +87,19 @@ Item {
                 border.color: Theme.colorMuted
                 clip: true
 
+                Image {
+                    anchors.fill: parent
+                    source: AlbumArtService.artUrl
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: false
+                    visible: AlbumArtService.hasArt
+                }
+
                 Text {
                     anchors.centerIn: parent
-                    text: "♪"
+                    text: AlbumArtService.busy ? "…" : "♪"
+                    visible: !AlbumArtService.hasArt
                     color: Theme.colorMuted
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize * 2.4

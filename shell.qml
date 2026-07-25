@@ -206,6 +206,11 @@ Scope {
     // the snapshot engine alive from first boot, not first IPC call.
     // See services/ConfigManager.qml's DESIGN NOTES.
     readonly property bool _configManagerLoaded: ConfigManager.ready
+
+    // Keep song-change notifications alive even when the music window and
+    // bar dropdown are closed. The property read force-instantiates the lazy
+    // singleton; notification behavior itself lives in MusicNotifications.
+    readonly property bool _musicNotificationsLoaded: MusicNotifications.ready
     readonly property bool _musicServiceLoaded: MusicService.connected
 
     // A Qt placeholder screen named FALLBACK appears while every real

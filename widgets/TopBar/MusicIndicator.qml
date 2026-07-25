@@ -31,7 +31,7 @@ Item {
             return truncate(MusicService.title);
         if (MusicService.fileUri !== "")
             return truncate(MusicService.fileUri.split("/").pop());
-        return MusicService.playbackState === "stop" ? "MPD stopped" : "MPD";
+        return MusicService.playbackState === "stop" ? "" : "MPD";
     }
 
     RowLayout {
