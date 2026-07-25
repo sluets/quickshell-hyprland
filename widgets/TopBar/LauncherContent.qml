@@ -82,6 +82,18 @@ ColumnLayout {
         };
     }
 
+    function musicEntry(): var {
+        return {
+            id: "internal:music",
+            name: "Music",
+            comment: "Open the Quickshell music library",
+            icon: Quickshell.shellPath("assets/icons/music.svg"),
+            internalAction: "music",
+            searchAliases: ["music", "player", "mpd", "library", "songs"],
+            noDisplay: false
+        };
+    }
+
     function scoreInternalEntry(q: string, entry: var): int {
         let score = root.scoreEntry(q, entry.name);
         for (const alias of entry.searchAliases ?? [])
@@ -111,6 +123,7 @@ ColumnLayout {
         const scored = [];
 
         root.appendCandidate(scored, root.calculatorEntry(), q);
+        root.appendCandidate(scored, root.musicEntry(), q);
 
         for (const entry of DesktopEntries.applications.values) {
             root.appendCandidate(scored, entry, q);
@@ -137,6 +150,10 @@ ColumnLayout {
         UserPrefs.recordLauncherUse(entry.id);
         if (entry.internalAction === "calculator") {
             Signals.toggleCalculatorWindow();
+            return;
+        }
+        if (entry.internalAction === "music") {
+            Signals.toggleMusicWindow();
             return;
         }
         if (entry.runInTerminal)

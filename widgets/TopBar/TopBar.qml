@@ -14,7 +14,8 @@
 // instantiates them through a Variants block and injects each one's
 // ShellScreen as the required `modelData` property below.
 //
-// Hosts SystemMenu + Workspaces + a divider + NowPlaying (grouped on the
+// Hosts SystemMenu + Workspaces + the media indicators (MPRIS
+// NowPlaying plus MPD MusicIndicator, grouped on the
 // left), Volume + Wifi + Bluetooth + Clock (grouped on the right,
 // divider between each), and the Launcher + WallpaperPicker (two
 // invisible anchors centered in the bar; their popouts open by
@@ -340,7 +341,8 @@ PanelWindow {
         }
 
         // ---- Modules ----
-        // SystemMenu, Workspaces, Separator, NowPlaying, Volume, Wifi,
+        // SystemMenu, Workspaces, NowPlaying, MusicIndicator,
+        // Volume, Wifi,
         // Bluetooth, and Clock are all neighboring files in this same
         // folder, so none need an import — Quickshell auto-imports
         // uppercase-named files from the same directory. Each reaches
@@ -355,8 +357,18 @@ PanelWindow {
             SystemMenu {}
             Separator {}
             Workspaces {}
-            Separator {}
-            NowPlaying {}
+            Separator {
+                visible: nowPlaying.visible || musicIndicator.visible
+            }
+            NowPlaying {
+                id: nowPlaying
+            }
+            Separator {
+                visible: nowPlaying.visible && musicIndicator.visible
+            }
+            MusicIndicator {
+                id: musicIndicator
+            }
         }
 
         // Invisible 1px anchor in the exact middle of the bar — the launcher

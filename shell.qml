@@ -196,6 +196,7 @@ import qs.widgets.Notifications
 import qs.widgets.PowerMenu
 import qs.widgets.Desktop
 import qs.widgets.Calculator
+import qs.widgets.Music
 
 Scope {
     id: shellScope
@@ -205,6 +206,7 @@ Scope {
     // the snapshot engine alive from first boot, not first IPC call.
     // See services/ConfigManager.qml's DESIGN NOTES.
     readonly property bool _configManagerLoaded: ConfigManager.ready
+    readonly property bool _musicServiceLoaded: MusicService.connected
 
     // A Qt placeholder screen named FALLBACK appears while every real
     // output is unavailable (for example, while both monitors are powered
@@ -362,6 +364,28 @@ Scope {
         }
     }
 
+    // MPD transport/service Phase 1 test surface.
+    //     qs ipc call music status
+    //     qs ipc call music play|pause|toggle|stop|previous|next|restart
+    //     qs ipc call music seek <seconds>
+    //     qs ipc call music volume <0-100>
+    // GPT — 2026-07-24
+    IpcHandler {
+        target: "music"
+
+        function status(): string { return MusicService.statusText(); }
+        function refresh(): string { MusicService.refreshAll(); return "ok: refresh requested"; }
+        function play(): string { MusicService.play(); return "ok: play requested"; }
+        function pause(): string { MusicService.pause(); return "ok: pause requested"; }
+        function toggle(): string { MusicService.toggle(); return "ok: toggle requested"; }
+        function stop(): string { MusicService.stop(); return "ok: stop requested"; }
+        function previous(): string { MusicService.previous(); return "ok: previous requested"; }
+        function next(): string { MusicService.next(); return "ok: next requested"; }
+        function restart(): string { MusicService.restartSong(); return "ok: restart requested"; }
+        function seek(seconds: real): string { MusicService.seek(seconds); return "ok: seek requested"; }
+        function volume(percent: int): string { MusicService.setVolume(percent); return "ok: volume requested"; }
+    }
+
     // Notification-state cleanup for controlled tests:
     //     qs ipc call notifs dismissAll
     // Keep dismissal ownership in Notifs; this endpoint only exposes it. // GPT
@@ -405,6 +429,15 @@ Scope {
         function toggle(): string {
             Signals.toggleCalculatorWindow();
             return "ok: calculator toggle requested";
+        }
+    }
+
+    IpcHandler {
+        target: "musicwindow"
+
+        function toggle(): string {
+            Signals.toggleMusicWindow();
+            return "ok: music window toggle requested";
         }
     }
 
@@ -591,6 +624,16 @@ Scope {
 
         function onToggleCalculatorWindow(): void {
             calculatorWindow.toggle();
+        }
+    }
+
+    MusicWindow { id: musicWindow }
+
+    Connections {
+        target: Signals
+
+        function onToggleMusicWindow(): void {
+            musicWindow.toggle();
         }
     }
 

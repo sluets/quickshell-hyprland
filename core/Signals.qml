@@ -84,4 +84,7 @@ Singleton {
 
     // Open/close the single Quickshell-native calculator window. // GPT
     signal toggleCalculatorWindow()
+
+    // Open/close the standalone MPD library window. // GPT
+    signal toggleMusicWindow()
 }
