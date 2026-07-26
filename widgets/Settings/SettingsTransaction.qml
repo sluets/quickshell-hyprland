@@ -9,6 +9,17 @@ Item {
     // ---- Staged (uncommitted) values. null = not staged. ----
     property var stagedTheme: null
     property var stagedFontScale: null
+    property var stagedCustomThemeBaseName: null
+    property var stagedCustomThemeBackground: null
+    property var stagedCustomThemeForeground: null
+    property var stagedCustomThemeAccent: null
+    property var stagedCustomThemeUrgent: null
+    property var stagedCustomThemeMuted: null
+    property var stagedCustomThemeSurface: null
+    property var stagedCustomThemeHover: null
+    property var stagedCustomThemeBorder: null
+    property var stagedCustomThemeBorder2: null
+    property var stagedCustomThemeBorderAngle: null
     property var stagedNotifPresentation: null
     property var stagedNotifBarPosition: null
     property var stagedNotifBarOffsetX: null
@@ -99,6 +110,17 @@ Item {
     // Effective values the UI highlights: staged if present, else live.
     readonly property string shownTheme: stagedTheme !== null ? stagedTheme : UserPrefs.themeName
     readonly property real shownFontScale: stagedFontScale !== null ? stagedFontScale : UserPrefs.fontScale
+    readonly property string shownCustomThemeBaseName: stagedCustomThemeBaseName !== null ? stagedCustomThemeBaseName : UserPrefs.customThemeBaseName
+    readonly property string shownCustomThemeBackground: stagedCustomThemeBackground !== null ? stagedCustomThemeBackground : UserPrefs.customThemeBackground
+    readonly property string shownCustomThemeForeground: stagedCustomThemeForeground !== null ? stagedCustomThemeForeground : UserPrefs.customThemeForeground
+    readonly property string shownCustomThemeAccent: stagedCustomThemeAccent !== null ? stagedCustomThemeAccent : UserPrefs.customThemeAccent
+    readonly property string shownCustomThemeUrgent: stagedCustomThemeUrgent !== null ? stagedCustomThemeUrgent : UserPrefs.customThemeUrgent
+    readonly property string shownCustomThemeMuted: stagedCustomThemeMuted !== null ? stagedCustomThemeMuted : UserPrefs.customThemeMuted
+    readonly property string shownCustomThemeSurface: stagedCustomThemeSurface !== null ? stagedCustomThemeSurface : UserPrefs.customThemeSurface
+    readonly property string shownCustomThemeHover: stagedCustomThemeHover !== null ? stagedCustomThemeHover : UserPrefs.customThemeHover
+    readonly property string shownCustomThemeBorder: stagedCustomThemeBorder !== null ? stagedCustomThemeBorder : UserPrefs.customThemeBorder
+    readonly property string shownCustomThemeBorder2: stagedCustomThemeBorder2 !== null ? stagedCustomThemeBorder2 : UserPrefs.customThemeBorder2
+    readonly property real shownCustomThemeBorderAngle: stagedCustomThemeBorderAngle !== null ? stagedCustomThemeBorderAngle : UserPrefs.customThemeBorderAngle
     readonly property int shownBarBorderWidthOverride: stagedBarBorderWidthOverride !== null ? stagedBarBorderWidthOverride : UserPrefs.barBorderWidthOverride
     readonly property bool shownBarBorderUseThemeColor: stagedBarBorderUseThemeColor !== null ? stagedBarBorderUseThemeColor : UserPrefs.barBorderUseThemeColor
     readonly property string shownBarBorderCustomColor: stagedBarBorderCustomColor !== null ? stagedBarBorderCustomColor : UserPrefs.barBorderCustomColor
@@ -218,6 +240,24 @@ Item {
             const [key, label, live, staged, format] = musicPairs[i];
             if (staged !== null && staged !== live)
                 c.push({ key: key, label: label, from: format(live), to: format(staged), value: staged });
+        }
+        const customPairs = [
+            ["customThemeBaseName", "Custom Base", UserPrefs.customThemeBaseName, stagedCustomThemeBaseName],
+            ["customThemeBackground", "Custom Background", UserPrefs.customThemeBackground, stagedCustomThemeBackground],
+            ["customThemeForeground", "Custom Foreground", UserPrefs.customThemeForeground, stagedCustomThemeForeground],
+            ["customThemeAccent", "Custom Accent", UserPrefs.customThemeAccent, stagedCustomThemeAccent],
+            ["customThemeUrgent", "Custom Urgent", UserPrefs.customThemeUrgent, stagedCustomThemeUrgent],
+            ["customThemeMuted", "Custom Muted", UserPrefs.customThemeMuted, stagedCustomThemeMuted],
+            ["customThemeSurface", "Custom Surface", UserPrefs.customThemeSurface, stagedCustomThemeSurface],
+            ["customThemeHover", "Custom Hover", UserPrefs.customThemeHover, stagedCustomThemeHover],
+            ["customThemeBorder", "Custom Border", UserPrefs.customThemeBorder, stagedCustomThemeBorder],
+            ["customThemeBorder2", "Custom Border 2", UserPrefs.customThemeBorder2, stagedCustomThemeBorder2],
+            ["customThemeBorderAngle", "Custom Border Angle", UserPrefs.customThemeBorderAngle, stagedCustomThemeBorderAngle]
+        ];
+        for (let i = 0; i < customPairs.length; ++i) {
+            const [key, label, live, staged] = customPairs[i];
+            if (staged !== null && staged !== live)
+                c.push({ key: key, label: label, from: String(live), to: String(staged), value: staged });
         }
         if (stagedTheme !== null && stagedTheme !== UserPrefs.themeName)
             c.push({ key: "themeName", label: "Theme",
@@ -399,6 +439,17 @@ Item {
     function discardStaged(): void {
         stagedTheme = null;
         stagedFontScale = null;
+        stagedCustomThemeBaseName = null;
+        stagedCustomThemeBackground = null;
+        stagedCustomThemeForeground = null;
+        stagedCustomThemeAccent = null;
+        stagedCustomThemeUrgent = null;
+        stagedCustomThemeMuted = null;
+        stagedCustomThemeSurface = null;
+        stagedCustomThemeHover = null;
+        stagedCustomThemeBorder = null;
+        stagedCustomThemeBorder2 = null;
+        stagedCustomThemeBorderAngle = null;
         stagedBarPaddingTopOverride = null;
         stagedBarPaddingSideOverride = null;
         stagedBarPaddingBottomOverride = null;
@@ -495,17 +546,24 @@ Item {
     function resolvedHyprBorderForApply(): var {
         const selectedTheme = Theme.themes[shownTheme] || Theme.active;
         const followsAppearance = shownHyprActiveBorderUseThemeColor;
-        const secondary = selectedTheme.barBorderColor2;
-        const gradient = followsAppearance && shownBarBorderUseThemeColor
-            && secondary.a > 0.001;
+        const customSelected = shownTheme === "CustomTheme";
+        const primaryHex = customSelected
+            ? _settingsHexToHyprHex(shownCustomThemeBorder)
+            : _qColorToHyprHex(selectedTheme.barBorderColor);
+        const secondaryEnabled = customSelected
+            ? shownCustomThemeBorder2 !== "transparent"
+            : selectedTheme.barBorderColor2.a > 0.001;
+        const secondaryHex = customSelected
+            ? (secondaryEnabled ? _settingsHexToHyprHex(shownCustomThemeBorder2) : "")
+            : (secondaryEnabled ? _qColorToHyprHex(selectedTheme.barBorderColor2) : "");
+        const gradient = followsAppearance && shownBarBorderUseThemeColor && secondaryEnabled;
         return {
             useTheme: followsAppearance,
             primaryHex: shownBarBorderUseThemeColor
-                ? _qColorToHyprHex(selectedTheme.barBorderColor)
-                : _settingsHexToHyprHex(shownBarBorderCustomColor),
-            secondaryHex: gradient ? _qColorToHyprHex(secondary) : "",
+                ? primaryHex : _settingsHexToHyprHex(shownBarBorderCustomColor),
+            secondaryHex: gradient ? secondaryHex : "",
             gradient: gradient,
-            angle: selectedTheme.barBorderGradientAngle,
+            angle: customSelected ? shownCustomThemeBorderAngle : selectedTheme.barBorderGradientAngle,
             customHex: shownHyprActiveBorderCustomColor
         };
     }

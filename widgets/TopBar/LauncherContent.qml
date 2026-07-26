@@ -94,6 +94,30 @@ ColumnLayout {
         };
     }
 
+    function quickNotesEntry(): var {
+        return {
+            id: "internal:quick-notes",
+            name: "Quick Notes",
+            comment: "Open the persistent scratchpad",
+            icon: Quickshell.shellPath("assets/icons/notes.svg"),
+            internalAction: "quicknotes",
+            searchAliases: ["notes", "note", "scratchpad", "text"],
+            noDisplay: false
+        };
+    }
+
+    function colorPickerEntry(): var {
+        return {
+            id: "internal:color-picker",
+            name: "Color Picker",
+            comment: "Pick a screen color or reuse a recent color",
+            icon: Quickshell.shellPath("assets/icons/color-picker.svg"),
+            internalAction: "colorpicker",
+            searchAliases: ["color", "colour", "picker", "eyedropper", "hex", "rgb", "hsl"],
+            noDisplay: false
+        };
+    }
+
     function scoreInternalEntry(q: string, entry: var): int {
         let score = root.scoreEntry(q, entry.name);
         for (const alias of entry.searchAliases ?? [])
@@ -124,6 +148,8 @@ ColumnLayout {
 
         root.appendCandidate(scored, root.calculatorEntry(), q);
         root.appendCandidate(scored, root.musicEntry(), q);
+        root.appendCandidate(scored, root.quickNotesEntry(), q);
+        root.appendCandidate(scored, root.colorPickerEntry(), q);
 
         for (const entry of DesktopEntries.applications.values) {
             root.appendCandidate(scored, entry, q);
@@ -154,6 +180,14 @@ ColumnLayout {
         }
         if (entry.internalAction === "music") {
             Signals.toggleMusicWindow();
+            return;
+        }
+        if (entry.internalAction === "quicknotes") {
+            Signals.toggleQuickNotesWindow();
+            return;
+        }
+        if (entry.internalAction === "colorpicker") {
+            Signals.toggleColorPickerWindow();
             return;
         }
         if (entry.runInTerminal)

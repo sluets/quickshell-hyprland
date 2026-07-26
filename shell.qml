@@ -197,6 +197,8 @@ import qs.widgets.PowerMenu
 import qs.widgets.Desktop
 import qs.widgets.Calculator
 import qs.widgets.Music
+import qs.widgets.QuickNotes
+import qs.widgets.ColorPicker
 
 Scope {
     id: shellScope
@@ -446,6 +448,24 @@ Scope {
         }
     }
 
+    IpcHandler {
+        target: "quicknotes"
+
+        function toggle(): string {
+            Signals.toggleQuickNotesWindow();
+            return "ok: quick notes toggle requested";
+        }
+    }
+
+    IpcHandler {
+        target: "colorpicker"
+
+        function toggle(): string {
+            Signals.toggleColorPickerWindow();
+            return "ok: color picker toggle requested";
+        }
+    }
+
     // Safe external torture-test surface. This deliberately exposes only
     // visual/runtime settings and never calls UI-profile save/delete/restore.
     // The Python harness in testing/ uses it to exercise the live shell. // GPT
@@ -639,6 +659,26 @@ Scope {
 
         function onToggleMusicWindow(): void {
             musicWindow.toggle();
+        }
+    }
+
+    QuickNotesWindow { id: quickNotesWindow }
+
+    Connections {
+        target: Signals
+
+        function onToggleQuickNotesWindow(): void {
+            quickNotesWindow.toggle();
+        }
+    }
+
+    ColorPickerWindow { id: colorPickerWindow }
+
+    Connections {
+        target: Signals
+
+        function onToggleColorPickerWindow(): void {
+            colorPickerWindow.toggle();
         }
     }
 

@@ -471,6 +471,29 @@ Singleton {
                     _hyprDirty = true;
                 break;
             case "fontScale": UserPrefs.setFontScale(ch.value); n++; break;
+            case "customThemeBaseName": UserPrefs.setCustomThemeBaseName(ch.value); n++; break;
+            case "customThemeBackground": UserPrefs.setCustomThemeBackground(ch.value); n++; break;
+            case "customThemeForeground": UserPrefs.setCustomThemeForeground(ch.value); n++; break;
+            case "customThemeAccent": UserPrefs.setCustomThemeAccent(ch.value); n++; break;
+            case "customThemeUrgent": UserPrefs.setCustomThemeUrgent(ch.value); n++; break;
+            case "customThemeMuted": UserPrefs.setCustomThemeMuted(ch.value); n++; break;
+            case "customThemeSurface": UserPrefs.setCustomThemeSurface(ch.value); n++; break;
+            case "customThemeHover": UserPrefs.setCustomThemeHover(ch.value); n++; break;
+            case "customThemeBorder":
+                UserPrefs.setCustomThemeBorder(ch.value); n++;
+                if (borderSnapshot !== null && Boolean(borderSnapshot.useTheme))
+                    _hyprDirty = true;
+                break;
+            case "customThemeBorder2":
+                UserPrefs.setCustomThemeBorder2(ch.value); n++;
+                if (borderSnapshot !== null && Boolean(borderSnapshot.useTheme))
+                    _hyprDirty = true;
+                break;
+            case "customThemeBorderAngle":
+                UserPrefs.setCustomThemeBorderAngle(ch.value); n++;
+                if (borderSnapshot !== null && Boolean(borderSnapshot.useTheme))
+                    _hyprDirty = true;
+                break;
             case "musicVisualizerEnabled": UserPrefs.setMusicVisualizerEnabled(ch.value); n++; break;
             case "musicVisualizerSource": UserPrefs.setMusicVisualizerSource(ch.value); n++; break;
             case "musicVisualizerBars": UserPrefs.setMusicVisualizerBars(ch.value); n++; break;

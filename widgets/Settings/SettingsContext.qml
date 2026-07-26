@@ -27,7 +27,7 @@ Item {
     property bool wallpaperTransitionTypeDropdownOpen: false
     // Displays remains a future feature. Its disabled prototype was removed
     // in Rev 25; rebuild it around a real services/DisplayManager.qml.
-    readonly property var pages: ["Appearance", "Launcher", "Wallpaper", "Notifications", "Desktop", "Music", "Hyprland", "UI Profiles", "SDDM"]
+    readonly property var pages: ["Appearance", "Custom Theme", "Launcher", "Wallpaper", "Notifications", "Desktop", "Music", "Hyprland", "UI Profiles", "SDDM"]
 
     // ---- Shared preset-color-picker overlay state (2026-07-11, Opus) ----
     // The swatch popup can't live inside its HexColorRow: the popup is
@@ -62,6 +62,18 @@ Item {
         colorPickerCallback = null;
     }
 
+    readonly property string shownCustomThemeBaseName: settingsTransaction.shownCustomThemeBaseName
+    readonly property string shownCustomThemeBackground: settingsTransaction.shownCustomThemeBackground
+    readonly property string shownCustomThemeForeground: settingsTransaction.shownCustomThemeForeground
+    readonly property string shownCustomThemeAccent: settingsTransaction.shownCustomThemeAccent
+    readonly property string shownCustomThemeUrgent: settingsTransaction.shownCustomThemeUrgent
+    readonly property string shownCustomThemeMuted: settingsTransaction.shownCustomThemeMuted
+    readonly property string shownCustomThemeSurface: settingsTransaction.shownCustomThemeSurface
+    readonly property string shownCustomThemeHover: settingsTransaction.shownCustomThemeHover
+    readonly property string shownCustomThemeBorder: settingsTransaction.shownCustomThemeBorder
+    readonly property string shownCustomThemeBorder2: settingsTransaction.shownCustomThemeBorder2
+    readonly property real shownCustomThemeBorderAngle: settingsTransaction.shownCustomThemeBorderAngle
+
     // ---- Stable geometry (see DESIGN NOTES) ----
     // One content width for every page, scaled off the font token so
     // it tracks font scale (≈504 px at the default 14 px). Wide
@@ -84,6 +96,17 @@ Item {
 
     property alias stagedTheme: settingsTransaction.stagedTheme
     property alias stagedFontScale: settingsTransaction.stagedFontScale
+    property alias stagedCustomThemeBaseName: settingsTransaction.stagedCustomThemeBaseName
+    property alias stagedCustomThemeBackground: settingsTransaction.stagedCustomThemeBackground
+    property alias stagedCustomThemeForeground: settingsTransaction.stagedCustomThemeForeground
+    property alias stagedCustomThemeAccent: settingsTransaction.stagedCustomThemeAccent
+    property alias stagedCustomThemeUrgent: settingsTransaction.stagedCustomThemeUrgent
+    property alias stagedCustomThemeMuted: settingsTransaction.stagedCustomThemeMuted
+    property alias stagedCustomThemeSurface: settingsTransaction.stagedCustomThemeSurface
+    property alias stagedCustomThemeHover: settingsTransaction.stagedCustomThemeHover
+    property alias stagedCustomThemeBorder: settingsTransaction.stagedCustomThemeBorder
+    property alias stagedCustomThemeBorder2: settingsTransaction.stagedCustomThemeBorder2
+    property alias stagedCustomThemeBorderAngle: settingsTransaction.stagedCustomThemeBorderAngle
     property alias stagedNotifPresentation: settingsTransaction.stagedNotifPresentation
     property alias stagedNotifBarPosition: settingsTransaction.stagedNotifBarPosition
     property alias stagedNotifBarOffsetX: settingsTransaction.stagedNotifBarOffsetX

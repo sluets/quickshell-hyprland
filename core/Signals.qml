@@ -87,4 +87,10 @@ Singleton {
 
     // Open/close the standalone MPD library window. // GPT
     signal toggleMusicWindow()
+
+    // Open/close the persistent single-note scratchpad. // GPT
+    signal toggleQuickNotesWindow()
+
+    // Open/close the screen color picker and recent-color history. // GPT
+    signal toggleColorPickerWindow()
 }

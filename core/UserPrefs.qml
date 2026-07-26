@@ -230,6 +230,17 @@ Singleton {
     // ---- Public read surface — widgets bind to THESE ----
     readonly property string themeName: adapter.themeName
     readonly property real fontScale: adapter.fontScale
+    readonly property string customThemeBaseName: adapter.customThemeBaseName
+    readonly property string customThemeBackground: adapter.customThemeBackground
+    readonly property string customThemeForeground: adapter.customThemeForeground
+    readonly property string customThemeAccent: adapter.customThemeAccent
+    readonly property string customThemeUrgent: adapter.customThemeUrgent
+    readonly property string customThemeMuted: adapter.customThemeMuted
+    readonly property string customThemeSurface: adapter.customThemeSurface
+    readonly property string customThemeHover: adapter.customThemeHover
+    readonly property string customThemeBorder: adapter.customThemeBorder
+    readonly property string customThemeBorder2: adapter.customThemeBorder2
+    readonly property real customThemeBorderAngle: adapter.customThemeBorderAngle
     readonly property string notifPresentation: adapter.notifPresentation
     readonly property string notifBarPosition: adapter.notifBarPosition
     readonly property int notifBarOffsetX: adapter.notifBarOffsetX
@@ -670,6 +681,20 @@ Singleton {
         adapter.themeName = name;
     }
 
+    function setCustomThemeBaseName(v: string): void { adapter.customThemeBaseName = v; }
+    function setCustomThemeBackground(v: string): void { if (_validHex(v)) adapter.customThemeBackground = v; }
+    function setCustomThemeForeground(v: string): void { if (_validHex(v)) adapter.customThemeForeground = v; }
+    function setCustomThemeAccent(v: string): void { if (_validHex(v)) adapter.customThemeAccent = v; }
+    function setCustomThemeUrgent(v: string): void { if (_validHex(v)) adapter.customThemeUrgent = v; }
+    function setCustomThemeMuted(v: string): void { if (_validHex(v)) adapter.customThemeMuted = v; }
+    function setCustomThemeSurface(v: string): void { if (_validHex(v)) adapter.customThemeSurface = v; }
+    function setCustomThemeHover(v: string): void { if (_validHex(v)) adapter.customThemeHover = v; }
+    function setCustomThemeBorder(v: string): void { if (_validHex(v)) adapter.customThemeBorder = v; }
+    function setCustomThemeBorder2(v: string): void {
+        if (v === "transparent" || _validHex(v)) adapter.customThemeBorder2 = v;
+    }
+    function setCustomThemeBorderAngle(v: real): void { adapter.customThemeBorderAngle = Math.max(0, Math.min(360, v)); }
+
     function setWallpaperCachingEnabled(enabled: bool): void {
         adapter.wallpaperCachingEnabled = enabled;
     }
@@ -742,6 +767,17 @@ Singleton {
             // 2026-07-09 when the settings window took ownership (the plan's
             // per-page migration rule). 1.4 was the long-standing Settings value.
             property real fontScale: 1.4
+            property string customThemeBaseName: "HoneycombTheme"
+            property string customThemeBackground: "#5e5e5e"
+            property string customThemeForeground: "#ececec"
+            property string customThemeAccent: "#ffffff"
+            property string customThemeUrgent: "#e05252"
+            property string customThemeMuted: "#9a9a9a"
+            property string customThemeSurface: "#4e4e4e"
+            property string customThemeHover: "#6c6c6c"
+            property string customThemeBorder: "#35e0b4"
+            property string customThemeBorder2: "transparent"
+            property real customThemeBorderAngle: 0
             property bool musicVisualizerEnabled: true
             property string musicVisualizerSource: "mpd"
             property int musicVisualizerBars: 32

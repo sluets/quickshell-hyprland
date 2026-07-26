@@ -129,3 +129,17 @@ hl.window_rule({
     move  = "20 monitor_h-120",
     float = true,
 })
+
+-- Keep the Quickshell scratchpad quick and unobtrusive: it should always
+-- open as a centered floating utility instead of joining the tiled layout.
+-- GPT — 2026-07-26
+hl.window_rule({
+    name = "quickshell-quick-notes",
+    match = {
+        class = "org.quickshell",
+        title = "Quickshell Quick Notes",
+    },
+
+    float = true,
+    center = true,
+})

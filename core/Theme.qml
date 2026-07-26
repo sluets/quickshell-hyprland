@@ -219,6 +219,21 @@ Singleton {
     SolarizedTheme { id: solarizedThemeInst }
     Synthwave84Theme { id: synthwave84ThemeInst }
     TokyoNightTheme { id: tokyoNightThemeInst }
+    readonly property var customBaseTheme: themesWithoutCustom[UserPrefs.customThemeBaseName] ?? honeycombThemeInst
+    CustomTheme {
+        id: customThemeInst
+        baseTheme: root.customBaseTheme
+        customBackground: UserPrefs.customThemeBackground
+        customForeground: UserPrefs.customThemeForeground
+        customAccent: UserPrefs.customThemeAccent
+        customUrgent: UserPrefs.customThemeUrgent
+        customMuted: UserPrefs.customThemeMuted
+        customSurface: UserPrefs.customThemeSurface
+        customHover: UserPrefs.customThemeHover
+        customBorder: UserPrefs.customThemeBorder
+        customBorder2: UserPrefs.customThemeBorder2
+        customBorderAngle: UserPrefs.customThemeBorderAngle
+    }
 
     // Type-name -> instance. Parenthesized so the QML parser reads an
     // object literal, not a code block. ADDING A THEME = one child
@@ -231,7 +246,7 @@ Singleton {
     // is invisible" failure mode, verbatim). This is why the settings
     // window "didn't update themes" — selecting one of those names was
     // never actually possible; `themeNames` only ever had two entries.
-    readonly property var themes: ({
+    readonly property var themesWithoutCustom: ({
         "DefaultTheme": defaultThemeInst,
         "HoneycombTheme": honeycombThemeInst,
         "AyuDarkTheme": ayuDarkThemeInst,
@@ -253,6 +268,31 @@ Singleton {
         "SolarizedTheme": solarizedThemeInst,
         "Synthwave84Theme": synthwave84ThemeInst,
         "TokyoNightTheme": tokyoNightThemeInst
+    })
+
+    readonly property var themes: ({
+        "DefaultTheme": defaultThemeInst,
+        "HoneycombTheme": honeycombThemeInst,
+        "AyuDarkTheme": ayuDarkThemeInst,
+        "AyuMirageTheme": ayuMirageThemeInst,
+        "CatppuccinMochaTheme": catppuccinMochaThemeInst,
+        "DraculaTheme": draculaThemeInst,
+        "EverforestTheme": everforestThemeInst,
+        "GruvboxTheme": gruvboxThemeInst,
+        "HorizonTheme": horizonThemeInst,
+        "KanagawaTheme": kanagawaThemeInst,
+        "MaterialOceanTheme": materialOceanThemeInst,
+        "MonokaiTheme": monokaiThemeInst,
+        "NightfoxTheme": nightfoxThemeInst,
+        "NordTheme": nordThemeInst,
+        "OceanicNextTheme": oceanicNextThemeInst,
+        "OneDarkTheme": oneDarkThemeInst,
+        "PalenightTheme": palenightThemeInst,
+        "RosePineTheme": rosePineThemeInst,
+        "SolarizedTheme": solarizedThemeInst,
+        "Synthwave84Theme": synthwave84ThemeInst,
+        "TokyoNightTheme": tokyoNightThemeInst,
+        "CustomTheme": customThemeInst
     })
 
     // What the settings window's theme picker lists.

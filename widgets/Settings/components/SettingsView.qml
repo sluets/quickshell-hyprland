@@ -283,6 +283,12 @@ Item {
                 settingsRoot: viewRoot.settingsRoot
             }
 
+            // ================ CUSTOM THEME PAGE ================
+            SettingsPages.CustomThemePage {
+                id: customThemePage
+                settingsRoot: viewRoot.settingsRoot
+            }
+
             // ================ LAUNCHER PAGE ================
             SettingsPages.LauncherPage {
                 id: launcherPage

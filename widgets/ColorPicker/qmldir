@@ -1,0 +1,2 @@
+module qs.widgets.ColorPicker
+ColorPickerWindow 1.0 ColorPickerWindow.qml

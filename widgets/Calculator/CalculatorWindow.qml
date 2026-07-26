@@ -15,6 +15,7 @@ FloatingWindow {
     maximumSize: Qt.size(1200, 900)
 
     property bool shown: false
+    property string activeView: "standard"
     property string displayText: "0"
     property string expressionText: ""
     property real accumulator: 0
@@ -28,7 +29,12 @@ FloatingWindow {
 
     function open(): void {
         shown = true;
-        Qt.callLater(function() { keyCatcher.forceActiveFocus(); });
+        Qt.callLater(function() {
+            if (activeView === "units")
+                converterView.focusInput();
+            else
+                keyCatcher.forceActiveFocus();
+        });
     }
 
     function close(): void {
@@ -246,7 +252,8 @@ FloatingWindow {
     Item {
         id: keyCatcher
         anchors.fill: parent
-        focus: true
+        enabled: root.activeView === "standard"
+        focus: root.activeView === "standard"
 
         Keys.onPressed: function(event) {
             const text = event.text;
@@ -282,6 +289,7 @@ FloatingWindow {
         anchors.fill: parent
         anchors.margins: Theme.spacingLarge
         spacing: Theme.spacingLarge
+        visible: root.activeView === "standard"
 
         ColumnLayout {
             Layout.fillWidth: true
@@ -302,11 +310,52 @@ FloatingWindow {
 
                 Item { Layout.fillWidth: true }
 
-                Text {
-                    text: "Standard"
-                    color: Theme.colorMuted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
+                Row {
+                    spacing: Theme.spacingSmall
+
+                    Rectangle {
+                        implicitWidth: standardTabText.implicitWidth + Theme.spacingMedium * 2
+                        implicitHeight: standardTabText.implicitHeight + Theme.spacingSmall * 2
+                        radius: Theme.radiusMedium
+                        color: Theme.colorAccent
+
+                        Text {
+                            id: standardTabText
+                            anchors.centerIn: parent
+                            text: "Standard"
+                            color: Theme.colorBackground
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                            font.bold: true
+                        }
+                    }
+
+                    Rectangle {
+                        implicitWidth: unitsTabText.implicitWidth + Theme.spacingMedium * 2
+                        implicitHeight: unitsTabText.implicitHeight + Theme.spacingSmall * 2
+                        radius: Theme.radiusMedium
+                        color: unitsTabMouse.containsMouse ? Theme.colorHover : Theme.colorSurface
+
+                        Text {
+                            id: unitsTabText
+                            anchors.centerIn: parent
+                            text: "Units"
+                            color: Theme.colorForeground
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                        }
+
+                        MouseArea {
+                            id: unitsTabMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.activeView = "units";
+                                converterView.focusInput();
+                            }
+                        }
+                    }
                 }
             }
 
@@ -527,4 +576,17 @@ FloatingWindow {
             }
         }
     }
+
+    UnitConverterView {
+        id: converterView
+        anchors.fill: parent
+        anchors.margins: Theme.spacingLarge
+        visible: root.activeView === "units"
+        onRequestStandard: {
+            root.activeView = "standard";
+            keyCatcher.forceActiveFocus();
+        }
+        onRequestClose: root.close()
+    }
+
 }
