@@ -641,9 +641,46 @@ Settings is now split into five explicit layers:
 
 `services/ClipboardHistory.qml` owns the bounded model and reusable `Process` objects for list, restore, delete, wipe, trim, and sequential thumbnail decode. `widgets/TopBar/Clipboard.qml` refreshes once when opened and mutates the visible model in place for delete/clear, preserving scroll position. The service depends on external session processes; verify them and `cliphist list` before changing QML. Thumbnail files use stable IDs under `$XDG_RUNTIME_DIR/qs-clipboard-thumbs/`, never the source-controlled assets directory.
 
+### Music player
+
+The music player keeps MPD as the playback/database/queue authority and keeps
+Quickshell as a client. `services/MpdConnection.qml` speaks the MPD protocol over
+the user-session Unix socket. `MusicService.qml` owns current status and commands;
+`MusicLibrary.qml` owns library and queue models. Widgets never parse protocol
+responses directly.
+
+`widgets/Music/MusicWindow.qml` is one persistent application-style
+`FloatingWindow` instantiated once by `shell.qml` and toggled through
+`core/Signals.qml`, the launcher, or `qs ipc call musicwindow toggle`. It leaves
+`maximumSize` unset: setting a maximum-size hint caused Hyprland Dwindle to float
+the window rather than tile it when the proposed node was larger than the hint.
+
+Album art is isolated behind `AlbumArtService.qml`. The static Python helper
+requests binary art from MPD (`readpicture`, then `albumart`) and writes a stable
+track-keyed cache under `$XDG_RUNTIME_DIR/quickshell-music-art`; QML only binds
+to the resulting local URL.
+
+The visualizer is similarly isolated: `AudioVisualizer.qml` owns one CAVA
+process while the Music window is visible, parses raw 32-band frames, and exposes
+normalized values to `AudioSpectrum.qml`. CAVA provides smoothing; QML does not
+layer another attack/decay filter over it.
+
+`MusicNotifications.qml` observes track and playback transitions, waits briefly
+for matching cached artwork, and invokes `notify-send` so the existing Quickshell
+notification daemon remains the presentation owner. It suppresses the initial
+startup snapshot and does not announce pause, seek, or refresh activity.
+
+The top-bar `MusicIndicator.qml` is intentionally a direct-control surface rather
+than a second player UI: left-click toggles playback, middle-click goes previous,
+right-click goes next. Its former attached popout remains commented in source for
+possible future reuse.
+
 ### Lifecycle rule
 
-All three utilities use persistent objects/windows/popouts. Runtime opening and closing changes visibility/state; it does not construct and destroy windows or spawn unbounded process instances.
+The calculator, clock tools, clipboard history, and music player use persistent
+objects/windows/popouts and static reusable processes. Runtime opening and closing
+changes visibility/state; it does not construct and destroy windows or create
+unbounded process instances.
 
 
 ## Documentation hierarchy

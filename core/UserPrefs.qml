@@ -323,6 +323,29 @@ Singleton {
     readonly property bool wallpaperCachingEnabled: adapter.wallpaperCachingEnabled
     readonly property bool clockUse24Hour: adapter.clockUse24Hour
     readonly property bool clockShowSeconds: adapter.clockShowSeconds
+    readonly property bool musicVisualizerEnabled: adapter.musicVisualizerEnabled
+    readonly property string musicVisualizerSource: adapter.musicVisualizerSource
+    readonly property int musicVisualizerBars: adapter.musicVisualizerBars
+    readonly property int musicVisualizerFramerate: adapter.musicVisualizerFramerate
+    readonly property int musicVisualizerSensitivity: adapter.musicVisualizerSensitivity
+    readonly property int musicVisualizerAutosens: adapter.musicVisualizerAutosens
+    readonly property int musicVisualizerLowerCutoff: adapter.musicVisualizerLowerCutoff
+    readonly property int musicVisualizerHigherCutoff: adapter.musicVisualizerHigherCutoff
+    readonly property int musicVisualizerSleepTimer: adapter.musicVisualizerSleepTimer
+    readonly property bool musicVisualizerReverse: adapter.musicVisualizerReverse
+    readonly property int musicVisualizerNoiseReduction: adapter.musicVisualizerNoiseReduction
+    readonly property string musicVisualizerStyle: adapter.musicVisualizerStyle
+    readonly property bool musicVisualizerUseThemeColor: adapter.musicVisualizerUseThemeColor
+    readonly property string musicVisualizerCustomColor: adapter.musicVisualizerCustomColor
+    readonly property string musicVisualizerColorMode: adapter.musicVisualizerColorMode
+    readonly property bool musicVisualizerFadeDarkerTop: adapter.musicVisualizerFadeDarkerTop
+    readonly property int musicVisualizerFadeStrength: adapter.musicVisualizerFadeStrength
+    readonly property string musicVisualizerLowColor: adapter.musicVisualizerLowColor
+    readonly property string musicVisualizerMidColor: adapter.musicVisualizerMidColor
+    readonly property string musicVisualizerHighColor: adapter.musicVisualizerHighColor
+    readonly property int musicVisualizerLedSegments: adapter.musicVisualizerLedSegments
+    readonly property int musicVisualizerLedGap: adapter.musicVisualizerLedGap
+    readonly property int musicVisualizerLedUnlitOpacity: adapter.musicVisualizerLedUnlitOpacity
 
     // ---- Public write surface — SettingsMenu.qml calls these, never
     // writes `adapter.*` directly, so every mutation path is in one place ----
@@ -659,6 +682,39 @@ Singleton {
         adapter.clockShowSeconds = enabled;
     }
 
+    function setMusicVisualizerEnabled(v: bool): void { adapter.musicVisualizerEnabled = v; }
+    function setMusicVisualizerSource(v: string): void {
+        const allowed = ["mpd", "system"];
+        adapter.musicVisualizerSource = allowed.indexOf(v) >= 0 ? v : "mpd";
+    }
+    function setMusicVisualizerBars(v: int): void { adapter.musicVisualizerBars = Math.min(96, Math.max(8, v)); }
+    function setMusicVisualizerFramerate(v: int): void { adapter.musicVisualizerFramerate = Math.min(144, Math.max(15, v)); }
+    function setMusicVisualizerSensitivity(v: int): void { adapter.musicVisualizerSensitivity = Math.min(300, Math.max(10, v)); }
+    function setMusicVisualizerAutosens(v: int): void { adapter.musicVisualizerAutosens = Math.min(2, Math.max(0, v)); }
+    function setMusicVisualizerLowerCutoff(v: int): void { adapter.musicVisualizerLowerCutoff = Math.min(1000, Math.max(20, v)); }
+    function setMusicVisualizerHigherCutoff(v: int): void { adapter.musicVisualizerHigherCutoff = Math.min(22000, Math.max(1000, v)); }
+    function setMusicVisualizerSleepTimer(v: int): void { adapter.musicVisualizerSleepTimer = Math.min(60, Math.max(0, v)); }
+    function setMusicVisualizerReverse(v: bool): void { adapter.musicVisualizerReverse = v; }
+    function setMusicVisualizerNoiseReduction(v: int): void { adapter.musicVisualizerNoiseReduction = Math.min(100, Math.max(0, v)); }
+    function setMusicVisualizerStyle(v: string): void {
+        const allowed = ["solid", "led", "dots"];
+        adapter.musicVisualizerStyle = allowed.indexOf(v) >= 0 ? v : "solid";
+    }
+    function setMusicVisualizerUseThemeColor(v: bool): void { adapter.musicVisualizerUseThemeColor = v; }
+    function setMusicVisualizerCustomColor(v: string): void { if (_validHex(v)) adapter.musicVisualizerCustomColor = v; }
+    function setMusicVisualizerColorMode(v: string): void {
+        const allowed = ["solid", "fade", "zones"];
+        adapter.musicVisualizerColorMode = allowed.indexOf(v) >= 0 ? v : "solid";
+    }
+    function setMusicVisualizerFadeDarkerTop(v: bool): void { adapter.musicVisualizerFadeDarkerTop = v; }
+    function setMusicVisualizerFadeStrength(v: int): void { adapter.musicVisualizerFadeStrength = Math.min(100, Math.max(0, v)); }
+    function setMusicVisualizerLowColor(v: string): void { if (_validHex(v)) adapter.musicVisualizerLowColor = v; }
+    function setMusicVisualizerMidColor(v: string): void { if (_validHex(v)) adapter.musicVisualizerMidColor = v; }
+    function setMusicVisualizerHighColor(v: string): void { if (_validHex(v)) adapter.musicVisualizerHighColor = v; }
+    function setMusicVisualizerLedSegments(v: int): void { adapter.musicVisualizerLedSegments = Math.min(40, Math.max(8, v)); }
+    function setMusicVisualizerLedGap(v: int): void { adapter.musicVisualizerLedGap = Math.min(6, Math.max(0, v)); }
+    function setMusicVisualizerLedUnlitOpacity(v: int): void { adapter.musicVisualizerLedUnlitOpacity = Math.min(50, Math.max(0, v)); }
+
     // Ensure the directory exists before FileView ever tries to write —
     // see DESIGN NOTES. Harmless/no-op if it's already there.
     Component.onCompleted: mkdirProc.running = true
@@ -686,6 +742,29 @@ Singleton {
             // 2026-07-09 when the settings window took ownership (the plan's
             // per-page migration rule). 1.4 was the long-standing Settings value.
             property real fontScale: 1.4
+            property bool musicVisualizerEnabled: true
+            property string musicVisualizerSource: "mpd"
+            property int musicVisualizerBars: 32
+            property int musicVisualizerFramerate: 60
+            property int musicVisualizerSensitivity: 100
+            property int musicVisualizerAutosens: 1
+            property int musicVisualizerLowerCutoff: 50
+            property int musicVisualizerHigherCutoff: 10000
+            property int musicVisualizerSleepTimer: 0
+            property bool musicVisualizerReverse: false
+            property int musicVisualizerNoiseReduction: 77
+            property string musicVisualizerStyle: "solid"
+            property bool musicVisualizerUseThemeColor: true
+            property string musicVisualizerCustomColor: "#ff7a00"
+            property string musicVisualizerColorMode: "solid"
+            property bool musicVisualizerFadeDarkerTop: true
+            property int musicVisualizerFadeStrength: 45
+            property string musicVisualizerLowColor: "#b84f00"
+            property string musicVisualizerMidColor: "#ff7a00"
+            property string musicVisualizerHighColor: "#ffe0a3"
+            property int musicVisualizerLedSegments: 20
+            property int musicVisualizerLedGap: 2
+            property int musicVisualizerLedUnlitOpacity: 10
         // Notification card prefs (settings window, Notifications
         // page, 2026-07-09). notifShowAppName defaults FALSE per the
         // maintainer's own hand-edit (THOUGHTS.txt: the app name

@@ -1,3 +1,30 @@
+## 2026-07-25 — MPD music player completed, visualized, and notification-integrated (GPT-5.6 Thinking)
+
+**What was built:**
+
+- Hardened MPD client using the active user-session Unix socket, with current-song/status state and playback, seek, volume, shuffle, repeat, and queue controls.
+- Direct top-bar controls and blank stopped-state text. The earlier compact dropdown remains preserved but disabled.
+- Persistent launcher-integrated Music window with Library, All Songs, and Queue tabs; artist → folder-album → track browsing; searchable flat library; and queue operations.
+- Correct normal Hyprland tiling by removing the Music window's maximum-size hint.
+- Album art through MPD `readpicture`/`albumart`, cached by a static Python helper in the user runtime directory.
+- Real 32-band CAVA spectrum following the active PipeWire output. Approved behavior uses 60 FPS, `noise_reduction = 77`, and no extra QML smoothing.
+- Song-start/song-change notifications containing art, title, and artist while suppressing startup, pause, seek, and refresh noise.
+- Dedicated local launcher icon and IPC controls for both the player service and Music window.
+
+**Live results:**
+
+- MPD control, library navigation, queue replacement, normal tiled resizing, album art, visualizer response, and notifications were tested successfully.
+- CAVA dependency health was verified from raw semicolon-delimited terminal output before QML integration.
+- The completed player follows the global UI font through `Theme.fontFamily`.
+
+**Next work:**
+
+- Add a dedicated Music Settings page using the split transaction/context/page architecture.
+- Expose useful CAVA and player toggles.
+- Integrate a proven EasyEffects backend for equalizer/preset control after live dependency verification; do not implement custom DSP in QML.
+
+---
+
 ## 2026-07-23 — Hyprland 0.56 animation compatibility retune (GPT)
 
 **Context:** After upgrading the live system from Hyprland 0.55.4 to 0.56.0, the managed animation config still loaded cleanly but spring-based window entry became visibly sluggish. Runtime verification showed the active Slide override at `windows = 4.0`, `windowsIn = 3.5`, and `spring:easy`.

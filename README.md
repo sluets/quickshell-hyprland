@@ -34,7 +34,7 @@ than a demonstration config.
 - Wi-Fi scanning, status, and connection controls
 - Bluetooth status, device controls, and pairing support
 - Split date/calendar and time-tools popouts
-- Media playback information and controls
+- MPD-backed local music player with direct bar controls, a standalone library window, queue browsing, search, album art, a live CAVA/PipeWire spectrum, and song-change notifications
 - Quickshell-native calculator opened from the launcher, with favorites, usage ranking, keyboard input, and session history
 - Timer, stopwatch, alarm, interval notifications, and selectable alert sounds
 - Clipboard persistence/history with bounded entries, delete/clear actions, and image thumbnails
@@ -120,7 +120,7 @@ git clone https://github.com/sluets/quickshell-hyprland ~/.config/quickshell
 Install the primary runtime dependencies:
 
 ```bash
-sudo pacman -S quickshell networkmanager pipewire libnotify wl-clipboard wl-clip-persist cliphist
+sudo pacman -S quickshell networkmanager pipewire libnotify wl-clipboard wl-clip-persist cliphist mpd mpc cava python
 ```
 
 Install `awww` using the appropriate package source for your system, then make
@@ -218,6 +218,9 @@ qs ipc call wallpapers random
 qs ipc call power toggle
 qs ipc call settings toggle
 qs ipc call calculator toggle
+qs ipc call musicwindow toggle
+qs ipc call music status
+qs ipc call music toggle
 qs ipc call config status
 qs ipc call config snapshot my-backup
 qs ipc call config list
@@ -234,6 +237,28 @@ Typical Hyprland shortcuts:
 | `SUPER + P` | Power menu |
 
 The exact bindings belong in the user's Hyprland Lua configuration.
+
+## Local music player
+
+The music player is a native MPD client using the user-session Unix socket at
+`$XDG_RUNTIME_DIR/mpd/socket`. MPD owns playback, decoding, the database, and
+the queue; Quickshell owns presentation and controls.
+
+Runtime pieces include:
+
+- direct top-bar controls: left-click play/pause, middle-click previous, right-click next;
+- a launcher-integrated standalone Music window;
+- Library, All Songs, and Queue views;
+- album art retrieved through MPD (`readpicture`, then `albumart`) and cached under the runtime directory;
+- a real PipeWire-output spectrum driven by CAVA;
+- song-start/song-change notifications with art, title, and artist.
+
+The bar intentionally shows nothing when MPD is stopped with no current track.
+The compact bar dropdown implementation remains preserved in source but disabled.
+
+See `docs/MUSIC_PLAYER_PLAN.md` for the current implementation map and the next
+planned checkpoint: a dedicated Music Settings page and an EasyEffects-backed
+equalizer.
 
 ## Wallpaper library
 
@@ -302,7 +327,7 @@ See `docs/BACKUPS.md` and `docs/SDDM_BACKUP_AND_TRANSFER.md` for details.
 - `docs/FEATURE_BACKLOG.md` — canonical future-work list
 - `docs/SMALL_ADDITIONS_BACKLOG.md` — focused small-utility ideas
 - `docs/CLIPBOARD_SETUP.md` — required clipboard backend setup
-- `docs/MUSIC_PLAYER_PLAN.md` — approved phased MPD player plan
+- `docs/MUSIC_PLAYER_PLAN.md` — implemented MPD player architecture, completed checkpoint, and remaining Music settings/EasyEffects work
 - `sddm-project/README.md` — SDDM theme management and installation
 
 ## Development approach

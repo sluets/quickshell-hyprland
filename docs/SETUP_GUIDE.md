@@ -96,7 +96,42 @@ sudo pacman -S quickshell networkmanager pipewire libnotify wl-clipboard wl-clip
 - **pipewire** (+ `wireplumber`) — audio. The volume widget, OSD, and
   now-playing all read PipeWire.
 
-### 1b. Wallpaper daemon — required if you want wallpapers to actually set
+### 1b. Local music player — required for the MPD player and visualizer
+
+```bash
+sudo pacman -S mpd mpc cava python
+```
+
+- **mpd** owns playback, decoding, the music database, and the queue.
+- **mpc** is the recommended command-line verification/control tool.
+- **cava** supplies the real PipeWire-output spectrum consumed by Quickshell.
+- **python** runs `scripts/mpd-fetch-art.py`, which retrieves embedded or folder
+  artwork through MPD and caches it under the user runtime directory.
+
+The current player expects MPD's user-session Unix socket at:
+
+```text
+$XDG_RUNTIME_DIR/mpd/socket
+```
+
+Verify the backend before debugging QML:
+
+```bash
+mpc status
+mpc current
+test -S "$XDG_RUNTIME_DIR/mpd/socket" && echo "MPD socket OK"
+timeout 3 cava -p ~/.config/quickshell/assets/cava-music.conf | head
+```
+
+The CAVA output should contain changing semicolon-delimited numeric rows while
+audio plays. Song notifications use `notify-send`, already supplied by
+`libnotify` in the required package group.
+
+EasyEffects is **not required for the current player**. It is the approved future
+backend for Music-page equalizer controls and should be installed and verified
+only when that work begins.
+
+### 1c. Wallpaper daemon — required if you want wallpapers to actually set
 
 The wallpaper picker calls out to a wallpaper daemon to apply the
 image. The shell shells out to **`awww`** (client) and expects
@@ -117,7 +152,7 @@ sudo pacman -S awww    # official repo package; or swww, see note above
 > shows a warning row instead of the grid. This is the #1 wallpaper
 > gotcha.
 
-### 1c. Wallpaper thumbnails — required for a non-laggy picker
+### 1d. Wallpaper thumbnails — required for a non-laggy picker
 
 The picker shows a grid of **square thumbnails**. It does **not**
 generate them — you do, with ImageMagick, via the bundled script
@@ -131,7 +166,7 @@ Without thumbnails the picker still works, but each cell falls back to
 decoding the full-size wallpaper — a folder of 4K images will make the
 grid crawl. Generate thumbs once (§6) and it's smooth.
 
-### 1d. Fonts — required for icons and the default look
+### 1e. Fonts — required for icons and the default look
 
 The UI uses **Nerd Font** glyphs for icons throughout. At minimum
 install the font the default theme expects plus a symbols fallback:
@@ -166,7 +201,7 @@ fc-cache -f
 > the names must contain "Nerd Font". (This was a genuine bug once — see
 > `docs/PROBLEMS_AND_FIXES.md`, the font-picker entry.)
 
-### 1e. Optional — nice-to-haves for specific widgets
+### 1f. Optional — nice-to-haves for specific widgets
 
 - **Desktop clock weather:** no package needed — it fetches from free
   public APIs (`zippopotam.us` for ZIP→lat/long, then Open-Meteo). It

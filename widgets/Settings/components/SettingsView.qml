@@ -307,6 +307,12 @@ Item {
                 settingsRoot: viewRoot.settingsRoot
             }
 
+            // ================ MUSIC PAGE ================
+            SettingsPages.MusicPage {
+                id: musicPage
+                settingsRoot: viewRoot.settingsRoot
+            }
+
             // ================ HYPRLAND PAGE ================
             SettingsPages.HyprlandPage {
                 id: hyprlandPage

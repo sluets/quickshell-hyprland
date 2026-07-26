@@ -35,7 +35,7 @@ FloatingWindow {
     Binding {
         target: AudioVisualizer
         property: "active"
-        value: root.shown
+        value: root.shown && UserPrefs.musicVisualizerEnabled
     }
 
     readonly property var shownArtists: {
@@ -345,9 +345,10 @@ FloatingWindow {
                 }
 
                 AudioSpectrum {
+                    visible: UserPrefs.musicVisualizerEnabled
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.minimumWidth: 220
+                    Layout.minimumWidth: visible ? 220 : 0
                 }
             }
 

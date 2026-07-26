@@ -72,6 +72,29 @@ Item {
     property var stagedDesktopClockShadowStrength: null
     property var stagedDesktopClockShadowOffsetX: null
     property var stagedDesktopClockShadowOffsetY: null
+    property var stagedMusicVisualizerEnabled: null
+    property var stagedMusicVisualizerSource: null
+    property var stagedMusicVisualizerBars: null
+    property var stagedMusicVisualizerFramerate: null
+    property var stagedMusicVisualizerSensitivity: null
+    property var stagedMusicVisualizerAutosens: null
+    property var stagedMusicVisualizerLowerCutoff: null
+    property var stagedMusicVisualizerHigherCutoff: null
+    property var stagedMusicVisualizerSleepTimer: null
+    property var stagedMusicVisualizerReverse: null
+    property var stagedMusicVisualizerNoiseReduction: null
+    property var stagedMusicVisualizerStyle: null
+    property var stagedMusicVisualizerUseThemeColor: null
+    property var stagedMusicVisualizerCustomColor: null
+    property var stagedMusicVisualizerColorMode: null
+    property var stagedMusicVisualizerFadeDarkerTop: null
+    property var stagedMusicVisualizerFadeStrength: null
+    property var stagedMusicVisualizerLowColor: null
+    property var stagedMusicVisualizerMidColor: null
+    property var stagedMusicVisualizerHighColor: null
+    property var stagedMusicVisualizerLedSegments: null
+    property var stagedMusicVisualizerLedGap: null
+    property var stagedMusicVisualizerLedUnlitOpacity: null
 
     // Effective values the UI highlights: staged if present, else live.
     readonly property string shownTheme: stagedTheme !== null ? stagedTheme : UserPrefs.themeName
@@ -139,10 +162,63 @@ Item {
     readonly property int shownDesktopClockShadowStrength: stagedDesktopClockShadowStrength !== null ? stagedDesktopClockShadowStrength : UserPrefs.desktopClockShadowStrength
     readonly property int shownDesktopClockShadowOffsetX: stagedDesktopClockShadowOffsetX !== null ? stagedDesktopClockShadowOffsetX : UserPrefs.desktopClockShadowOffsetX
     readonly property int shownDesktopClockShadowOffsetY: stagedDesktopClockShadowOffsetY !== null ? stagedDesktopClockShadowOffsetY : UserPrefs.desktopClockShadowOffsetY
+    readonly property bool shownMusicVisualizerEnabled: stagedMusicVisualizerEnabled !== null ? stagedMusicVisualizerEnabled : UserPrefs.musicVisualizerEnabled
+    readonly property string shownMusicVisualizerSource: stagedMusicVisualizerSource !== null ? stagedMusicVisualizerSource : UserPrefs.musicVisualizerSource
+    readonly property int shownMusicVisualizerBars: stagedMusicVisualizerBars !== null ? stagedMusicVisualizerBars : UserPrefs.musicVisualizerBars
+    readonly property int shownMusicVisualizerFramerate: stagedMusicVisualizerFramerate !== null ? stagedMusicVisualizerFramerate : UserPrefs.musicVisualizerFramerate
+    readonly property int shownMusicVisualizerSensitivity: stagedMusicVisualizerSensitivity !== null ? stagedMusicVisualizerSensitivity : UserPrefs.musicVisualizerSensitivity
+    readonly property int shownMusicVisualizerAutosens: stagedMusicVisualizerAutosens !== null ? stagedMusicVisualizerAutosens : UserPrefs.musicVisualizerAutosens
+    readonly property int shownMusicVisualizerLowerCutoff: stagedMusicVisualizerLowerCutoff !== null ? stagedMusicVisualizerLowerCutoff : UserPrefs.musicVisualizerLowerCutoff
+    readonly property int shownMusicVisualizerHigherCutoff: stagedMusicVisualizerHigherCutoff !== null ? stagedMusicVisualizerHigherCutoff : UserPrefs.musicVisualizerHigherCutoff
+    readonly property int shownMusicVisualizerSleepTimer: stagedMusicVisualizerSleepTimer !== null ? stagedMusicVisualizerSleepTimer : UserPrefs.musicVisualizerSleepTimer
+    readonly property bool shownMusicVisualizerReverse: stagedMusicVisualizerReverse !== null ? stagedMusicVisualizerReverse : UserPrefs.musicVisualizerReverse
+    readonly property int shownMusicVisualizerNoiseReduction: stagedMusicVisualizerNoiseReduction !== null ? stagedMusicVisualizerNoiseReduction : UserPrefs.musicVisualizerNoiseReduction
+    readonly property string shownMusicVisualizerStyle: stagedMusicVisualizerStyle !== null ? stagedMusicVisualizerStyle : UserPrefs.musicVisualizerStyle
+    readonly property bool shownMusicVisualizerUseThemeColor: stagedMusicVisualizerUseThemeColor !== null ? stagedMusicVisualizerUseThemeColor : UserPrefs.musicVisualizerUseThemeColor
+    readonly property string shownMusicVisualizerCustomColor: stagedMusicVisualizerCustomColor !== null ? stagedMusicVisualizerCustomColor : UserPrefs.musicVisualizerCustomColor
+    readonly property string shownMusicVisualizerColorMode: stagedMusicVisualizerColorMode !== null ? stagedMusicVisualizerColorMode : UserPrefs.musicVisualizerColorMode
+    readonly property bool shownMusicVisualizerFadeDarkerTop: stagedMusicVisualizerFadeDarkerTop !== null ? stagedMusicVisualizerFadeDarkerTop : UserPrefs.musicVisualizerFadeDarkerTop
+    readonly property int shownMusicVisualizerFadeStrength: stagedMusicVisualizerFadeStrength !== null ? stagedMusicVisualizerFadeStrength : UserPrefs.musicVisualizerFadeStrength
+    readonly property string shownMusicVisualizerLowColor: stagedMusicVisualizerLowColor !== null ? stagedMusicVisualizerLowColor : UserPrefs.musicVisualizerLowColor
+    readonly property string shownMusicVisualizerMidColor: stagedMusicVisualizerMidColor !== null ? stagedMusicVisualizerMidColor : UserPrefs.musicVisualizerMidColor
+    readonly property string shownMusicVisualizerHighColor: stagedMusicVisualizerHighColor !== null ? stagedMusicVisualizerHighColor : UserPrefs.musicVisualizerHighColor
+    readonly property int shownMusicVisualizerLedSegments: stagedMusicVisualizerLedSegments !== null ? stagedMusicVisualizerLedSegments : UserPrefs.musicVisualizerLedSegments
+    readonly property int shownMusicVisualizerLedGap: stagedMusicVisualizerLedGap !== null ? stagedMusicVisualizerLedGap : UserPrefs.musicVisualizerLedGap
+    readonly property int shownMusicVisualizerLedUnlitOpacity: stagedMusicVisualizerLedUnlitOpacity !== null ? stagedMusicVisualizerLedUnlitOpacity : UserPrefs.musicVisualizerLedUnlitOpacity
 
     // The diff — what the pending panel lists and Apply commits.
     readonly property var changes: {
         const c = [];
+        const musicPairs = [
+            ["musicVisualizerEnabled", "Visualizer", UserPrefs.musicVisualizerEnabled, stagedMusicVisualizerEnabled, v => v ? "on" : "off"],
+            ["musicVisualizerSource", "Visualizer Source", UserPrefs.musicVisualizerSource, stagedMusicVisualizerSource, v => v === "mpd" ? "MPD only" : "all system audio"],
+            ["musicVisualizerBars", "Visualizer Bars", UserPrefs.musicVisualizerBars, stagedMusicVisualizerBars, v => String(v)],
+            ["musicVisualizerFramerate", "Visualizer FPS", UserPrefs.musicVisualizerFramerate, stagedMusicVisualizerFramerate, v => String(v)],
+            ["musicVisualizerSensitivity", "Visualizer Sensitivity", UserPrefs.musicVisualizerSensitivity, stagedMusicVisualizerSensitivity, v => String(v)],
+            ["musicVisualizerAutosens", "Visualizer Autosens", UserPrefs.musicVisualizerAutosens, stagedMusicVisualizerAutosens, v => String(v)],
+            ["musicVisualizerLowerCutoff", "Visualizer Low Cutoff", UserPrefs.musicVisualizerLowerCutoff, stagedMusicVisualizerLowerCutoff, v => v + " Hz"],
+            ["musicVisualizerHigherCutoff", "Visualizer High Cutoff", UserPrefs.musicVisualizerHigherCutoff, stagedMusicVisualizerHigherCutoff, v => v + " Hz"],
+            ["musicVisualizerSleepTimer", "Visualizer Sleep", UserPrefs.musicVisualizerSleepTimer, stagedMusicVisualizerSleepTimer, v => v === 0 ? "off" : v + " s"],
+            ["musicVisualizerReverse", "Visualizer Direction", UserPrefs.musicVisualizerReverse, stagedMusicVisualizerReverse, v => v ? "high to low" : "low to high"],
+            ["musicVisualizerNoiseReduction", "Visualizer Smoothing", UserPrefs.musicVisualizerNoiseReduction, stagedMusicVisualizerNoiseReduction, v => String(v)],
+            ["musicVisualizerStyle", "Visualizer Style", UserPrefs.musicVisualizerStyle, stagedMusicVisualizerStyle, v => v],
+            ["musicVisualizerUseThemeColor", "Visualizer Theme Color", UserPrefs.musicVisualizerUseThemeColor, stagedMusicVisualizerUseThemeColor, v => v ? "on" : "off"],
+            ["musicVisualizerCustomColor", "Visualizer Color", UserPrefs.musicVisualizerCustomColor, stagedMusicVisualizerCustomColor, v => v],
+            ["musicVisualizerColorMode", "Visualizer Color Mode", UserPrefs.musicVisualizerColorMode, stagedMusicVisualizerColorMode, v => v],
+            ["musicVisualizerFadeDarkerTop", "Visualizer Fade Direction", UserPrefs.musicVisualizerFadeDarkerTop, stagedMusicVisualizerFadeDarkerTop, v => v ? "darker top" : "lighter top"],
+            ["musicVisualizerFadeStrength", "Visualizer Fade Strength", UserPrefs.musicVisualizerFadeStrength, stagedMusicVisualizerFadeStrength, v => v + "%"],
+            ["musicVisualizerLowColor", "Visualizer Low Color", UserPrefs.musicVisualizerLowColor, stagedMusicVisualizerLowColor, v => v],
+            ["musicVisualizerMidColor", "Visualizer Mid Color", UserPrefs.musicVisualizerMidColor, stagedMusicVisualizerMidColor, v => v],
+            ["musicVisualizerHighColor", "Visualizer High Color", UserPrefs.musicVisualizerHighColor, stagedMusicVisualizerHighColor, v => v],
+            ["musicVisualizerLedSegments", "Visualizer Segments", UserPrefs.musicVisualizerLedSegments, stagedMusicVisualizerLedSegments, v => String(v)],
+            ["musicVisualizerLedGap", "Visualizer Segment Gap", UserPrefs.musicVisualizerLedGap, stagedMusicVisualizerLedGap, v => v + " px"],
+            ["musicVisualizerLedUnlitOpacity", "Visualizer Unlit Opacity", UserPrefs.musicVisualizerLedUnlitOpacity, stagedMusicVisualizerLedUnlitOpacity, v => v + "%"]
+        ];
+        for (let i = 0; i < musicPairs.length; ++i) {
+            const [key, label, live, staged, format] = musicPairs[i];
+            if (staged !== null && staged !== live)
+                c.push({ key: key, label: label, from: format(live), to: format(staged), value: staged });
+        }
         if (stagedTheme !== null && stagedTheme !== UserPrefs.themeName)
             c.push({ key: "themeName", label: "Theme",
                      from: UserPrefs.themeName, to: stagedTheme,
@@ -378,6 +454,29 @@ Item {
         stagedDesktopClockShadowStrength = null;
         stagedDesktopClockShadowOffsetX = null;
         stagedDesktopClockShadowOffsetY = null;
+        stagedMusicVisualizerEnabled = null;
+        stagedMusicVisualizerSource = null;
+        stagedMusicVisualizerBars = null;
+        stagedMusicVisualizerFramerate = null;
+        stagedMusicVisualizerSensitivity = null;
+        stagedMusicVisualizerAutosens = null;
+        stagedMusicVisualizerLowerCutoff = null;
+        stagedMusicVisualizerHigherCutoff = null;
+        stagedMusicVisualizerSleepTimer = null;
+        stagedMusicVisualizerReverse = null;
+        stagedMusicVisualizerNoiseReduction = null;
+        stagedMusicVisualizerStyle = null;
+        stagedMusicVisualizerUseThemeColor = null;
+        stagedMusicVisualizerCustomColor = null;
+        stagedMusicVisualizerColorMode = null;
+        stagedMusicVisualizerFadeDarkerTop = null;
+        stagedMusicVisualizerFadeStrength = null;
+        stagedMusicVisualizerLowColor = null;
+        stagedMusicVisualizerMidColor = null;
+        stagedMusicVisualizerHighColor = null;
+        stagedMusicVisualizerLedSegments = null;
+        stagedMusicVisualizerLedGap = null;
+        stagedMusicVisualizerLedUnlitOpacity = null;
         stagedWallpaperTransitionType = null;
         stagedWallpaperTransitionDuration = null;
         stagedWallpaperTransitionFps = null;

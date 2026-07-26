@@ -27,7 +27,7 @@ Item {
     property bool wallpaperTransitionTypeDropdownOpen: false
     // Displays remains a future feature. Its disabled prototype was removed
     // in Rev 25; rebuild it around a real services/DisplayManager.qml.
-    readonly property var pages: ["Appearance", "Launcher", "Wallpaper", "Notifications", "Desktop", "Hyprland", "UI Profiles", "SDDM"]
+    readonly property var pages: ["Appearance", "Launcher", "Wallpaper", "Notifications", "Desktop", "Music", "Hyprland", "UI Profiles", "SDDM"]
 
     // ---- Shared preset-color-picker overlay state (2026-07-11, Opus) ----
     // The swatch popup can't live inside its HexColorRow: the popup is
@@ -147,6 +147,29 @@ Item {
     property alias stagedDesktopClockShadowStrength: settingsTransaction.stagedDesktopClockShadowStrength
     property alias stagedDesktopClockShadowOffsetX: settingsTransaction.stagedDesktopClockShadowOffsetX
     property alias stagedDesktopClockShadowOffsetY: settingsTransaction.stagedDesktopClockShadowOffsetY
+    property alias stagedMusicVisualizerEnabled: settingsTransaction.stagedMusicVisualizerEnabled
+    property alias stagedMusicVisualizerSource: settingsTransaction.stagedMusicVisualizerSource
+    property alias stagedMusicVisualizerBars: settingsTransaction.stagedMusicVisualizerBars
+    property alias stagedMusicVisualizerFramerate: settingsTransaction.stagedMusicVisualizerFramerate
+    property alias stagedMusicVisualizerSensitivity: settingsTransaction.stagedMusicVisualizerSensitivity
+    property alias stagedMusicVisualizerAutosens: settingsTransaction.stagedMusicVisualizerAutosens
+    property alias stagedMusicVisualizerLowerCutoff: settingsTransaction.stagedMusicVisualizerLowerCutoff
+    property alias stagedMusicVisualizerHigherCutoff: settingsTransaction.stagedMusicVisualizerHigherCutoff
+    property alias stagedMusicVisualizerSleepTimer: settingsTransaction.stagedMusicVisualizerSleepTimer
+    property alias stagedMusicVisualizerReverse: settingsTransaction.stagedMusicVisualizerReverse
+    property alias stagedMusicVisualizerNoiseReduction: settingsTransaction.stagedMusicVisualizerNoiseReduction
+    property alias stagedMusicVisualizerStyle: settingsTransaction.stagedMusicVisualizerStyle
+    property alias stagedMusicVisualizerUseThemeColor: settingsTransaction.stagedMusicVisualizerUseThemeColor
+    property alias stagedMusicVisualizerCustomColor: settingsTransaction.stagedMusicVisualizerCustomColor
+    property alias stagedMusicVisualizerColorMode: settingsTransaction.stagedMusicVisualizerColorMode
+    property alias stagedMusicVisualizerFadeDarkerTop: settingsTransaction.stagedMusicVisualizerFadeDarkerTop
+    property alias stagedMusicVisualizerFadeStrength: settingsTransaction.stagedMusicVisualizerFadeStrength
+    property alias stagedMusicVisualizerLowColor: settingsTransaction.stagedMusicVisualizerLowColor
+    property alias stagedMusicVisualizerMidColor: settingsTransaction.stagedMusicVisualizerMidColor
+    property alias stagedMusicVisualizerHighColor: settingsTransaction.stagedMusicVisualizerHighColor
+    property alias stagedMusicVisualizerLedSegments: settingsTransaction.stagedMusicVisualizerLedSegments
+    property alias stagedMusicVisualizerLedGap: settingsTransaction.stagedMusicVisualizerLedGap
+    property alias stagedMusicVisualizerLedUnlitOpacity: settingsTransaction.stagedMusicVisualizerLedUnlitOpacity
 
     readonly property string shownTheme: settingsTransaction.shownTheme
     readonly property real shownFontScale: settingsTransaction.shownFontScale
@@ -213,6 +236,28 @@ Item {
     readonly property int shownDesktopClockShadowStrength: settingsTransaction.shownDesktopClockShadowStrength
     readonly property int shownDesktopClockShadowOffsetX: settingsTransaction.shownDesktopClockShadowOffsetX
     readonly property int shownDesktopClockShadowOffsetY: settingsTransaction.shownDesktopClockShadowOffsetY
+    readonly property bool shownMusicVisualizerEnabled: settingsTransaction.shownMusicVisualizerEnabled
+    readonly property int shownMusicVisualizerBars: settingsTransaction.shownMusicVisualizerBars
+    readonly property int shownMusicVisualizerFramerate: settingsTransaction.shownMusicVisualizerFramerate
+    readonly property int shownMusicVisualizerSensitivity: settingsTransaction.shownMusicVisualizerSensitivity
+    readonly property int shownMusicVisualizerAutosens: settingsTransaction.shownMusicVisualizerAutosens
+    readonly property int shownMusicVisualizerLowerCutoff: settingsTransaction.shownMusicVisualizerLowerCutoff
+    readonly property int shownMusicVisualizerHigherCutoff: settingsTransaction.shownMusicVisualizerHigherCutoff
+    readonly property int shownMusicVisualizerSleepTimer: settingsTransaction.shownMusicVisualizerSleepTimer
+    readonly property bool shownMusicVisualizerReverse: settingsTransaction.shownMusicVisualizerReverse
+    readonly property int shownMusicVisualizerNoiseReduction: settingsTransaction.shownMusicVisualizerNoiseReduction
+    readonly property string shownMusicVisualizerStyle: settingsTransaction.shownMusicVisualizerStyle
+    readonly property bool shownMusicVisualizerUseThemeColor: settingsTransaction.shownMusicVisualizerUseThemeColor
+    readonly property string shownMusicVisualizerCustomColor: settingsTransaction.shownMusicVisualizerCustomColor
+    readonly property string shownMusicVisualizerColorMode: settingsTransaction.shownMusicVisualizerColorMode
+    readonly property bool shownMusicVisualizerFadeDarkerTop: settingsTransaction.shownMusicVisualizerFadeDarkerTop
+    readonly property int shownMusicVisualizerFadeStrength: settingsTransaction.shownMusicVisualizerFadeStrength
+    readonly property string shownMusicVisualizerLowColor: settingsTransaction.shownMusicVisualizerLowColor
+    readonly property string shownMusicVisualizerMidColor: settingsTransaction.shownMusicVisualizerMidColor
+    readonly property string shownMusicVisualizerHighColor: settingsTransaction.shownMusicVisualizerHighColor
+    readonly property int shownMusicVisualizerLedSegments: settingsTransaction.shownMusicVisualizerLedSegments
+    readonly property int shownMusicVisualizerLedGap: settingsTransaction.shownMusicVisualizerLedGap
+    readonly property int shownMusicVisualizerLedUnlitOpacity: settingsTransaction.shownMusicVisualizerLedUnlitOpacity
     readonly property var changes: settingsTransaction.changes
 
     function discardStaged(): void {

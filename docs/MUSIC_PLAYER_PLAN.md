@@ -7,44 +7,69 @@ docs/MUSIC_PLAYER_PLAN.md   (v3 — approved build specification;
                              reviewed builder packet)
 
 =================================================================
-STATUS
+STATUS — IMPLEMENTED CHECKPOINT 2026-07-25
 =================================================================
 
-APPROVED 2026-07-23 after three adversarial review passes between
-Claude/Fable and GPT. The authoritative execution details and v3
-artist-mode recovery amendments are preserved in
-`docs/music-builders-packet-v3.zip`.
+The original v3 builder specification below is retained as design history, but
+it is no longer an active phase-by-phase work order. The live implementation
+now exceeds the deliberately narrow v3 commitment in several places.
 
-Key v3 decisions over the original v2 text:
+Completed and live-tested:
 
-- Unix-socket-only initial transport.
-- Reentrancy-guarded reconnect teardown.
-- Stored-playlist staging before destructive queue replacement.
-- One callback-confirmed restore/cleanup pipeline for normal exit,
-  automatic recovery, and abort-after-save cleanup.
-- Queue-integrity failures are hard; seek/re-pause fidelity failures
-  are reported as soft warnings after the queue is safely restored.
-- Refcounted multi-monitor elapsed ticker.
-- Bar item and minimal panel shell ship together.
+- MPD installed and running with the user-session Unix socket at
+  `$XDG_RUNTIME_DIR/mpd/socket`; no nonexistent fallback socket is rotated in.
+- One hardened command connection plus lightweight status/current-song polling.
+  The proposed second persistent `idle` socket was intentionally not retained
+  after transient `PeerClosedError` behavior; the current path is stable.
+- Direct top-bar controls: left-click play/pause, middle-click previous,
+  right-click next. The text is blank when MPD is stopped with no current song.
+- The former attached compact popout is preserved in source but disabled.
+- A persistent standalone `MusicWindow.qml`, opened from the launcher or IPC,
+  with Library, All Songs, and Queue tabs.
+- Artist -> folder-derived album -> track browsing, flat searchable library,
+  queue refresh/clear/play, album queueing, and filtered-set queue replacement.
+- Normal Hyprland tiling behavior. `MusicWindow.qml` deliberately leaves
+  `maximumSize` unset because an xdg_toplevel maximum-size hint caused Dwindle
+  to float the window whenever the proposed tile exceeded that hint.
+- Real album art through MPD itself: `readpicture` first, `albumart` second. A
+  Python helper caches stable files under `$XDG_RUNTIME_DIR/quickshell-music-art`.
+- Real 32-band PipeWire-output visualization through CAVA raw output. The
+  approved baseline is 60 FPS and CAVA's default `noise_reduction = 77`, with
+  no extra QML attack/decay smoothing.
+- Song-start and song-change notifications through the existing Quickshell
+  notification daemon, containing album art, title, and artist. Startup state,
+  pause, seek, and ordinary refreshes do not create notifications.
+- Local launcher icon at `assets/icons/music.svg`.
+- IPC control surface for status, refresh, playback, track navigation, seek,
+  and volume, plus `musicwindow toggle`.
 
-Claude: v1's "not part of the current work order" gate is now OPEN —
-the Settings split shipped, the memory stabilization plan closed
-2026-07-23, and the lifecycle patterns this feature must follow are
-documented in CODE_REVIEW_2026-07-22.md §10.
+Current component map:
 
-v2 narrows the initial commitment to what was actually requested:
+```text
+services/MpdConnection.qml       MPD protocol transport and request queue
+services/MusicService.qml        current-song/status state and playback commands
+services/MusicLibrary.qml        library/queue models and queue-building actions
+services/AlbumArtService.qml     current-track art state and helper lifecycle
+services/AudioVisualizer.qml     CAVA process and normalized spectrum bands
+services/MusicNotifications.qml  song-start/song-change notifications
+scripts/mpd-fetch-art.py         MPD binary-art retrieval and runtime cache
+widgets/Music/MusicWindow.qml    standalone Library / All Songs / Queue window
+widgets/Music/MusicPanel.qml     now-playing metadata, art, seek, and controls
+widgets/Music/AudioSpectrum.qml  single left-to-right spectrum
+widgets/TopBar/MusicIndicator.qml direct top-bar controls
+assets/cava-music.conf           explicit settings-ready CAVA profile
+assets/icons/music.svg           launcher icon
+```
 
-1. Bar now-playing item (like today's NowPlaying, MPD-backed)
-2. Click → compact player panel (art, title/artist, shuffle, repeat,
-   prev/play/next, volume, progress — the reference screenshot)
-3. Scrollable queue dropdown inside the panel
-4. ARTIST MODE: search artists, one click builds a temporary
-   artist-only queue, shuffle within it, one click restores the
-   full queue
+Next checkpoint:
 
-The full Tauon-style library window (v1 Phases 5–6) is DEFERRED, not
-deleted — the service layer below is built so it can be added without
-rework.
+1. Add a dedicated Music page to the existing split Settings architecture.
+2. Expose player toggles and useful CAVA controls transactionally.
+3. Use EasyEffects as the proven PipeWire DSP/equalizer backend rather than
+   implementing audio processing in QML. Verify the dependency and preset/control
+   surface live before adding equalizer controls.
+4. Player-specific font selection remains optional and deferred. The player
+   currently follows `Theme.fontFamily`, matching the rest of the UI.
 
 =================================================================
 OWNERSHIP — carried from v1, unchanged

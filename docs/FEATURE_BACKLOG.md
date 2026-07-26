@@ -1,16 +1,16 @@
 # Feature Backlog
 
-Updated: 2026-07-23
+Updated: 2026-07-25
 Owner: GPT
 
 This is the canonical prioritized project backlog. Detailed implementation plans may live in separate documents, but every active project should appear here.
 
 ## Current checkpoint
 
-1. Finish documentation cleanup for the calculator, clock tools, clipboard history, and approved MPD plan.
+1. Update documentation for the completed MPD music-player block.
 2. Commit and push a clean canonical tree.
-3. Restore/pull that tree on the work laptop.
-4. Do not start another large feature before the checkpoint is clean.
+3. Install and live-verify EasyEffects before writing equalizer integration.
+4. Build the Music Settings page through the current split Settings architecture.
 
 ## Next small features
 
@@ -22,20 +22,24 @@ This is the canonical prioritized project backlog. Detailed implementation plans
 6. **Audio-device quick picker**.
 7. **Launcher calculator/converter expressions**.
 
-## Approved larger feature
+## Active larger feature
 
-### MPD music player
+### Music settings and EasyEffects integration
 
-The agreed specification is `MUSIC_PLAYER_PLAN.md` v3. The immediate next step is Phase 0 after MPD is installed and configured.
+The MPD music player itself is implemented and live-tested. See
+`MUSIC_PLAYER_PLAN.md` for the exact current component map and completed scope.
 
-Before changing code, verify:
+Next work:
 
-- MPD is installed and running;
-- its Unix socket is reachable;
-- the library and queue contain expected data;
-- the exact Phase-0 `mpc`/socket commands work.
+- dedicated Music Settings page;
+- visualizer enable/disable and settings-ready CAVA controls;
+- album-art and song-notification toggles;
+- EasyEffects-backed equalizer enable/preset controls after dependency health and
+  command/preset behavior are verified on the live system;
+- optional player-only font selection later.
 
-Do not build against an assumed backend.
+Do not implement DSP in QML or create a custom PipeWire filter chain while a
+proven EasyEffects backend satisfies the requirement.
 
 ## Structural and maintenance work
 
@@ -47,7 +51,6 @@ Do not build against an assumed backend.
 
 ## Deferred / parked
 
-- Full Tauon-style music library window.
 - Displays/monitor configuration UI until a safe apply/revert design is proven.
 - Wallpaper-derived dynamic color theme.
 - Notification history UI.
@@ -58,6 +61,10 @@ Do not build against an assumed backend.
 - Optional SDDM deactivate/rollback UI and machine-specific monitor-layout management.
 
 ## Completed recent block
+
+- MPD local-library player with direct bar controls and standalone tiled window.
+- Artist/folder-album/track browsing, searchable All Songs view, and Queue view.
+- MPD album art, CAVA/PipeWire spectrum, and song-change notifications.
 
 - Calculator as a launcher-integrated internal application.
 - Launcher favorites, usage ranking, hide behavior, and calculator aliases.
