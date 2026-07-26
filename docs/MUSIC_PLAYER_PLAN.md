@@ -7,7 +7,7 @@ docs/MUSIC_PLAYER_PLAN.md   (v3 — approved build specification;
                              reviewed builder packet)
 
 =================================================================
-STATUS — IMPLEMENTED CHECKPOINT 2026-07-25
+STATUS — STABILIZED CHECKPOINT 2026-07-26
 =================================================================
 
 The original v3 builder specification below is retained as design history, but
@@ -18,9 +18,11 @@ Completed and live-tested:
 
 - MPD installed and running with the user-session Unix socket at
   `$XDG_RUNTIME_DIR/mpd/socket`; no nonexistent fallback socket is rotated in.
-- One hardened command connection plus lightweight status/current-song polling.
-  The proposed second persistent `idle` socket was intentionally not retained
-  after transient `PeerClosedError` behavior; the current path is stable.
+- Two hardened MPD command connections: the playback/status service polls
+  lightweight status/current-song data, while the library/queue service uses a
+  45-second `ping` keepalive so MPD does not close the otherwise idle socket at
+  its connection timeout. A dedicated MPD `idle` event socket remains optional
+  future work, not a current requirement.
 - Direct top-bar controls: left-click play/pause, middle-click previous,
   right-click next. The text is blank when MPD is stopped with no current song.
 - The former attached compact popout is preserved in source but disabled.
@@ -31,17 +33,31 @@ Completed and live-tested:
 - Normal Hyprland tiling behavior. `MusicWindow.qml` deliberately leaves
   `maximumSize` unset because an xdg_toplevel maximum-size hint caused Dwindle
   to float the window whenever the proposed tile exceeded that hint.
-- Real album art through MPD itself: `readpicture` first, `albumart` second. A
-  Python helper caches stable files under `$XDG_RUNTIME_DIR/quickshell-music-art`.
+- Real album art through MPD itself: `readpicture` first, `albumart` second.
+  The helper uses atomic writes and a persistent, oldest-first-pruned cache at
+  `~/.cache/quickshell-music-art`, capped at 128 MiB. Rapid skips cancel stale
+  fetches without flashing the placeholder or clearing valid previous art.
 - Real 32-band PipeWire-output visualization through CAVA raw output. The
   approved baseline is 60 FPS and CAVA's default `noise_reduction = 77`, with
-  no extra QML attack/decay smoothing.
+  no extra QML attack/decay smoothing. In MPD-only mode CAVA now exists only
+  while MPD is actively playing; pause, stop, or closing the Music window shuts
+  it down and clears the bars. System-audio mode remains window-scoped.
 - Song-start and song-change notifications through the existing Quickshell
-  notification daemon, containing album art, title, and artist. Startup state,
-  pause, seek, and ordinary refreshes do not create notifications.
+  notification daemon, containing album art, title, and artist. Cold-boot state
+  is primed before observation so the first real play still notifies. Startup,
+  pause, seek, and ordinary refreshes do not create notifications. Artwork is
+  supplied through both the icon argument and freedesktop `image-path` hint.
 - Local launcher icon at `assets/icons/music.svg`.
 - IPC control surface for status, refresh, playback, track navigation, seek,
   and volume, plus `musicwindow toggle`.
+- Smooth locally interpolated progress between MPD polls. Dragging the seek bar
+  previews locally and emits exactly one seek command on release.
+- Window-scoped keyboard controls: Space toggles play/pause and Escape closes
+  the Music window.
+- Search/filter cleanup resets stale artist selection when the selected artist
+  is no longer visible, and shared panel sizing now has one source of truth.
+- A dedicated Music Settings page is implemented through the split transaction,
+  context, and page architecture, including visualizer source/style controls.
 
 Current component map:
 
@@ -61,15 +77,48 @@ assets/cava-music.conf           explicit settings-ready CAVA profile
 assets/icons/music.svg           launcher icon
 ```
 
-Next checkpoint:
+Current checkpoint:
 
-1. Add a dedicated Music page to the existing split Settings architecture.
-2. Expose player toggles and useful CAVA controls transactionally.
-3. Use EasyEffects as the proven PipeWire DSP/equalizer backend rather than
+1. Commit and push this stabilized player state as the new canonical baseline.
+2. Use EasyEffects as the proven PipeWire DSP/equalizer backend rather than
    implementing audio processing in QML. Verify the dependency and preset/control
    surface live before adding equalizer controls.
-4. Player-specific font selection remains optional and deferred. The player
+3. Player-specific font selection remains optional and deferred. The player
    currently follows `Theme.fontFamily`, matching the rest of the UI.
+
+=================================================================
+SHELVED REVIEW ITEMS — REVISIT ONLY WITH A REAL NEED
+=================================================================
+
+- **Large queue operations:** consider a confirmation/cap for replacing the
+  queue with a very large filtered library, plus an explicit append gesture or
+  action. Current replacement behavior is accepted and working.
+- **Queue editing:** remove/reorder controls are deferred. MPD remains the queue
+  owner; any future UI must preserve queue IDs and refresh from MPD afterward.
+- **MPRIS duplication guard:** unnecessary while no MPD-MPRIS bridge is
+  installed. Revisit only if MPD is later exposed through MPRIS and the existing
+  Now Playing surface can display the same source twice.
+- **Visualizer renderer rewrite:** do not replace the current delegate-based
+  spectrum with a Canvas merely on theoretical performance grounds. Profile a
+  demonstrated frame-time or allocation problem first.
+- **Visualizer capture transport:** keep the verified `mpd.PipeWire` CAVA source.
+  The proposed FIFO migration is rejected for the current system because live
+  testing proved the MPD monitor carries MPD audio and excludes Firefox audio.
+- **Dedicated MPD `idle` socket:** optional future efficiency improvement. The
+  current polling plus library keepalive is stable and low-cost.
+- **Request-timeout refinement:** revisit only if real MPD requests time out or
+  reconnect churn returns.
+- **Resizable library columns / SplitView:** deferred UI enhancement, not needed
+  for current use.
+- **QML-native CAVA configuration writer:** deferred while the current generated
+  config path is stable.
+- **Search binding cleanup:** deferred unless the current filter model develops a
+  concrete correctness or performance issue.
+- **Player volume UI:** service support exists; a visible control is optional and
+  not part of the stabilized baseline.
+
+These items are intentionally parked. Do not reopen them as generic cleanup;
+require a user-visible limitation, profiling result, or new integration need.
 
 =================================================================
 OWNERSHIP — carried from v1, unchanged

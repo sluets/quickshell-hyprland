@@ -324,6 +324,19 @@ Singleton {
         }
     }
 
+    // MPD closes non-idle client connections after its configured inactivity
+    // timeout (commonly 60 seconds). MusicLibrary can otherwise sit quiet after
+    // loading, causing a PeerClosedError/reconnect/full-library refresh cycle.
+    // A tiny ping keeps only this library socket alive without changing MPD's
+    // global timeout or adding an idle socket. // GPT 2026-07-26
+    Timer {
+        id: connectionKeepalive
+        interval: 45000
+        repeat: true
+        running: root.connected
+        onTriggered: connection.request("ping", null)
+    }
+
     Timer {
         id: queueRefreshDelay
         interval: 250

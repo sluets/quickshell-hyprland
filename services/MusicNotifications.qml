@@ -45,21 +45,22 @@ Singleton {
         return MusicService.artist !== "" ? MusicService.artist : "Unknown artist";
     }
 
+    function primeInitialState(): void {
+        // MusicService performs its initial status/current-song refresh shortly
+        // after connecting. Snapshot whatever state settled — including the
+        // valid stopped-and-empty state — so the first song played after a cold
+        // boot is not swallowed as initialization. // GPT 2026-07-26
+        previousFile = MusicService.fileUri || "";
+        previousState = MusicService.playbackState || "unknown";
+        initialized = true;
+    }
+
     function observePlayback(): void {
+        if (!initialized)
+            return;
+
         const file = MusicService.fileUri || "";
         const state = MusicService.playbackState || "unknown";
-
-        // The service connects and populates state asynchronously at startup.
-        // Record that first complete snapshot without announcing a song that
-        // was already playing before Quickshell launched.
-        if (!initialized) {
-            if (file === "" || state === "unknown")
-                return;
-            previousFile = file;
-            previousState = state;
-            initialized = true;
-            return;
-        }
 
         const trackChanged = file !== "" && file !== previousFile;
         const startedPlaying = state === "play" && previousState !== "play";
@@ -116,11 +117,29 @@ Singleton {
 
     Connections {
         target: MusicService
+
+        // Only prime once. A later transient reconnect must not reset the
+        // baseline and announce the already-playing track again.
+        function onConnectedChanged(): void {
+            if (MusicService.connected && !root.initialized)
+                initGuard.restart();
+        }
+
         function onFileUriChanged(): void { Qt.callLater(root.observePlayback); }
         function onPlaybackStateChanged(): void { Qt.callLater(root.observePlayback); }
     }
 
-    Component.onCompleted: Qt.callLater(root.observePlayback)
+    Component.onCompleted: {
+        if (MusicService.connected)
+            initGuard.restart();
+    }
+
+    Timer {
+        id: initGuard
+        interval: 600
+        repeat: false
+        onTriggered: root.primeInitialState()
+    }
 
     Timer {
         id: artWait
@@ -145,8 +164,13 @@ Singleton {
                 "--urgency=normal",
                 "--expire-time=5000"
             ];
-            if (root.commandArtPath !== "")
+            if (root.commandArtPath !== "") {
+                // Keep --icon for broad notify-send compatibility and also
+                // provide the freedesktop image-path hint used by daemons that
+                // prefer explicit notification artwork metadata. // GPT 2026-07-26
                 args.push("--icon=" + root.commandArtPath);
+                args.push("--hint=string:image-path:" + root.commandArtPath);
+            }
             args.push(root.commandTitle, root.commandArtist);
             return args;
         }

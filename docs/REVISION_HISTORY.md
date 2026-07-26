@@ -1,3 +1,56 @@
+## 2026-07-26 — MPD music player stabilization and cleanup checkpoint (GPT-5.6 Thinking)
+
+**Context:** After the player, library, artwork, visualizer, notifications, and
+Music Settings page were completed, a focused external review identified several
+small lifecycle and state-management risks. The fixes were applied one batch at
+a time and live-tested during sustained normal use.
+
+**What changed:**
+
+- Primed notification state after connection so cold boot does not suppress the
+  first legitimate song-start notification.
+- Added smooth local elapsed interpolation between existing MPD polls.
+- Changed seek dragging to local preview with exactly one MPD seek on release.
+- Added the missing Settings-context forwarding property for visualizer source,
+  removing the `undefined`-to-`QString` warning.
+- Added a 45-second `ping` keepalive to the otherwise idle MusicLibrary MPD
+  connection. This stopped the repeat `QLocalSocket::PeerClosedError` cycle
+  caused by MPD's connection timeout without changing global MPD configuration.
+- Hardened album-art cancellation so stale helpers cannot clear current art or
+  win the busy-state race during rapid skips.
+- Replaced the runtime-only artwork cache with a persistent cache at
+  `~/.cache/quickshell-music-art`, capped at 128 MiB, pruned oldest-first, and
+  written atomically. Live testing populated the cache and confirmed rapid art
+  changes without placeholder flashing.
+- Made CAVA lifecycle source-aware: MPD-only visualization runs only while MPD
+  is actively playing; pause, stop, and window close terminate it and clear the
+  bars. System-audio mode retains window-scoped operation.
+- Added window-scoped Space play/pause and Escape close controls.
+- Reset stale artist selection when filtering hides the selected artist.
+- Consolidated now-playing panel width into one source of truth.
+- Added the freedesktop `image-path` notification hint while preserving the
+  existing icon argument.
+
+**Live results:**
+
+- Sustained playback remained stable throughout the work.
+- The once-per-minute socket warning stopped after the library keepalive patch.
+- CAVA was absent with the Music window closed and while MPD was paused, and
+  returned correctly during playback.
+- The persistent artwork cache was created and populated successfully.
+- The final keyboard, filtering, sizing, seek, progress, artwork, and
+  notification cleanup behavior was accepted.
+
+**Shelved review items:** Large-queue safeguards/append UX, queue editing,
+MPRIS duplicate protection, visualizer Canvas rewrite, dedicated MPD `idle`
+socket, request-timeout refinements, resizable library columns, QML-native CAVA
+configuration, search-binding cleanup, and visible volume controls. The FIFO
+capture proposal is rejected for the current machine because the verified
+`mpd.PipeWire` source isolates MPD from Firefox correctly. Reopen shelved items
+only for a demonstrated limitation, profiling result, or new integration need.
+
+---
+
 ## 2026-07-25 — MPD music player completed, visualized, and notification-integrated (GPT-5.6 Thinking)
 
 **What was built:**

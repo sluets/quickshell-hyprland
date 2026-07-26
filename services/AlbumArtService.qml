@@ -2,7 +2,7 @@
 // services/AlbumArtService.qml
 // Fetches/caches album art for the current MPD track.
 // Lookup order uses MPD itself: embedded picture first, then folder cover.
-// GPT — 2026-07-25
+// GPT — 2026-07-26
 //=============================================================================
 
 pragma Singleton
@@ -43,10 +43,14 @@ Singleton {
         wantedFile = nextFile;
 
         if (nextFile === "") {
-            restartAfterExit = false;
             if (fetchProcess.running) {
+                // Route deliberate cancellation through the restart branch so
+                // the outgoing helper result can never be mistaken for a
+                // successful empty-art response. // GPT 2026-07-26
+                restartAfterExit = true;
                 fetchProcess.running = false;
             } else {
+                busy = false;
                 clear();
             }
             return;
@@ -56,6 +60,8 @@ Singleton {
             return;
 
         if (fetchProcess.running) {
+            // Keep the previous artwork visible while the old helper exits.
+            // The replacement fetch starts from onExited below.
             restartAfterExit = true;
             fetchProcess.running = false;
             return;
@@ -66,9 +72,11 @@ Singleton {
 
     function startFetch(filePath: string): void {
         if (filePath === "") {
+            busy = false;
             clear();
             return;
         }
+
         requestedFile = filePath;
         helperOutput = "";
         helperError = "";
@@ -94,13 +102,11 @@ Singleton {
             lastError = helperError.trim();
         }
 
-        if (restartAfterExit || wantedFile !== requestedFile) {
-            restartAfterExit = false;
-            if (wantedFile === "") {
+        if (wantedFile !== requestedFile) {
+            if (wantedFile === "")
                 clear();
-            } else {
+            else
                 startFetch(wantedFile);
-            }
         }
     }
 
@@ -109,7 +115,6 @@ Singleton {
         function onFileUriChanged(): void { root.refresh(); }
     }
 
-
     Component.onCompleted: root.refresh()
 
     Process {
@@ -117,7 +122,23 @@ Singleton {
         command: ["python3", root.helperPath, root.requestedFile]
         stdout: StdioCollector { onStreamFinished: root.helperOutput = text }
         stderr: StdioCollector { onStreamFinished: root.helperError = text }
-        onRunningChanged: root.busy = running
-        onExited: (code, _status) => root.applyResult(code)
+
+        // `busy` is owned only by startFetch/applyResult. Mirroring Process.running
+        // here raced with result handling and could leave notifications waiting
+        // for their full artwork timeout. // GPT 2026-07-26
+        onExited: (code, _status) => {
+            if (root.restartAfterExit) {
+                root.restartAfterExit = false;
+                if (root.wantedFile === "") {
+                    root.busy = false;
+                    root.clear();
+                } else {
+                    root.startFetch(root.wantedFile);
+                }
+                return;
+            }
+
+            root.applyResult(code);
+        }
     }
 }

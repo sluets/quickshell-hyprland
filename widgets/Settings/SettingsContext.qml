@@ -237,6 +237,7 @@ Item {
     readonly property int shownDesktopClockShadowOffsetX: settingsTransaction.shownDesktopClockShadowOffsetX
     readonly property int shownDesktopClockShadowOffsetY: settingsTransaction.shownDesktopClockShadowOffsetY
     readonly property bool shownMusicVisualizerEnabled: settingsTransaction.shownMusicVisualizerEnabled
+    readonly property string shownMusicVisualizerSource: settingsTransaction.shownMusicVisualizerSource
     readonly property int shownMusicVisualizerBars: settingsTransaction.shownMusicVisualizerBars
     readonly property int shownMusicVisualizerFramerate: settingsTransaction.shownMusicVisualizerFramerate
     readonly property int shownMusicVisualizerSensitivity: settingsTransaction.shownMusicVisualizerSensitivity

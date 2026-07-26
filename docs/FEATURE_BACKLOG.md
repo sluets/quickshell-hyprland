@@ -1,16 +1,15 @@
 # Feature Backlog
 
-Updated: 2026-07-25
+Updated: 2026-07-26
 Owner: GPT
 
 This is the canonical prioritized project backlog. Detailed implementation plans may live in separate documents, but every active project should appear here.
 
 ## Current checkpoint
 
-1. Update documentation for the completed MPD music-player block.
-2. Commit and push a clean canonical tree.
+1. Commit and push the stabilized MPD music-player baseline.
+2. Provide the resulting clean canonical ZIP before further player work.
 3. Install and live-verify EasyEffects before writing equalizer integration.
-4. Build the Music Settings page through the current split Settings architecture.
 
 ## Next small features
 
@@ -31,12 +30,13 @@ The MPD music player itself is implemented and live-tested. See
 
 Next work:
 
-- dedicated Music Settings page;
-- visualizer enable/disable and settings-ready CAVA controls;
-- album-art and song-notification toggles;
 - EasyEffects-backed equalizer enable/preset controls after dependency health and
   command/preset behavior are verified on the live system;
 - optional player-only font selection later.
+
+The dedicated Music Settings page, visualizer controls, MPD/system-audio source
+selection, album-art behavior, and song notifications are implemented and
+live-tested.
 
 Do not implement DSP in QML or create a custom PipeWire filter chain while a
 proven EasyEffects backend satisfies the requirement.
@@ -51,6 +51,13 @@ proven EasyEffects backend satisfies the requirement.
 
 ## Deferred / parked
 
+Music-player review items are detailed in `MUSIC_PLAYER_PLAN.md`. In summary:
+large-queue confirmation/append behavior, queue remove/reorder, MPRIS duplicate
+protection, a Canvas visualizer rewrite, a dedicated MPD `idle` socket,
+resizable library columns, a QML-native CAVA config writer, search-binding
+cleanup, and visible volume controls are shelved until a concrete need appears.
+The FIFO visualizer-source proposal is rejected for the current verified setup.
+
 - Displays/monitor configuration UI until a safe apply/revert design is proven.
 - Wallpaper-derived dynamic color theme.
 - Notification history UI.
@@ -64,7 +71,9 @@ proven EasyEffects backend satisfies the requirement.
 
 - MPD local-library player with direct bar controls and standalone tiled window.
 - Artist/folder-album/track browsing, searchable All Songs view, and Queue view.
-- MPD album art, CAVA/PipeWire spectrum, and song-change notifications.
+- MPD album art with persistent bounded cache, CAVA/PipeWire spectrum with
+  playback-aware lifecycle, smooth seek/progress behavior, keyboard controls,
+  song-change notifications, and dedicated transactional Music Settings.
 
 - Calculator as a launcher-integrated internal application.
 - Launcher favorites, usage ranking, hide behavior, and calculator aliases.

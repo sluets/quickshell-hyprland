@@ -163,6 +163,63 @@ def extension_for(mime_type: str | None, payload: bytes) -> str:
     return ".img"
 
 
+
+CACHE_BUDGET_BYTES = 128 * 1024 * 1024
+
+
+def album_art_cache_dir() -> Path:
+    base = os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache")
+    directory = Path(base) / "quickshell-music-art"
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
+
+
+def cached_path(directory: Path, digest: str) -> Path | None:
+    """Return an existing non-empty cache entry for this track."""
+    for existing in directory.glob(f"{digest}.*"):
+        if existing.name.endswith(".tmp"):
+            continue
+        try:
+            if existing.is_file() and existing.stat().st_size > 0:
+                return existing
+        except OSError:
+            continue
+    return None
+
+
+def prune_cache(directory: Path, budget: int = CACHE_BUDGET_BYTES) -> None:
+    """Remove least-recently-used files until the cache fits the budget."""
+    entries: list[tuple[float, int, Path]] = []
+    total = 0
+
+    try:
+        children = list(directory.iterdir())
+    except OSError:
+        return
+
+    for item in children:
+        if not item.is_file():
+            continue
+        try:
+            stat = item.stat()
+        except OSError:
+            continue
+        entries.append((stat.st_atime, stat.st_size, item))
+        total += stat.st_size
+
+    if total <= budget:
+        return
+
+    entries.sort(key=lambda entry: entry[0])
+    for _atime, size, item in entries:
+        try:
+            item.unlink()
+        except OSError:
+            continue
+        total -= size
+        if total <= budget:
+            return
+
 def main(argv: list[str]) -> int:
     if len(argv) < 2:
         print("usage: mpd-fetch-art.py <relative-track-file>", file=sys.stderr)
@@ -170,6 +227,19 @@ def main(argv: list[str]) -> int:
 
     track_path = argv[1].strip()
     if not track_path:
+        return 0
+
+    directory = album_art_cache_dir()
+    digest = hashlib.sha1(track_path.encode("utf-8")).hexdigest()  # nosec B324
+
+    # Revisited tracks return immediately without opening another MPD socket.
+    hit = cached_path(directory, digest)
+    if hit is not None:
+        try:
+            os.utime(hit, None)
+        except OSError:
+            pass
+        print(str(hit))
         return 0
 
     try:
@@ -181,17 +251,13 @@ def main(argv: list[str]) -> int:
     if not payload:
         return 0
 
-    runtime_dir = os.environ.get("XDG_RUNTIME_DIR") or f"/tmp/quickshell-{os.getuid()}"
-    cache_dir = Path(runtime_dir) / "quickshell-music-art"
-    cache_dir.mkdir(parents=True, exist_ok=True)
-
-    digest = hashlib.sha1(track_path.encode("utf-8")).hexdigest()  # nosec B324
-    ext = extension_for(mime_type, payload)
-    target = cache_dir / f"{digest}{ext}"
-    target.write_bytes(payload)
+    target = directory / f"{digest}{extension_for(mime_type, payload)}"
+    temporary = target.with_suffix(target.suffix + ".tmp")
+    temporary.write_bytes(payload)
+    temporary.replace(target)
+    prune_cache(directory)
     print(str(target))
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv))

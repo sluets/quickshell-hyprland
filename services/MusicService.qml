@@ -34,6 +34,23 @@ Singleton {
     property int songPosition: -1
     property real elapsedSeconds: 0
     property real durationSeconds: 0
+
+    // MPD is polled periodically, but the UI should not advance in visible
+    // one-second steps. elapsedSeconds remains the last authoritative MPD
+    // value; displayElapsed interpolates locally while playback is active.
+    // GPT — 2026-07-26
+    property real elapsedBase: 0
+    property real elapsedStamp: 0
+    property int elapsedTick: 0
+
+    readonly property real displayElapsed: {
+        elapsedTick; // dependency used to refresh the binding every 100 ms
+        if (playbackState !== "play")
+            return elapsedBase;
+        const drift = Math.max(0, (Date.now() - elapsedStamp) / 1000);
+        const value = elapsedBase + drift;
+        return durationSeconds > 0 ? Math.min(durationSeconds, value) : value;
+    }
     property int volume: -1
     property bool repeat: false
     property bool random: false
@@ -72,6 +89,11 @@ Singleton {
         lastCommandResult = ok ? "ok" : String(error || "command failed");
     }
 
+    function markElapsed(seconds): void {
+        elapsedBase = Math.max(0, Number(seconds) || 0);
+        elapsedStamp = Date.now();
+    }
+
     function refreshStatus(): void {
         connection.request("status", function(ok, lines, error) {
             if (!ok) {
@@ -89,6 +111,7 @@ Singleton {
             root.songPosition = root.asInt(data.song, -1);
             root.queueLength = root.asInt(data.playlistlength, 0);
             root.elapsedSeconds = root.asReal(data.elapsed, 0);
+            root.markElapsed(root.elapsedSeconds);
             root.durationSeconds = root.asReal(data.duration, 0);
             root.databaseUpdatingJob = root.asInt(data.updating_db, 0);
             root.setResult(true, "");
@@ -158,8 +181,12 @@ Singleton {
 
     function previous(): void { changeTrack("previous"); }
     function next(): void { changeTrack("next"); }
-    function restartSong(): void { command("seekcur 0"); }
-    function seek(seconds): void { command("seekcur " + Math.max(0, Number(seconds) || 0)); }
+    function restartSong(): void { seek(0); }
+    function seek(seconds): void {
+        const target = Math.max(0, Number(seconds) || 0);
+        markElapsed(target);
+        command("seekcur " + target);
+    }
     function setVolume(percent): void { command("setvol " + Math.max(0, Math.min(100, Math.round(percent)))); }
     function setRandom(enabled: bool): void { command("random " + (enabled ? "1" : "0")); }
     function toggleRandom(): void { setRandom(!random); }
@@ -206,9 +233,17 @@ Singleton {
         onTriggered: root.refreshAll()
     }
 
-    // Temporary robust refresh path for Phase 1. One local MPD status/current
-    // song refresh per second while playing (three seconds otherwise) is tiny,
-    // and avoids depending on a second idle socket until that path is hardened.
+    // Drives displayElapsed between authoritative MPD status samples.
+    Timer {
+        id: elapsedTimer
+        interval: 100
+        repeat: true
+        running: root.connected && root.playbackState === "play"
+        onTriggered: root.elapsedTick++
+    }
+
+    // Keep the existing conservative polling cadence for now. The UI is smooth
+    // locally, while MPD remains the authority once per second.
     Timer {
         id: refreshTimer
         interval: root.playbackState === "play" ? 1000 : 3000

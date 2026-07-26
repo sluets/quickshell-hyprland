@@ -30,12 +30,37 @@ FloatingWindow {
 
     visible: shown
 
-    // Run CAVA only while this window is visible. Closing the window stops
-    // capture and clears the spectrum instead of leaving a background process.
+    // Window-scoped media shortcut. Qt.WindowShortcut limits this to the
+    // active music window, so Space does not become a global play/pause key.
+    // GPT — 2026-07-26
+    Shortcut {
+        sequence: "Space"
+        context: Qt.WindowShortcut
+        enabled: root.shown
+        onActivated: MusicService.toggle()
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        context: Qt.WindowShortcut
+        enabled: root.shown
+        onActivated: root.close()
+    }
+
+    // Keep system-audio capture available while the window is open, because
+    // Firefox or another application may still be producing sound. The MPD-only
+    // source is narrower: pause/stop tears CAVA down and clears the spectrum.
+    // GPT — 2026-07-26
+    readonly property bool visualizerPlaybackActive:
+        UserPrefs.musicVisualizerSource === "system"
+        || MusicService.playbackState === "play"
+
     Binding {
         target: AudioVisualizer
         property: "active"
-        value: root.shown && UserPrefs.musicVisualizerEnabled
+        value: root.shown
+            && UserPrefs.musicVisualizerEnabled
+            && root.visualizerPlaybackActive
     }
 
     readonly property var shownArtists: {
@@ -70,8 +95,11 @@ FloatingWindow {
     onClosed: shown = false
 
     onShownArtistsChanged: {
-        if (selectedArtist === "" && shownArtists.length > 0)
+        if (shownArtists.length === 0) {
+            selectedArtist = "";
+        } else if (shownArtists.indexOf(selectedArtist) < 0) {
             selectedArtist = shownArtists[0];
+        }
     }
     onSelectedAlbumsChanged: {
         if (selectedAlbums.length === 0) {
@@ -339,8 +367,8 @@ FloatingWindow {
 
                 MusicPanel {
                     id: nowPlayingPanel
-                    Layout.preferredWidth: 540
-                    Layout.maximumWidth: 540
+                    Layout.preferredWidth: implicitWidth
+                    Layout.maximumWidth: implicitWidth
                     showLibraryButton: false
                 }
 

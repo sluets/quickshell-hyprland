@@ -10,9 +10,13 @@ import qs.services
 Item {
     id: root
 
-    implicitWidth: 540
+    property real preferredWidth: 540
+    implicitWidth: preferredWidth
     implicitHeight: panelColumn.implicitHeight
     property bool showLibraryButton: true
+    // -1 means no active scrub. While dragging, the handle follows locally and
+    // only one seek command is sent when the pointer is released.
+    property real dragRatio: -1
     signal libraryRequested()
 
     readonly property bool isPlaying: MusicService.playbackState === "play"
@@ -33,10 +37,12 @@ Item {
     }
 
     function progressRatio(): real {
+        if (dragRatio >= 0)
+            return dragRatio;
         if (MusicService.durationSeconds <= 0)
             return 0;
         return Math.max(0, Math.min(1,
-            MusicService.elapsedSeconds / MusicService.durationSeconds));
+            MusicService.displayElapsed / MusicService.durationSeconds));
     }
 
     component IconButton: Rectangle {
@@ -170,14 +176,22 @@ Item {
                 anchors.fill: parent
                 enabled: MusicService.durationSeconds > 0
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onPressed: mouse => MusicService.seek(
-                    Math.max(0, Math.min(1, mouse.x / width))
-                    * MusicService.durationSeconds)
-                onPositionChanged: mouse => {
-                    if (pressed && enabled)
-                        MusicService.seek(Math.max(0, Math.min(1, mouse.x / width))
-                            * MusicService.durationSeconds);
+
+                function ratioAt(pointerX): real {
+                    return Math.max(0, Math.min(1, pointerX / Math.max(1, width)));
                 }
+
+                onPressed: mouse => root.dragRatio = ratioAt(mouse.x)
+                onPositionChanged: mouse => {
+                    if (pressed)
+                        root.dragRatio = ratioAt(mouse.x);
+                }
+                onReleased: {
+                    if (root.dragRatio >= 0)
+                        MusicService.seek(root.dragRatio * MusicService.durationSeconds);
+                    root.dragRatio = -1;
+                }
+                onCanceled: root.dragRatio = -1
             }
         }
 
