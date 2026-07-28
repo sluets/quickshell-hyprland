@@ -43,10 +43,12 @@ ColumnLayout {
         settingsRoot.stagedCustomThemeBorderAngle=t.barBorderGradientAngle;
         settingsRoot.stagedTheme="CustomTheme";
     }
+    SettingsComponents.SettingsSectionHeader { title: "Palette" }
+    SettingsComponents.SettingsCard {
+        contentSpacing: Theme.spacingSmall
 
-    Text { text:"Build a custom palette while preserving the font, spacing, and sizing of a base theme."; color:Theme.colorMuted; font.family:Theme.fontFamily; font.pixelSize:Theme.fontSize; wrapMode:Text.WordWrap; Layout.fillWidth:true }
-    Rectangle {
-        Layout.fillWidth:true; implicitHeight: startText.implicitHeight + Theme.spacingMedium*2; radius:Theme.radiusMedium; color:startMouse.containsMouse?Theme.colorHover:Theme.colorSurface
+        Rectangle {
+            Layout.fillWidth:true; implicitHeight: startText.implicitHeight + Theme.spacingMedium*2; radius:Theme.radiusMedium; color:startMouse.containsMouse?Theme.colorHover:Theme.colorSurface
         Text { id:startText; anchors.centerIn:parent; text:"Start from current theme"; color:Theme.colorForeground; font.family:Theme.fontFamily; font.pixelSize:Theme.fontSize }
         MouseArea { id:startMouse; anchors.fill:parent; hoverEnabled:true; cursorShape:Qt.PointingHandCursor; onClicked:page.copyCurrentTheme() }
     }
@@ -75,6 +77,11 @@ ColumnLayout {
             MouseArea { anchors.fill:parent; onClicked:settingsRoot.stagedCustomThemeBorder2="transparent" }
         }
     }
-    SettingsComponents.StepperRow { label:"Border gradient angle"; labelColumnWidth:190; valueColumnWidth:72; valueText:Math.round(settingsRoot.shownCustomThemeBorderAngle)+"°"; staged:settingsRoot.stagedCustomThemeBorderAngle !== null; onMinus: settingsRoot.stagedCustomThemeBorderAngle = (settingsRoot.shownCustomThemeBorderAngle + 345) % 360; onPlus: settingsRoot.stagedCustomThemeBorderAngle = (settingsRoot.shownCustomThemeBorderAngle + 15) % 360 }
-    Text { text:"Choose CustomTheme on the Appearance page, or use Start from current theme to select it automatically. Apply commits all palette changes together."; color:Theme.colorMuted; font.family:Theme.fontFamily; font.pixelSize:Math.round(Theme.fontSize*.82); wrapMode:Text.WordWrap; Layout.fillWidth:true }
+    }
+
+    SettingsComponents.SettingsSectionHeader { title: "Border" }
+    SettingsComponents.SettingsCard {
+        contentSpacing: Theme.spacingSmall
+    SettingsComponents.StepperRow { label:"Gradient angle"; labelColumnWidth:190; valueColumnWidth:72; valueText:Math.round(settingsRoot.shownCustomThemeBorderAngle)+"°"; staged:settingsRoot.stagedCustomThemeBorderAngle !== null; onMinus: settingsRoot.stagedCustomThemeBorderAngle = (settingsRoot.shownCustomThemeBorderAngle + 345) % 360; onPlus: settingsRoot.stagedCustomThemeBorderAngle = (settingsRoot.shownCustomThemeBorderAngle + 15) % 360 }
+    }
 }

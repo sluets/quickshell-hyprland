@@ -1,6 +1,6 @@
 # Settings Architecture and Split Map
 
-_Last updated 2026-07-19 by GPT through Rev 39._
+_Last updated 2026-07-28 by GPT through Settings redesign Rev 27._
 
 This is the authoritative ownership map for Settings. New work must follow it from the first revision so `SettingsWindow.qml` never becomes a monolith again.
 
@@ -75,22 +75,26 @@ Owns:
 
 Owns:
 
-- titlebar and close button;
-- sidebar navigation and headings;
+- rounded sidebar navigation and headings;
 - page viewport and all page instances;
 - scrolling and draggable scrollbar;
-- pending footer placement;
+- compact action-footer placement;
+- Apply-review dialog mounting;
 - overlay mounting.
+
+The custom titlebar and close button were intentionally removed during the visual-polish pass. Window closure is handled by the compositor/window shortcut rather than reserved chrome inside Settings.
 
 It receives the window host and `SettingsContext`; it does not own persistence.
 
 ### `SettingsOverlays.qml` — shared popup layer
 
-Owns the theme, font, and wallpaper-transition dropdowns, click-outside dismiss surfaces, shared preset color picker, and popup positioning/clamping. It stays mounted at the card/view level so popups are not clipped by page content.
+Owns the theme, font, and wallpaper-transition dropdowns, click-outside dismiss surfaces, shared preset color picker, popup positioning/clamping, and wheel containment for those overlay lists. It stays mounted at the card/view level so popups are not clipped by page content.
+
+Important: Theme, Font family, and Wallpaper transition are not `DropdownSettingRow`/`ComboBox` menus. Their page files expose anchor items and open-state flags; `SettingsOverlays.qml` renders the actual lists. Any bug involving those visible menus must be fixed here, and the outer page `Flickable` must remain non-interactive while one is open.
 
 ### `SettingsPendingFooter.qml` — presentation only
 
-Renders pending changes, status/error/output text, and Apply/Cancel controls. It emits requests but never computes or persists settings.
+Renders the compact pending count/status and Apply/Discard controls. Apply opens a separate review dialog listing staged changes before commit. The component emits requests but never computes or persists settings. Redundant idle text such as “All changes applied” is intentionally omitted.
 
 ### Page files — one feature/page per file
 
@@ -100,7 +104,7 @@ Pages own labels, controls, and page-specific presentation. They stage values th
 
 Animation presets follow the same split architecture:
 
-- `HyprlandPage.qml` presents Off/Snappy/Smooth/Bouncy.
+- `HyprlandPage.qml` presents Disabled/Custom/Snappy/Smooth/Bouncy, per-branch style dropdowns, and optional typed speed controls.
 - `SettingsTransaction.qml` owns staged state, effective value, pending diff, discard, validation, and Apply.
 - `SettingsContext.qml` exposes the page-facing alias/forward.
 - `UserPrefs.qml` persists the selected preset.
@@ -179,4 +183,5 @@ Symptom guide:
 - Cancel works but Apply fails: Apply path or `ConfigManager`;
 - one page cannot resolve a name: context alias/forward;
 - restored values exist but Hyprland does not change: reload handshake or reapply bridge;
-- popup does not resolve: explicit sibling import and qualified component type.
+- popup does not resolve: explicit sibling import and qualified component type;
+- Theme/Font/Wallpaper-transition wheel bug: inspect `SettingsOverlays.qml`, not `DropdownSettingRow.qml`, and verify the page Flickable is disabled from the real overlay-open flags.

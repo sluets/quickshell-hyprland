@@ -9,60 +9,41 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: Theme.spacingMedium
 
-    SettingsComponents.OptionPickerRow {
-        label: "Placement"
+    SettingsComponents.SettingsSectionHeader { title: "Behavior" }
+    SettingsComponents.SettingsCard {
+        contentSpacing: Theme.spacingSmall
+
+        SettingsComponents.OptionPickerRow {
+            label: "Placement"
+        description: "Attached connects to the bar; centered opens on the focused monitor."
         options: settingsRoot.launcherPlacementOptions
         shownValue: settingsRoot.shownLauncherPlacement
         staged: settingsRoot.stagedLauncherPlacement !== null
         onPicked: value => settingsRoot.stagedLauncherPlacement = value
     }
 
-    ColumnLayout {
+    SettingsComponents.StepperRow {
         Layout.fillWidth: true
-        spacing: Theme.spacingSmall
+        label: "Horizontal Offset"
+        valueColumnWidth: 72
+        valueText: settingsRoot.shownLauncherOffsetX + " px"
+        staged: settingsRoot.stagedLauncherOffsetX !== null
         enabled: settingsRoot.shownLauncherPlacement === "centered"
         opacity: enabled ? 1.0 : 0.45
-
-        Text {
-            text: "Horizontal Offset"
-            color: settingsRoot.stagedLauncherOffsetX !== null ? Theme.colorAccent : Theme.colorForeground
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
-        }
-
-        SettingsComponents.StepperRow {
-            label: ""
-            labelColumnWidth: 0
-            valueColumnWidth: 72
-            valueText: settingsRoot.shownLauncherOffsetX + " px"
-            staged: settingsRoot.stagedLauncherOffsetX !== null
-            onMinus: settingsRoot.stagedLauncherOffsetX = Math.max(-500, settingsRoot.shownLauncherOffsetX - 5)
-            onPlus: settingsRoot.stagedLauncherOffsetX = Math.min(2000, settingsRoot.shownLauncherOffsetX + 5)
-        }
+        onMinus: settingsRoot.stagedLauncherOffsetX = Math.max(-500, settingsRoot.shownLauncherOffsetX - 5)
+        onPlus: settingsRoot.stagedLauncherOffsetX = Math.min(2000, settingsRoot.shownLauncherOffsetX + 5)
     }
 
-    ColumnLayout {
+    SettingsComponents.StepperRow {
         Layout.fillWidth: true
-        spacing: Theme.spacingSmall
+        label: "Vertical Offset"
+        valueColumnWidth: 72
+        valueText: settingsRoot.shownLauncherOffsetY + " px"
+        staged: settingsRoot.stagedLauncherOffsetY !== null
         enabled: settingsRoot.shownLauncherPlacement === "centered"
         opacity: enabled ? 1.0 : 0.45
-
-        Text {
-            text: "Vertical Offset"
-            color: settingsRoot.stagedLauncherOffsetY !== null ? Theme.colorAccent : Theme.colorForeground
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
-        }
-
-        SettingsComponents.StepperRow {
-            label: ""
-            labelColumnWidth: 0
-            valueColumnWidth: 72
-            valueText: settingsRoot.shownLauncherOffsetY + " px"
-            staged: settingsRoot.stagedLauncherOffsetY !== null
-            onMinus: settingsRoot.stagedLauncherOffsetY = Math.max(-500, settingsRoot.shownLauncherOffsetY - 5)
-            onPlus: settingsRoot.stagedLauncherOffsetY = Math.min(2000, settingsRoot.shownLauncherOffsetY + 5)
-        }
+        onMinus: settingsRoot.stagedLauncherOffsetY = Math.max(-500, settingsRoot.shownLauncherOffsetY - 5)
+        onPlus: settingsRoot.stagedLauncherOffsetY = Math.min(2000, settingsRoot.shownLauncherOffsetY + 5)
     }
 
     SettingsComponents.ToggleSettingRow {
@@ -72,15 +53,9 @@ ColumnLayout {
         onToggled: settingsRoot.stagedLauncherShowAppsOnOpen = !settingsRoot.shownLauncherShowAppsOnOpen
     }
 
-    Text {
-        Layout.fillWidth: true
-        text: "Attached keeps the current bar-connected launcher. Centered opens on the focused monitor and uses the offsets above."
-        wrapMode: Text.WordWrap
-        color: Theme.colorMuted
-        font.family: Theme.fontFamily
-        font.pixelSize: Math.round(Theme.fontSize * 0.8)
     }
 
+    SettingsComponents.SettingsSectionHeader { title: "Application Data" }
     Rectangle {
         Layout.fillWidth: true
         implicitHeight: launcherDataColumn.implicitHeight + Theme.spacingMedium * 2

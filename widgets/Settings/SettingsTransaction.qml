@@ -47,6 +47,13 @@ Item {
     property var stagedHyprWorkspaceAnimationStyle: null
     property var stagedHyprLayerAnimationStyle: null
     property var stagedHyprFadeAnimationPreset: null
+    property var stagedHyprCustomAnimationSpeedsEnabled: null
+    property var stagedHyprWindowSpeed: null
+    property var stagedHyprWindowInSpeed: null
+    property var stagedHyprWindowOutSpeed: null
+    property var stagedHyprWorkspaceSpeed: null
+    property var stagedHyprLayerSpeed: null
+    property var stagedHyprFadeSpeed: null
     property var stagedHyprActiveBorderUseThemeColor: null
     property var stagedHyprActiveBorderCustomColor: null
     property var stagedBarBorderWidthOverride: null
@@ -163,6 +170,13 @@ Item {
     readonly property string shownHyprWorkspaceAnimationStyle: stagedHyprWorkspaceAnimationStyle !== null ? stagedHyprWorkspaceAnimationStyle : UserPrefs.hyprWorkspaceAnimationStyle
     readonly property string shownHyprLayerAnimationStyle: stagedHyprLayerAnimationStyle !== null ? stagedHyprLayerAnimationStyle : UserPrefs.hyprLayerAnimationStyle
     readonly property string shownHyprFadeAnimationPreset: stagedHyprFadeAnimationPreset !== null ? stagedHyprFadeAnimationPreset : UserPrefs.hyprFadeAnimationPreset
+    readonly property bool shownHyprCustomAnimationSpeedsEnabled: stagedHyprCustomAnimationSpeedsEnabled !== null ? stagedHyprCustomAnimationSpeedsEnabled : UserPrefs.hyprCustomAnimationSpeedsEnabled
+    readonly property real shownHyprWindowSpeed: stagedHyprWindowSpeed !== null ? stagedHyprWindowSpeed : UserPrefs.hyprWindowSpeed
+    readonly property real shownHyprWindowInSpeed: stagedHyprWindowInSpeed !== null ? stagedHyprWindowInSpeed : UserPrefs.hyprWindowInSpeed
+    readonly property real shownHyprWindowOutSpeed: stagedHyprWindowOutSpeed !== null ? stagedHyprWindowOutSpeed : UserPrefs.hyprWindowOutSpeed
+    readonly property real shownHyprWorkspaceSpeed: stagedHyprWorkspaceSpeed !== null ? stagedHyprWorkspaceSpeed : UserPrefs.hyprWorkspaceSpeed
+    readonly property real shownHyprLayerSpeed: stagedHyprLayerSpeed !== null ? stagedHyprLayerSpeed : UserPrefs.hyprLayerSpeed
+    readonly property real shownHyprFadeSpeed: stagedHyprFadeSpeed !== null ? stagedHyprFadeSpeed : UserPrefs.hyprFadeSpeed
     readonly property bool shownHyprActiveBorderUseThemeColor: stagedHyprActiveBorderUseThemeColor !== null ? stagedHyprActiveBorderUseThemeColor : UserPrefs.hyprActiveBorderUseThemeColor
     readonly property string shownHyprActiveBorderCustomColor: stagedHyprActiveBorderCustomColor !== null ? stagedHyprActiveBorderCustomColor : UserPrefs.hyprActiveBorderCustomColor
     readonly property string shownNotifCorner: stagedNotifCorner !== null ? stagedNotifCorner : UserPrefs.notifCorner
@@ -363,7 +377,14 @@ Item {
             ["hyprWindowAnimationStyle", "Window Animation", UserPrefs.hyprWindowAnimationStyle, stagedHyprWindowAnimationStyle],
             ["hyprWorkspaceAnimationStyle", "Workspace Animation", UserPrefs.hyprWorkspaceAnimationStyle, stagedHyprWorkspaceAnimationStyle],
             ["hyprLayerAnimationStyle", "Layer Animation", UserPrefs.hyprLayerAnimationStyle, stagedHyprLayerAnimationStyle],
-            ["hyprFadeAnimationPreset", "Fade Animation", UserPrefs.hyprFadeAnimationPreset, stagedHyprFadeAnimationPreset]
+            ["hyprFadeAnimationPreset", "Fade Animation", UserPrefs.hyprFadeAnimationPreset, stagedHyprFadeAnimationPreset],
+            ["hyprCustomAnimationSpeedsEnabled", "Custom Animation Speeds", UserPrefs.hyprCustomAnimationSpeedsEnabled, stagedHyprCustomAnimationSpeedsEnabled],
+            ["hyprWindowSpeed", "Window Speed", UserPrefs.hyprWindowSpeed, stagedHyprWindowSpeed],
+            ["hyprWindowInSpeed", "Window Open Speed", UserPrefs.hyprWindowInSpeed, stagedHyprWindowInSpeed],
+            ["hyprWindowOutSpeed", "Window Close Speed", UserPrefs.hyprWindowOutSpeed, stagedHyprWindowOutSpeed],
+            ["hyprWorkspaceSpeed", "Workspace Speed", UserPrefs.hyprWorkspaceSpeed, stagedHyprWorkspaceSpeed],
+            ["hyprLayerSpeed", "Layer Speed", UserPrefs.hyprLayerSpeed, stagedHyprLayerSpeed],
+            ["hyprFadeSpeed", "Fade Speed", UserPrefs.hyprFadeSpeed, stagedHyprFadeSpeed]
         ];
         for (let i = 0; i < hyprPairs.length; i++) {
             const [key, label, live, staged] = hyprPairs[i];
@@ -481,6 +502,13 @@ Item {
         stagedHyprWorkspaceAnimationStyle = null;
         stagedHyprLayerAnimationStyle = null;
         stagedHyprFadeAnimationPreset = null;
+        stagedHyprCustomAnimationSpeedsEnabled = null;
+        stagedHyprWindowSpeed = null;
+        stagedHyprWindowInSpeed = null;
+        stagedHyprWindowOutSpeed = null;
+        stagedHyprWorkspaceSpeed = null;
+        stagedHyprLayerSpeed = null;
+        stagedHyprFadeSpeed = null;
         stagedHyprActiveBorderUseThemeColor = null;
         stagedHyprActiveBorderCustomColor = null;
         stagedBarBorderWidthOverride = null;
@@ -595,6 +623,13 @@ Item {
             { key: "hyprWorkspaceAnimationStyle", value: UserPrefs.hyprWorkspaceAnimationStyle },
             { key: "hyprLayerAnimationStyle", value: UserPrefs.hyprLayerAnimationStyle },
             { key: "hyprFadeAnimationPreset", value: UserPrefs.hyprFadeAnimationPreset },
+            { key: "hyprCustomAnimationSpeedsEnabled", value: UserPrefs.hyprCustomAnimationSpeedsEnabled },
+            { key: "hyprWindowSpeed", value: UserPrefs.hyprWindowSpeed },
+            { key: "hyprWindowInSpeed", value: UserPrefs.hyprWindowInSpeed },
+            { key: "hyprWindowOutSpeed", value: UserPrefs.hyprWindowOutSpeed },
+            { key: "hyprWorkspaceSpeed", value: UserPrefs.hyprWorkspaceSpeed },
+            { key: "hyprLayerSpeed", value: UserPrefs.hyprLayerSpeed },
+            { key: "hyprFadeSpeed", value: UserPrefs.hyprFadeSpeed },
             { key: "hyprActiveBorderUseThemeColor", value: UserPrefs.hyprActiveBorderUseThemeColor },
             { key: "hyprActiveBorderCustomColor", value: UserPrefs.hyprActiveBorderCustomColor }
         ];

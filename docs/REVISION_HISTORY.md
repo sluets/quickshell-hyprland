@@ -1,3 +1,25 @@
+## 2026-07-28 — Settings visual redesign approved through Rev 27 (GPT-5.6 Thinking)
+
+**Context:** The Settings window was visually rebuilt against the approved canonical mockup while preserving the split architecture and staged Apply transaction. The work was delivered cumulatively so the newest archive could be dropped over the project at home.
+
+**What changed:**
+
+- Added shared elevation/card/control tokens and redesigned the sidebar as a rounded navigation card.
+- Converted all Settings pages to logical per-section cards with a fixed left-anchored form grid.
+- Joined stepper controls, aligned toggles/dropdowns, reduced permanent helper text, and moved useful explanations into hover tooltips.
+- Removed the custom titlebar and redundant idle-status text.
+- Replaced the permanent pending panel with a compact action footer and Apply-review confirmation dialog.
+- Added Hyprland animation style dropdowns and direct numeric speed controls. Custom mode now emits the selected speeds directly into complete Lua declarations for window, open, close, workspace, layer, and fade branches.
+- Fixed Launcher offset rows so labels and controls share one line.
+- Fixed long overlay dropdown wheel propagation by changing the actual owner, `SettingsOverlays.qml`, and disabling the page Flickable while Theme, Font family, or Wallpaper transition is open.
+- Removed failed dropdown experiments from `DropdownSettingRow.qml` after confirming those menus do not use that component.
+
+**Approved baseline:** Settings redesign Rev 27. Earlier redesign archives are superseded.
+
+**Deferred:** Full home-machine regression/theme/font-scale sweep, then Music redesign and the remaining shell surfaces.
+
+---
+
 ## 2026-07-26 — MPD music player stabilization and cleanup checkpoint (GPT-5.6 Thinking)
 
 **Context:** After the player, library, artwork, visualizer, notifications, and

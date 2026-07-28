@@ -317,6 +317,18 @@ Singleton {
     readonly property color colorSurface: active.colorSurface
     readonly property color colorHover: active.colorHover
 
+    // Shared visual-polish elevation ladder (Settings Rev 0).
+    readonly property color colorGround: colorBackground
+    readonly property color colorCard: colorSurface
+    readonly property color colorControl:
+        Qt.tint(colorSurface, Qt.rgba(colorForeground.r, colorForeground.g, colorForeground.b, 0.06))
+    readonly property color colorSelected:
+        Qt.tint(colorSurface, Qt.rgba(colorAccent.r, colorAccent.g, colorAccent.b, 0.14))
+    readonly property color colorDivider:
+        Qt.rgba(colorMuted.r, colorMuted.g, colorMuted.b, 0.18)
+    readonly property color colorCardBorder:
+        Qt.rgba(colorMuted.r, colorMuted.g, colorMuted.b, 0.25)
+
     // NOT a direct forward (third exception, after fontSize and
     // barBorderWidth): "" from UserPrefs means "follow the theme",
     // same convention as everywhere else an override lives.
@@ -395,6 +407,8 @@ Singleton {
     readonly property int spacingSmall: active.spacingSmall
     readonly property int spacingMedium: active.spacingMedium
     readonly property int spacingLarge: active.spacingLarge
+    readonly property int spacingXLarge: spacingLarge + spacingMedium
+    readonly property int radiusLarge: Math.round(radiusMedium * 1.8)
 
     readonly property int animationDuration: active.animationDuration
     readonly property int animationEasing: active.animationEasing

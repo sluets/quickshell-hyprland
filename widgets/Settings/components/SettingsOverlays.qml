@@ -87,12 +87,27 @@ Rectangle {
     // through to the dismiss-catcher underneath.
     MouseArea { anchors.fill: parent }
 
+    WheelHandler {
+        target: null
+        blocking: true
+        onWheel: event => {
+            const delta = event.pixelDelta.y !== 0
+                ? event.pixelDelta.y
+                : event.angleDelta.y / 2;
+            const maxY = Math.max(0, themeDropdownList.contentHeight - themeDropdownList.height);
+            themeDropdownList.contentY = Math.max(0, Math.min(maxY, themeDropdownList.contentY - delta));
+            event.accepted = true;
+        }
+    }
+
     ListView {
+        id: themeDropdownList
         anchors.fill: parent
         anchors.margins: Theme.spacingSmall
         clip: true
         spacing: 2
         interactive: contentHeight > height
+        boundsBehavior: Flickable.StopAtBounds
         model: Theme.themeNames
 
         delegate: Rectangle {
@@ -169,12 +184,27 @@ Rectangle {
 
     MouseArea { anchors.fill: parent }
 
+    WheelHandler {
+        target: null
+        blocking: true
+        onWheel: event => {
+            const delta = event.pixelDelta.y !== 0
+                ? event.pixelDelta.y
+                : event.angleDelta.y / 2;
+            const maxY = Math.max(0, fontDropdownList.contentHeight - fontDropdownList.height);
+            fontDropdownList.contentY = Math.max(0, Math.min(maxY, fontDropdownList.contentY - delta));
+            event.accepted = true;
+        }
+    }
+
     ListView {
+        id: fontDropdownList
         anchors.fill: parent
         anchors.margins: Theme.spacingSmall
         clip: true
         spacing: 2
         interactive: contentHeight > height
+        boundsBehavior: Flickable.StopAtBounds
         model: settingsRoot.fontFamilyOptions
 
         delegate: Rectangle {
@@ -252,12 +282,27 @@ Rectangle {
 
     MouseArea { anchors.fill: parent }
 
+    WheelHandler {
+        target: null
+        blocking: true
+        onWheel: event => {
+            const delta = event.pixelDelta.y !== 0
+                ? event.pixelDelta.y
+                : event.angleDelta.y / 2;
+            const maxY = Math.max(0, wallpaperTransitionDropdownList.contentHeight - wallpaperTransitionDropdownList.height);
+            wallpaperTransitionDropdownList.contentY = Math.max(0, Math.min(maxY, wallpaperTransitionDropdownList.contentY - delta));
+            event.accepted = true;
+        }
+    }
+
     ListView {
+        id: wallpaperTransitionDropdownList
         anchors.fill: parent
         anchors.margins: Theme.spacingSmall
         clip: true
         spacing: 2
         interactive: contentHeight > height
+        boundsBehavior: Flickable.StopAtBounds
         model: settingsRoot.wallpaperTransitionTypeOptions
 
         delegate: Rectangle {

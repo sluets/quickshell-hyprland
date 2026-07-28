@@ -10,6 +10,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.core
+import qs.services
 import "." as SettingsComponents
 import "../pages" as SettingsPages
 
@@ -17,6 +18,13 @@ Item {
     id: viewRoot
 
     required property var settingsRoot
+
+    // Rev 2 density rule: Settings pages are form-like UI, not dashboards.
+    // Keep the working column compact when the toplevel is maximized instead
+    // of allowing every row/card to stretch across the monitor. Extra width
+    // remains intentional ground space to the right.
+    readonly property int maximumContentWidth: 760
+    property bool applyReviewOpen: false
 
     // ---- The card ----
     Rectangle {
@@ -36,66 +44,19 @@ Item {
         // fire when clicking inside the card.
         MouseArea { anchors.fill: parent }
 
-        // Application-style titlebar. Drag anywhere in the empty header
-        // area; Super+drag also works because this is a real toplevel.
-        Rectangle {
-            id: titlebar
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: Math.round(Theme.fontSize * 3.2)
-            color: "transparent"
-            z: 20
-
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                onPressed: settingsRoot.startSystemMove()
-            }
-
-            Rectangle {
-                anchors.right: parent.right
-                anchors.rightMargin: Theme.spacingLarge
-                anchors.verticalCenter: parent.verticalCenter
-                width: closeText.implicitHeight + Theme.spacingMedium * 2
-                height: width
-                radius: Theme.radiusMedium
-                color: closeMouse.containsMouse ? Theme.colorHover : "transparent"
-                z: 2
-                Text {
-                    id: closeText
-                    anchors.centerIn: parent
-                    text: "×"
-                    color: Theme.colorForeground
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Math.round(Theme.fontSize * 1.25)
-                }
-                MouseArea {
-                    id: closeMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: settingsRoot.close()
-                }
-            }
-        }
-
         Rectangle {
             id: sidebar
-            anchors.top: titlebar.bottom
+            anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.left: parent.left
-            width: settingsRoot.sidebarWidth
-            color: Qt.darker(Theme.colorBackground, 1.08)
-            bottomLeftRadius: Math.max(0, UserPrefs.hyprRounding)
-
-            Rectangle {
-                anchors.right: parent.right
-                width: 1
-                height: parent.height
-                color: Theme.colorMuted
-                opacity: 0.5
-            }
+            anchors.topMargin: Theme.spacingLarge
+            anchors.bottomMargin: Theme.spacingLarge
+            anchors.leftMargin: Theme.spacingMedium
+            width: settingsRoot.sidebarWidth - Theme.spacingMedium
+            radius: Theme.radiusLarge
+            color: Theme.colorCard
+            border.width: 1
+            border.color: Theme.colorCardBorder
 
             ColumnLayout {
                 anchors.fill: parent
@@ -120,9 +81,19 @@ Item {
                         Layout.fillWidth: true
                         implicitHeight: sideText.implicitHeight + Theme.spacingMedium * 1.5
                         radius: Theme.radiusMedium
-                        color: isCurrent ? Theme.colorSurface
+                        color: isCurrent ? Theme.colorSelected
                              : sideMouse.containsMouse ? Theme.colorHover : "transparent"
 
+                        Rectangle {
+                            visible: sideItem.isCurrent
+                            anchors.left: parent.left
+                            anchors.leftMargin: 2
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 3
+                            height: parent.height - Theme.spacingSmall * 2
+                            radius: 2
+                            color: Theme.colorAccent
+                        }
                         Text {
                             id: sideText
                             anchors.left: parent.left
@@ -150,37 +121,36 @@ Item {
                     }
                 }
                 Item { Layout.fillHeight: true }
-                Text {
-                    text: settingsRoot.changes.length > 0
-                        ? settingsRoot.changes.length + " unapplied change" + (settingsRoot.changes.length === 1 ? "" : "s")
-                        : "All changes applied"
-                    color: settingsRoot.changes.length > 0 ? Theme.colorAccent : Theme.colorMuted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Math.round(Theme.fontSize * 0.75)
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
             }
         }
 
         ColumnLayout {
             id: content
-            // Fixed width + pinned to the card's top-left padding —
-            // centerIn here would re-center the column every time the
-            // card's height changed, undoing the top-anchor above.
-            anchors.top: titlebar.bottom
+            // Rev 2: left-aligned, tighter capped form column. At normal window sizes
+            // this consumes all available room; when maximized it stops at a
+            // practical width instead of turning controls into long tracks.
+            anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.left: sidebar.right
-            anchors.right: parent.right
-            anchors.margins: Theme.spacingLarge
+            anchors.topMargin: Theme.spacingLarge
+            anchors.bottomMargin: Theme.spacingLarge
+            anchors.leftMargin: Theme.spacingLarge
+            width: Math.max(0, Math.min(
+                viewRoot.maximumContentWidth,
+                card.width - sidebar.width - Theme.spacingLarge * 2
+            ))
             spacing: Theme.spacingMedium
 
-            Text {
-                text: settingsRoot.currentPage
-                color: Theme.colorForeground
-                font.family: Theme.fontFamily
-                font.pixelSize: Math.round(Theme.fontSize * 1.35)
-                font.bold: true
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 2
+                Text {
+                    text: settingsRoot.currentPage
+                    color: Theme.colorForeground
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Math.round(Theme.fontSize * 1.55)
+                    font.bold: true
+                }
             }
 
             // ---------------- Page tabs ----------------
@@ -271,6 +241,9 @@ Item {
                     contentHeight: pageStack.implicitHeight
                     boundsBehavior: Flickable.StopAtBounds
                     interactive: contentHeight > height
+                        && !settingsRoot.themeDropdownOpen
+                        && !settingsRoot.fontFamilyDropdownOpen
+                        && !settingsRoot.wallpaperTransitionTypeDropdownOpen
 
                     StackLayout {
                         id: pageStack
@@ -387,9 +360,8 @@ Item {
             SettingsComponents.SettingsPendingFooter {
                 Layout.fillWidth: true
                 changes: settingsRoot.changes
-                pendingVisibleLines: settingsRoot.pendingVisibleLines
                 onCancelRequested: settingsRoot.discardStaged()
-                onApplyRequested: settingsRoot.apply()
+                onApplyRequested: viewRoot.applyReviewOpen = true
             }
         }
 
@@ -398,6 +370,155 @@ Item {
             settingsRoot: viewRoot.settingsRoot
             appearancePage: appearancePage
             wallpaperPage: wallpaperPage
+        }
+
+        // Rev 6: Apply opens a compact review instead of permanently reserving
+        // a large pending-changes panel at the bottom of every Settings page.
+        Rectangle {
+            id: applyReviewOverlay
+            anchors.fill: parent
+            visible: viewRoot.applyReviewOpen
+            z: 1000
+            color: "#99000000"
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: viewRoot.applyReviewOpen = false
+            }
+
+            Rectangle {
+                id: applyReviewCard
+                anchors.centerIn: parent
+                width: Math.min(560, parent.width - Theme.spacingLarge * 4)
+                height: Math.min(520, parent.height - Theme.spacingLarge * 4)
+                radius: Theme.radiusLarge
+                color: Theme.colorCard
+                border.width: 1
+                border.color: Theme.colorCardBorder
+
+                MouseArea { anchors.fill: parent }
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingLarge
+                    spacing: Theme.spacingMedium
+
+                    Text {
+                        text: "Apply changes?"
+                        color: Theme.colorForeground
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Math.round(Theme.fontSize * 1.25)
+                        font.bold: true
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: settingsRoot.changes.length + " setting" + (settingsRoot.changes.length === 1 ? "" : "s") + " will be written:"
+                        color: Theme.colorMuted
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Math.round(Theme.fontSize * 0.85)
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        radius: Theme.radiusMedium
+                        color: Theme.colorSurface
+                        border.width: 1
+                        border.color: Theme.colorDivider
+
+                        ListView {
+                            id: applyReviewList
+                            anchors.fill: parent
+                            anchors.margins: Theme.spacingMedium
+                            clip: true
+                            spacing: Theme.spacingSmall
+                            model: settingsRoot.changes
+
+                            delegate: Column {
+                                required property var modelData
+                                width: ListView.view.width
+                                spacing: 2
+
+                                Text {
+                                    width: parent.width
+                                    text: modelData.label
+                                    elide: Text.ElideRight
+                                    color: Theme.colorForeground
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize
+                                    font.bold: true
+                                }
+                                Text {
+                                    width: parent.width
+                                    text: modelData.from + "  →  " + modelData.to
+                                    elide: Text.ElideRight
+                                    color: Theme.colorAccent
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Math.round(Theme.fontSize * 0.85)
+                                }
+                            }
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
+                        Item { Layout.fillWidth: true }
+
+                        Rectangle {
+                            implicitWidth: reviewCancelText.implicitWidth + Theme.spacingLarge * 2
+                            implicitHeight: reviewCancelText.implicitHeight + Theme.spacingSmall * 2
+                            radius: Theme.radiusMedium
+                            color: reviewCancelMouse.containsMouse ? Theme.colorHover : Theme.colorControl
+                            Text {
+                                id: reviewCancelText
+                                anchors.centerIn: parent
+                                text: "Cancel"
+                                color: Theme.colorForeground
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize
+                            }
+                            MouseArea {
+                                id: reviewCancelMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: viewRoot.applyReviewOpen = false
+                            }
+                        }
+
+                        Rectangle {
+                            readonly property bool enabled_: settingsRoot.changes.length > 0 && ConfigManager.busy === ""
+                            implicitWidth: reviewApplyText.implicitWidth + Theme.spacingLarge * 2
+                            implicitHeight: reviewApplyText.implicitHeight + Theme.spacingSmall * 2
+                            radius: Theme.radiusMedium
+                            color: reviewApplyMouse.containsMouse && enabled_ ? Theme.colorHover : Theme.colorAccent
+                            opacity: enabled_ ? 1.0 : 0.4
+                            Text {
+                                id: reviewApplyText
+                                anchors.centerIn: parent
+                                text: "Apply changes"
+                                color: Theme.colorBackground
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize
+                                font.bold: true
+                            }
+                            MouseArea {
+                                id: reviewApplyMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: parent.enabled_ ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                onClicked: {
+                                    if (!parent.enabled_) return;
+                                    viewRoot.applyReviewOpen = false;
+                                    settingsRoot.apply();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -1,11 +1,7 @@
 //=============================================================================
-// widgets/Settings/pages/AppearancePage.qml
-//
-// Appearance settings page extracted from SettingsWindow.qml.
-// Owns presentation only; staged values, dropdown state, color-picker state,
-// and Apply/Cancel behavior remain owned by SettingsWindow.qml.
+// FILE: widgets/Settings/pages/AppearancePage.qml
+// PURPOSE: Rev 0 visual-polish test page. Behavior remains owned by SettingsWindow.
 //=============================================================================
-
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -14,370 +10,210 @@ import "../components" as SettingsComponents
 
 ColumnLayout {
     id: page
-
     required property var settingsRoot
-
-    // Card-level dropdown overlays remain in SettingsWindow.qml so they are
-    // not clipped by the page Flickable. These aliases expose the three
-    // anchor buttons without moving any overlay behavior.
     readonly property alias themeDropdownAnchor: themeDropdownButton
     readonly property alias fontDropdownAnchor: fontDropdownButton
-
     Layout.fillWidth: true
-    spacing: Theme.spacingMedium
+    spacing: Theme.spacingSmall
 
-// ---------------- Theme picker ----------------
-Text {
-    text: "Theme"
-    color: Theme.colorForeground
-    font.family: Theme.fontFamily
-    font.pixelSize: Theme.fontSize
-    font.bold: true
-}
-
-// Dropdown, not a flat list (2026-07-11, Sonnet 5) — a flat
-// row-per-theme layout was fine at 2 themes but unusable at
-// 20 (all 20 became selectable in this same session, see
-// core/Theme.qml's revision history). Closed button + a
-// fixed-height scrolling list on open, same recipe as the
-// pending-changes ListView below (stable-geometry rule:
-// grows downward, only on click).
-Rectangle {
-    id: themeDropdownButton
-    Layout.fillWidth: true
-    implicitHeight: themeButtonRow.implicitHeight + Theme.spacingSmall * 2
-    radius: Theme.radiusMedium
-    bottomLeftRadius: settingsRoot.themeDropdownOpen ? 0 : -1
-    bottomRightRadius: settingsRoot.themeDropdownOpen ? 0 : -1
-    color: themeButtonMouse.containsMouse ? Theme.colorHover : Theme.colorSurface
-    border.width: 1
-    border.color: Theme.colorMuted
-
-    RowLayout {
-        id: themeButtonRow
-        anchors.fill: parent
-        anchors.leftMargin: Theme.spacingMedium
-        anchors.rightMargin: Theme.spacingMedium
-        spacing: Theme.spacingMedium
-
-        Text {
+    SettingsComponents.SettingsSectionHeader { title: "Theme & Typography"; Layout.topMargin: 0 }
+    SettingsComponents.SettingsCard {
+        Rectangle {
             Layout.fillWidth: true
-            elide: Text.ElideRight
-            text: (settingsRoot.stagedTheme !== null ? "● " : "") + settingsRoot.shownTheme
-            color: settingsRoot.stagedTheme !== null ? Theme.colorAccent : Theme.colorForeground
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            implicitHeight: Math.max(themeLabel.implicitHeight, themeDropdownButton.implicitHeight) + Theme.spacingSmall * 2
+            color: "transparent"
+
+            Text {
+                id: themeLabel
+                anchors.left: parent.left
+                anchors.leftMargin: Theme.spacingMedium
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Theme"
+                color: settingsRoot.stagedTheme !== null ? Theme.colorAccent : Theme.colorForeground
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize
+            }
+
+            Rectangle {
+                id: themeDropdownButton
+                anchors.left: parent.left
+                anchors.leftMargin: Math.min(250, Math.max(Theme.spacingMedium, parent.width - width - Theme.spacingMedium))
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(320, parent.width - x - Theme.spacingMedium)
+                implicitHeight: themeValue.implicitHeight + Theme.spacingSmall * 2
+                radius: Theme.radiusMedium
+                color: themeButtonMouse.containsMouse ? Theme.colorHover : Theme.colorControl
+                border.width: settingsRoot.themeDropdownOpen ? 1 : 0
+                border.color: Theme.colorAccent
+
+                Text {
+                    id: themeValue
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.spacingMedium
+                    anchors.right: themeArrow.left
+                    anchors.rightMargin: Theme.spacingSmall
+                    anchors.verticalCenter: parent.verticalCenter
+                    elide: Text.ElideRight
+                    text: settingsRoot.shownTheme
+                    color: Theme.colorForeground
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+                }
+                Text {
+                    id: themeArrow
+                    anchors.right: parent.right
+                    anchors.rightMargin: Theme.spacingMedium
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: settingsRoot.themeDropdownOpen ? "▴" : "▾"
+                    color: Theme.colorMuted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+                }
+                MouseArea {
+                    id: themeButtonMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        settingsRoot.themeDropdownOpen = !settingsRoot.themeDropdownOpen;
+                        if (settingsRoot.themeDropdownOpen) {
+                            settingsRoot.fontFamilyDropdownOpen = false;
+                            settingsRoot.wallpaperTransitionTypeDropdownOpen = false;
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                visible: settingsRoot.stagedTheme !== null
+                anchors.left: parent.left
+                anchors.leftMargin: 2
+                anchors.verticalCenter: parent.verticalCenter
+                width: 3
+                height: parent.height - Theme.spacingMedium
+                radius: 2
+                color: Theme.colorAccent
+            }
         }
-        Text {
-            text: settingsRoot.themeDropdownOpen ? "▾" : "▸"
-            color: Theme.colorMuted
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+
+        SettingsComponents.StepperRow {
+            label: "Font scale"
+            description: "Scale text throughout the shell"
+            valueText: settingsRoot.shownFontScale.toFixed(1) + "×"
+            staged: settingsRoot.stagedFontScale !== null
+            onMinus: settingsRoot.stagedFontScale = Math.max(0.8, Math.round((settingsRoot.shownFontScale - 0.1) * 10) / 10)
+            onPlus: settingsRoot.stagedFontScale = Math.min(2.5, Math.round((settingsRoot.shownFontScale + 0.1) * 10) / 10)
         }
-    }
-    MouseArea {
-        id: themeButtonMouse
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            settingsRoot.themeDropdownOpen = !settingsRoot.themeDropdownOpen;
-            if (settingsRoot.themeDropdownOpen) {
-                settingsRoot.fontFamilyDropdownOpen = false;
-                settingsRoot.wallpaperTransitionTypeDropdownOpen = false;
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: Math.max(fontLabel.implicitHeight, fontDropdownButton.implicitHeight) + Theme.spacingSmall * 2
+            color: "transparent"
+
+            Text {
+                id: fontLabel
+                anchors.left: parent.left
+                anchors.leftMargin: Theme.spacingMedium
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Font family"
+                color: settingsRoot.stagedFontFamilyOverride !== null ? Theme.colorAccent : Theme.colorForeground
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize
+            }
+
+            Rectangle {
+                id: fontDropdownButton
+                anchors.left: parent.left
+                anchors.leftMargin: Math.min(250, Math.max(Theme.spacingMedium, parent.width - width - Theme.spacingMedium))
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(320, parent.width - x - Theme.spacingMedium)
+                implicitHeight: fontValue.implicitHeight + Theme.spacingSmall * 2
+                radius: Theme.radiusMedium
+                color: fontButtonMouse.containsMouse ? Theme.colorHover : Theme.colorControl
+                border.width: settingsRoot.fontFamilyDropdownOpen ? 1 : 0
+                border.color: Theme.colorAccent
+
+                Text {
+                    id: fontValue
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.spacingMedium
+                    anchors.right: fontArrow.left
+                    anchors.rightMargin: Theme.spacingSmall
+                    anchors.verticalCenter: parent.verticalCenter
+                    elide: Text.ElideRight
+                    text: settingsRoot.shownFontFamilyOverride === "" ? "Theme default" : settingsRoot.shownFontFamilyOverride
+                    color: Theme.colorForeground
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+                }
+                Text {
+                    id: fontArrow
+                    anchors.right: parent.right
+                    anchors.rightMargin: Theme.spacingMedium
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: settingsRoot.fontFamilyDropdownOpen ? "▴" : "▾"
+                    color: Theme.colorMuted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+                }
+                MouseArea {
+                    id: fontButtonMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        settingsRoot.fontFamilyDropdownOpen = !settingsRoot.fontFamilyDropdownOpen;
+                        if (settingsRoot.fontFamilyDropdownOpen) {
+                            settingsRoot.themeDropdownOpen = false;
+                            settingsRoot.wallpaperTransitionTypeDropdownOpen = false;
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                visible: settingsRoot.stagedFontFamilyOverride !== null
+                anchors.left: parent.left
+                anchors.leftMargin: 2
+                anchors.verticalCenter: parent.verticalCenter
+                width: 3
+                height: parent.height - Theme.spacingMedium
+                radius: 2
+                color: Theme.colorAccent
             }
         }
     }
-}
 
-// (Dropdown list itself now lives at card level — see the
-// "Dropdown overlays" section near the bottom of the file,
-// rendered as a floating panel instead of an inline
-// ListView so opening it doesn't grow this page.)
-
-// ---------------- Font scale ----------------
-Text {
-    text: "Font Scale"
-    Layout.topMargin: Theme.spacingLarge
-    color: Theme.colorForeground
-    font.family: Theme.fontFamily
-    font.pixelSize: Theme.fontSize
-    font.bold: true
-}
-
-SettingsComponents.StepperRow {
-    valueText: settingsRoot.shownFontScale.toFixed(1) + "×"
-    staged: settingsRoot.stagedFontScale !== null
-    onMinus: settingsRoot.stagedFontScale =
-        Math.max(0.8, Math.round((settingsRoot.shownFontScale - 0.1) * 10) / 10)
-    onPlus: settingsRoot.stagedFontScale =
-        Math.min(2.5, Math.round((settingsRoot.shownFontScale + 0.1) * 10) / 10)
-}
-
-// ---------------- Font family ----------------
-// Same closed-button + fixed-height scrolling list recipe
-// as the theme dropdown above — Qt.fontFamilies() can
-// easily be 100+ entries, so a flat row-per-font layout
-// was never on the table. "(Theme Default)" is the ""
-// sentinel (follow the active theme's fontFamily token);
-// everything else is a name straight out of
-// Qt.fontFamilies(), so whatever gets picked is guaranteed
-// to actually be installed.
-Text {
-    text: "Font Family"
-    Layout.topMargin: Theme.spacingLarge
-    color: Theme.colorForeground
-    font.family: Theme.fontFamily
-    font.pixelSize: Theme.fontSize
-    font.bold: true
-}
-
-Rectangle {
-    id: fontDropdownButton
-    Layout.fillWidth: true
-    implicitHeight: fontButtonRow.implicitHeight + Theme.spacingSmall * 2
-    radius: Theme.radiusMedium
-    bottomLeftRadius: settingsRoot.fontFamilyDropdownOpen ? 0 : -1
-    bottomRightRadius: settingsRoot.fontFamilyDropdownOpen ? 0 : -1
-    color: fontButtonMouse.containsMouse ? Theme.colorHover : Theme.colorSurface
-    border.width: 1
-    border.color: Theme.colorMuted
-
-    RowLayout {
-        id: fontButtonRow
-        anchors.fill: parent
-        anchors.leftMargin: Theme.spacingMedium
-        anchors.rightMargin: Theme.spacingMedium
-        spacing: Theme.spacingMedium
-
-        Text {
-            Layout.fillWidth: true
-            elide: Text.ElideRight
-            text: (settingsRoot.stagedFontFamilyOverride !== null ? "● " : "")
-                + (settingsRoot.shownFontFamilyOverride === "" ? "(Theme Default)" : settingsRoot.shownFontFamilyOverride)
-            color: settingsRoot.stagedFontFamilyOverride !== null ? Theme.colorAccent : Theme.colorForeground
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
-        }
-        Text {
-            text: settingsRoot.fontFamilyDropdownOpen ? "▾" : "▸"
-            color: Theme.colorMuted
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
-        }
-    }
-    MouseArea {
-        id: fontButtonMouse
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            settingsRoot.fontFamilyDropdownOpen = !settingsRoot.fontFamilyDropdownOpen;
-            if (settingsRoot.fontFamilyDropdownOpen) {
-                settingsRoot.themeDropdownOpen = false;
-                settingsRoot.wallpaperTransitionTypeDropdownOpen = false;
+    SettingsComponents.SettingsSectionHeader { title: "Bar Layout" }
+    SettingsComponents.SettingsCard {
+        SettingsComponents.ToggleSettingRow {
+            label: "Custom padding"; description: "Override the active theme's bar spacing"
+            value: settingsRoot.shownBarPaddingTopOverride >= 0
+            staged: settingsRoot.stagedBarPaddingTopOverride !== null || settingsRoot.stagedBarPaddingSideOverride !== null || settingsRoot.stagedBarPaddingBottomOverride !== null
+            onToggled: {
+                if (settingsRoot.shownBarPaddingTopOverride >= 0) {
+                    settingsRoot.stagedBarPaddingTopOverride = -1; settingsRoot.stagedBarPaddingSideOverride = -1; settingsRoot.stagedBarPaddingBottomOverride = UserPrefs.barPaddingBottomOffSentinel;
+                } else {
+                    settingsRoot.stagedBarPaddingTopOverride = Theme.barPaddingTop; settingsRoot.stagedBarPaddingSideOverride = Theme.barPaddingSide; settingsRoot.stagedBarPaddingBottomOverride = Theme.barPaddingBottom;
+                }
             }
         }
+        SettingsComponents.StepperRow { visible: settingsRoot.shownBarPaddingTopOverride >= 0; label: "Top"; valueText: settingsRoot.shownBarPaddingTopOverride + " px"; staged: settingsRoot.stagedBarPaddingTopOverride !== null; onMinus: settingsRoot.stagedBarPaddingTopOverride = Math.max(0, settingsRoot.shownBarPaddingTopOverride - 1); onPlus: settingsRoot.stagedBarPaddingTopOverride = Math.min(200, settingsRoot.shownBarPaddingTopOverride + 1) }
+        SettingsComponents.StepperRow { visible: settingsRoot.shownBarPaddingTopOverride >= 0; label: "Sides"; valueText: settingsRoot.shownBarPaddingSideOverride + " px"; staged: settingsRoot.stagedBarPaddingSideOverride !== null; onMinus: settingsRoot.stagedBarPaddingSideOverride = Math.max(0, settingsRoot.shownBarPaddingSideOverride - 1); onPlus: settingsRoot.stagedBarPaddingSideOverride = Math.min(200, settingsRoot.shownBarPaddingSideOverride + 1) }
+        SettingsComponents.StepperRow { visible: settingsRoot.shownBarPaddingTopOverride >= 0; label: "Bottom"; valueText: settingsRoot.shownBarPaddingBottomOverride + " px"; staged: settingsRoot.stagedBarPaddingBottomOverride !== null; onMinus: settingsRoot.stagedBarPaddingBottomOverride = Math.max(-100, settingsRoot.shownBarPaddingBottomOverride - 1); onPlus: settingsRoot.stagedBarPaddingBottomOverride = Math.min(200, settingsRoot.shownBarPaddingBottomOverride + 1) }
     }
-}
 
-// (Dropdown list itself now lives at card level — see the
-// "Dropdown overlays" section near the bottom of the file.)
-
-// ---------------- Bar padding ----------------
-// Per-edge overrides of the theme's single barMargin token
-// (core/Theme.qml's barPaddingTop/Side/Bottom). "Sides"
-// covers left AND right together. The toggle seeds all
-// three overrides with their CURRENT effective pixel
-// values at once, same reasoning as the Bar Border width
-// toggle just below — nothing visibly jumps the moment
-// it's switched on.
-Text {
-    text: "Bar Padding"
-    Layout.topMargin: Theme.spacingLarge
-    color: Theme.colorForeground
-    font.family: Theme.fontFamily
-    font.pixelSize: Theme.fontSize
-    font.bold: true
-}
-
-SettingsComponents.ToggleSettingRow {
-    label: "Custom padding"
-    value: settingsRoot.shownBarPaddingTopOverride >= 0
-    staged: settingsRoot.stagedBarPaddingTopOverride !== null
-        || settingsRoot.stagedBarPaddingSideOverride !== null
-        || settingsRoot.stagedBarPaddingBottomOverride !== null
-    onToggled: {
-        if (settingsRoot.shownBarPaddingTopOverride >= 0) {
-            // Turning OFF: back to "follow theme" on all
-            // three. Bottom's sentinel is NOT -1 (see
-            // UserPrefs.barPaddingBottomOffSentinel) —
-            // using -1 here would stage a real "-1px"
-            // override instead of turning it off.
-            settingsRoot.stagedBarPaddingTopOverride = -1;
-            settingsRoot.stagedBarPaddingSideOverride = -1;
-            settingsRoot.stagedBarPaddingBottomOverride = UserPrefs.barPaddingBottomOffSentinel;
-        } else {
-            // Turning ON: seed with the current effective
-            // values (Theme.barPadding* already resolves
-            // theme-vs-override, so this is just "what's
-            // on screen right now" for all three edges).
-            settingsRoot.stagedBarPaddingTopOverride = Theme.barPaddingTop;
-            settingsRoot.stagedBarPaddingSideOverride = Theme.barPaddingSide;
-            settingsRoot.stagedBarPaddingBottomOverride = Theme.barPaddingBottom;
-        }
+    SettingsComponents.SettingsSectionHeader { title: "Bar Styling" }
+    SettingsComponents.SettingsCard {
+        SettingsComponents.ToggleSettingRow { label: "Custom border width"; value: settingsRoot.shownBarBorderWidthOverride >= 0; staged: settingsRoot.stagedBarBorderWidthOverride !== null; onToggled: settingsRoot.stagedBarBorderWidthOverride = settingsRoot.shownBarBorderWidthOverride >= 0 ? -1 : Theme.barBorderWidth }
+        SettingsComponents.StepperRow { visible: settingsRoot.shownBarBorderWidthOverride >= 0; label: "Border width"; valueText: settingsRoot.shownBarBorderWidthOverride + " px"; staged: settingsRoot.stagedBarBorderWidthOverride !== null; onMinus: settingsRoot.stagedBarBorderWidthOverride = Math.max(0, settingsRoot.shownBarBorderWidthOverride - 1); onPlus: settingsRoot.stagedBarBorderWidthOverride = Math.min(12, settingsRoot.shownBarBorderWidthOverride + 1) }
+        SettingsComponents.ToggleSettingRow { label: "Use theme color"; description: "Follow the active theme's bar border colors"; value: settingsRoot.shownBarBorderUseThemeColor; staged: settingsRoot.stagedBarBorderUseThemeColor !== null; onToggled: settingsRoot.stagedBarBorderUseThemeColor = !settingsRoot.shownBarBorderUseThemeColor }
+        SettingsComponents.HexColorRow { colorPickerHost: settingsRoot; visible: !settingsRoot.shownBarBorderUseThemeColor; shownValue: settingsRoot.shownBarBorderCustomColor; staged: settingsRoot.stagedBarBorderCustomColor !== null; onHexStaged: t => settingsRoot.stagedBarBorderCustomColor = t }
     }
-}
 
-// All three gate on TOP's state, not their own — Bottom in
-// particular can legitimately sit at a negative px value
-// once custom padding is on, so ">= 0" can't be used to
-// mean "is custom padding active" for that row (see the
-// toggle above; all three are always staged together).
-SettingsComponents.StepperRow {
-    visible: settingsRoot.shownBarPaddingTopOverride >= 0
-    label: "Top"
-    valueText: settingsRoot.shownBarPaddingTopOverride + " px"
-    staged: settingsRoot.stagedBarPaddingTopOverride !== null
-    onMinus: settingsRoot.stagedBarPaddingTopOverride =
-        Math.max(0, settingsRoot.shownBarPaddingTopOverride - 1)
-    onPlus: settingsRoot.stagedBarPaddingTopOverride =
-        Math.min(200, settingsRoot.shownBarPaddingTopOverride + 1)
-}
-
-SettingsComponents.StepperRow {
-    visible: settingsRoot.shownBarPaddingTopOverride >= 0
-    label: "Sides"
-    valueText: settingsRoot.shownBarPaddingSideOverride + " px"
-    staged: settingsRoot.stagedBarPaddingSideOverride !== null
-    onMinus: settingsRoot.stagedBarPaddingSideOverride =
-        Math.max(0, settingsRoot.shownBarPaddingSideOverride - 1)
-    onPlus: settingsRoot.stagedBarPaddingSideOverride =
-        Math.min(200, settingsRoot.shownBarPaddingSideOverride + 1)
-}
-
-// Bottom is the one edge allowed to go negative — it's the
-// maintainer's fix for the persistent gap under the bar
-// even at 0 (Hyprland's own gaps_out reserves space on
-// every screen edge independently of this shell's
-// exclusiveZone; a negative value here cancels that out).
-// Clamped to -100, generous enough to cancel any sane
-// gaps_out without inviting the bar to overlap windows by
-// a huge margin. TopBar.qml's exclusiveZone is separately
-// clamped to never go below 0 regardless of this value.
-SettingsComponents.StepperRow {
-    visible: settingsRoot.shownBarPaddingTopOverride >= 0
-    label: "Bottom"
-    valueText: settingsRoot.shownBarPaddingBottomOverride + " px"
-    staged: settingsRoot.stagedBarPaddingBottomOverride !== null
-    onMinus: settingsRoot.stagedBarPaddingBottomOverride =
-        Math.max(-100, settingsRoot.shownBarPaddingBottomOverride - 1)
-    onPlus: settingsRoot.stagedBarPaddingBottomOverride =
-        Math.min(200, settingsRoot.shownBarPaddingBottomOverride + 1)
-}
-
-// ---------------- Bar border ----------------
-// Overrides that sit ABOVE the active theme's barBorder
-// tokens (precedence chain in core/Theme.qml). Width off =
-// the theme decides (which by default follows the Hyprland
-// Border Size). Color off-theme = a hand-typed hex.
-Text {
-    text: "Bar Border"
-    Layout.topMargin: Theme.spacingLarge
-    color: Theme.colorForeground
-    font.family: Theme.fontFamily
-    font.pixelSize: Theme.fontSize
-    font.bold: true
-}
-
-SettingsComponents.ToggleSettingRow {
-    label: "Custom width"
-    value: settingsRoot.shownBarBorderWidthOverride >= 0
-    staged: settingsRoot.stagedBarBorderWidthOverride !== null
-    // Turning ON seeds the override with the current
-    // effective width so nothing visibly jumps; OFF is -1,
-    // "follow theme".
-    onToggled: settingsRoot.stagedBarBorderWidthOverride =
-        settingsRoot.shownBarBorderWidthOverride >= 0 ? -1 : Theme.barBorderWidth
-}
-
-SettingsComponents.StepperRow {
-    visible: settingsRoot.shownBarBorderWidthOverride >= 0
-    label: "Width"
-    valueText: settingsRoot.shownBarBorderWidthOverride + " px"
-    staged: settingsRoot.stagedBarBorderWidthOverride !== null
-    onMinus: settingsRoot.stagedBarBorderWidthOverride =
-        Math.max(0, settingsRoot.shownBarBorderWidthOverride - 1)
-    onPlus: settingsRoot.stagedBarBorderWidthOverride =
-        Math.min(12, settingsRoot.shownBarBorderWidthOverride + 1)
-}
-
-SettingsComponents.ToggleSettingRow {
-    label: "Use theme color"
-    value: settingsRoot.shownBarBorderUseThemeColor
-    staged: settingsRoot.stagedBarBorderUseThemeColor !== null
-    onToggled: settingsRoot.stagedBarBorderUseThemeColor =
-        !settingsRoot.shownBarBorderUseThemeColor
-}
-
-// Hex entry, shown only when the theme color is off. The
-// HexColorRow component (extracted from what used to be an
-// inline block here, 2026-07-11) only ever stages VALID
-// hex — Apply can't submit garbage.
-SettingsComponents.HexColorRow {
-    colorPickerHost: settingsRoot
-    visible: !settingsRoot.shownBarBorderUseThemeColor
-    shownValue: settingsRoot.shownBarBorderCustomColor
-    staged: settingsRoot.stagedBarBorderCustomColor !== null
-    onHexStaged: t => settingsRoot.stagedBarBorderCustomColor = t
-}
-
-Text {
-    visible: !settingsRoot.shownBarBorderUseThemeColor
-    text: "#RRGGBB (8 digits = Qt #AARRGGBB, alpha first)"
-    color: Theme.colorMuted
-    font.family: Theme.fontFamily
-    font.pixelSize: Math.round(Theme.fontSize * 0.8)
-}
-
-// ---------------- Settings window geometry ----------------
-Text {
-    text: "Settings Window"
-    Layout.topMargin: Theme.spacingLarge
-    color: Theme.colorForeground
-    font.family: Theme.fontFamily
-    font.pixelSize: Theme.fontSize
-    font.bold: true
-}
-
-Text {
-    Layout.fillWidth: true
-    text: "Controls the size used the next time Settings opens. Manual resizing remains temporary."
-    wrapMode: Text.WordWrap
-    color: Theme.colorMuted
-    font.family: Theme.fontFamily
-    font.pixelSize: Math.round(Theme.fontSize * 0.9)
-}
-
-SettingsComponents.StepperRow {
-    label: "Default width"
-    valueText: settingsRoot.shownSettingsWindowDefaultWidth + " px"
-    staged: settingsRoot.stagedSettingsWindowDefaultWidth !== null
-    showReset: true
-    onMinus: settingsRoot.stagedSettingsWindowDefaultWidth = Math.max(700, settingsRoot.shownSettingsWindowDefaultWidth - 50)
-    onPlus: settingsRoot.stagedSettingsWindowDefaultWidth = Math.min(1800, settingsRoot.shownSettingsWindowDefaultWidth + 50)
-    onReset: settingsRoot.stagedSettingsWindowDefaultWidth = 1036
-}
-
-SettingsComponents.StepperRow {
-    label: "Default height"
-    valueText: settingsRoot.shownSettingsWindowDefaultHeight + " px"
-    staged: settingsRoot.stagedSettingsWindowDefaultHeight !== null
-    showReset: true
-    onMinus: settingsRoot.stagedSettingsWindowDefaultHeight = Math.max(500, settingsRoot.shownSettingsWindowDefaultHeight - 50)
-    onPlus: settingsRoot.stagedSettingsWindowDefaultHeight = Math.min(1200, settingsRoot.shownSettingsWindowDefaultHeight + 50)
-    onReset: settingsRoot.stagedSettingsWindowDefaultHeight = 616
-}
-
-
+    SettingsComponents.SettingsSectionHeader { title: "Settings Window" }
+    SettingsComponents.SettingsCard {
+        SettingsComponents.StepperRow { label: "Default width"; description: "Used the next time Settings opens"; valueText: settingsRoot.shownSettingsWindowDefaultWidth + " px"; staged: settingsRoot.stagedSettingsWindowDefaultWidth !== null; showReset: true; onMinus: settingsRoot.stagedSettingsWindowDefaultWidth = Math.max(700, settingsRoot.shownSettingsWindowDefaultWidth - 50); onPlus: settingsRoot.stagedSettingsWindowDefaultWidth = Math.min(1800, settingsRoot.shownSettingsWindowDefaultWidth + 50); onReset: settingsRoot.stagedSettingsWindowDefaultWidth = 1036 }
+        SettingsComponents.StepperRow { label: "Default height"; description: "Manual resizing remains temporary"; valueText: settingsRoot.shownSettingsWindowDefaultHeight + " px"; staged: settingsRoot.stagedSettingsWindowDefaultHeight !== null; showReset: true; onMinus: settingsRoot.stagedSettingsWindowDefaultHeight = Math.max(500, settingsRoot.shownSettingsWindowDefaultHeight - 50); onPlus: settingsRoot.stagedSettingsWindowDefaultHeight = Math.min(1200, settingsRoot.shownSettingsWindowDefaultHeight + 50); onReset: settingsRoot.stagedSettingsWindowDefaultHeight = 616 }
+    }
 }

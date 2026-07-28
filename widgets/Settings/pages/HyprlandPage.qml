@@ -43,201 +43,234 @@ ColumnLayout {
 
     Component.onCompleted: setupCheck.running = true
 
-    SettingsComponents.StepperRow {
-        label: "Gaps In"
-        valueText: settingsRoot.shownHyprGapsIn + " px"
-        staged: settingsRoot.stagedHyprGapsIn !== null
-        onMinus: settingsRoot.stagedHyprGapsIn =
-            Math.max(0, settingsRoot.shownHyprGapsIn - 1)
-        onPlus: settingsRoot.stagedHyprGapsIn =
-            Math.min(30, settingsRoot.shownHyprGapsIn + 1)
+    SettingsComponents.SettingsSectionHeader { title: "Layout" }
+    SettingsComponents.SettingsCard {
+        contentSpacing: Theme.spacingSmall
+
+        SettingsComponents.StepperRow {
+            label: "Gaps In"
+            valueText: settingsRoot.shownHyprGapsIn + " px"
+            staged: settingsRoot.stagedHyprGapsIn !== null
+            onMinus: settingsRoot.stagedHyprGapsIn =
+                Math.max(0, settingsRoot.shownHyprGapsIn - 1)
+            onPlus: settingsRoot.stagedHyprGapsIn =
+                Math.min(30, settingsRoot.shownHyprGapsIn + 1)
+        }
+
+        SettingsComponents.StepperRow {
+            label: "Gaps Out"
+            valueText: settingsRoot.shownHyprGapsOut + " px"
+            staged: settingsRoot.stagedHyprGapsOut !== null
+            onMinus: settingsRoot.stagedHyprGapsOut =
+                Math.max(0, settingsRoot.shownHyprGapsOut - 2)
+            onPlus: settingsRoot.stagedHyprGapsOut =
+                Math.min(60, settingsRoot.shownHyprGapsOut + 2)
+        }
+
+        SettingsComponents.StepperRow {
+            label: "Border Size"
+            valueText: settingsRoot.shownHyprBorderSize + " px"
+            staged: settingsRoot.stagedHyprBorderSize !== null
+            onMinus: settingsRoot.stagedHyprBorderSize =
+                Math.max(0, settingsRoot.shownHyprBorderSize - 1)
+            onPlus: settingsRoot.stagedHyprBorderSize =
+                Math.min(10, settingsRoot.shownHyprBorderSize + 1)
+        }
+
+        SettingsComponents.StepperRow {
+            label: "Rounding"
+            valueText: settingsRoot.shownHyprRounding + " px"
+            staged: settingsRoot.stagedHyprRounding !== null
+            onMinus: settingsRoot.stagedHyprRounding =
+                Math.max(0, settingsRoot.shownHyprRounding - 1)
+            onPlus: settingsRoot.stagedHyprRounding =
+                Math.min(30, settingsRoot.shownHyprRounding + 1)
+        }
+    }
+    SettingsComponents.SettingsSectionHeader { title: "Animations" }
+    SettingsComponents.SettingsCard {
+        contentSpacing: Theme.spacingMedium
+
+        SettingsComponents.DropdownSettingRow {
+            label: "Overall Feel"
+            description: "Disabled turns every animation off. Custom enables the individual style and speed controls without applying a preset. Snappy, Smooth, and Bouncy provide complete timing and curve presets."
+            options: [
+                { text: "Disabled", value: "off" },
+                { text: "Custom", value: "custom" },
+                { text: "Snappy", value: "snappy" },
+                { text: "Smooth", value: "smooth" },
+                { text: "Bouncy", value: "bouncy" }
+            ]
+            shownValue: settingsRoot.shownHyprAnimationPreset
+            staged: settingsRoot.stagedHyprAnimationPreset !== null
+            onPicked: value => settingsRoot.stagedHyprAnimationPreset = value
+        }
+
+        SettingsComponents.DropdownSettingRow {
+            label: "Window Style"
+            options: [
+                { text: "Follow Feel", value: "follow" },
+                { text: "Pop In", value: "popin" },
+                { text: "Slide", value: "slide" },
+                { text: "GNOME-like", value: "gnomed" }
+            ]
+            shownValue: settingsRoot.shownHyprWindowAnimationStyle
+            staged: settingsRoot.stagedHyprWindowAnimationStyle !== null
+            onPicked: value => settingsRoot.stagedHyprWindowAnimationStyle = value
+        }
+
+        SettingsComponents.DropdownSettingRow {
+            label: "Workspace Style"
+            options: [
+                { text: "Follow Feel", value: "follow" },
+                { text: "Horizontal Slide", value: "slide" },
+                { text: "Vertical Slide", value: "slidevert" },
+                { text: "Fade", value: "fade" },
+                { text: "Slide + Fade", value: "slidefade" },
+                { text: "Vertical + Fade", value: "slidefadevert" }
+            ]
+            shownValue: settingsRoot.shownHyprWorkspaceAnimationStyle
+            staged: settingsRoot.stagedHyprWorkspaceAnimationStyle !== null
+            onPicked: value => settingsRoot.stagedHyprWorkspaceAnimationStyle = value
+        }
+
+        SettingsComponents.DropdownSettingRow {
+            label: "Layer Style"
+            options: [
+                { text: "Follow Feel", value: "follow" },
+                { text: "Fade", value: "fade" },
+                { text: "Pop In", value: "popin" },
+                { text: "Slide", value: "slide" }
+            ]
+            shownValue: settingsRoot.shownHyprLayerAnimationStyle
+            staged: settingsRoot.stagedHyprLayerAnimationStyle !== null
+            onPicked: value => settingsRoot.stagedHyprLayerAnimationStyle = value
+        }
+
+        SettingsComponents.DropdownSettingRow {
+            label: "Fade Behavior"
+            options: [
+                { text: "Follow Feel", value: "follow" },
+                { text: "Off", value: "off" },
+                { text: "Quick", value: "quick" },
+                { text: "Balanced", value: "balanced" },
+                { text: "Soft", value: "soft" }
+            ]
+            shownValue: settingsRoot.shownHyprFadeAnimationPreset
+            staged: settingsRoot.stagedHyprFadeAnimationPreset !== null
+            onPicked: value => settingsRoot.stagedHyprFadeAnimationPreset = value
+        }
+
+        // GPT: Theme color here means the shell accent color. Hyprland does not
+        // know about the shell theme directly; ConfigManager writes the resolved
+        // color into the generated Hyprland appearance file.
     }
 
-    SettingsComponents.StepperRow {
-        label: "Gaps Out"
-        valueText: settingsRoot.shownHyprGapsOut + " px"
-        staged: settingsRoot.stagedHyprGapsOut !== null
-        onMinus: settingsRoot.stagedHyprGapsOut =
-            Math.max(0, settingsRoot.shownHyprGapsOut - 2)
-        onPlus: settingsRoot.stagedHyprGapsOut =
-            Math.min(60, settingsRoot.shownHyprGapsOut + 2)
+    SettingsComponents.SettingsSectionHeader { title: "Animation Speeds" }
+    SettingsComponents.SettingsCard {
+        contentSpacing: Theme.spacingSmall
+
+        SettingsComponents.ToggleSettingRow {
+            label: "Use custom speeds"
+            description: "Overrides only animation timing. The style and curve dropdowns above still choose how each animation moves."
+            value: settingsRoot.shownHyprCustomAnimationSpeedsEnabled
+            staged: settingsRoot.stagedHyprCustomAnimationSpeedsEnabled !== null
+            onToggled: settingsRoot.stagedHyprCustomAnimationSpeedsEnabled =
+                !settingsRoot.shownHyprCustomAnimationSpeedsEnabled
+        }
+
+        SettingsComponents.NumberInputRow {
+            label: "Window"
+            value: settingsRoot.shownHyprWindowSpeed
+            enabled: settingsRoot.shownHyprCustomAnimationSpeedsEnabled
+            staged: settingsRoot.stagedHyprWindowSpeed !== null
+            onValueEdited: value => settingsRoot.stagedHyprWindowSpeed = value
+        }
+        SettingsComponents.NumberInputRow {
+            label: "Window open"
+            value: settingsRoot.shownHyprWindowInSpeed
+            enabled: settingsRoot.shownHyprCustomAnimationSpeedsEnabled
+            staged: settingsRoot.stagedHyprWindowInSpeed !== null
+            onValueEdited: value => settingsRoot.stagedHyprWindowInSpeed = value
+        }
+        SettingsComponents.NumberInputRow {
+            label: "Window close"
+            value: settingsRoot.shownHyprWindowOutSpeed
+            enabled: settingsRoot.shownHyprCustomAnimationSpeedsEnabled
+            staged: settingsRoot.stagedHyprWindowOutSpeed !== null
+            onValueEdited: value => settingsRoot.stagedHyprWindowOutSpeed = value
+        }
+        SettingsComponents.NumberInputRow {
+            label: "Workspace slide"
+            value: settingsRoot.shownHyprWorkspaceSpeed
+            enabled: settingsRoot.shownHyprCustomAnimationSpeedsEnabled
+            staged: settingsRoot.stagedHyprWorkspaceSpeed !== null
+            onValueEdited: value => settingsRoot.stagedHyprWorkspaceSpeed = value
+        }
+        SettingsComponents.NumberInputRow {
+            label: "Layers / pop-ins"
+            value: settingsRoot.shownHyprLayerSpeed
+            enabled: settingsRoot.shownHyprCustomAnimationSpeedsEnabled
+            staged: settingsRoot.stagedHyprLayerSpeed !== null
+            onValueEdited: value => settingsRoot.stagedHyprLayerSpeed = value
+        }
+        SettingsComponents.NumberInputRow {
+            label: "Fade"
+            value: settingsRoot.shownHyprFadeSpeed
+            enabled: settingsRoot.shownHyprCustomAnimationSpeedsEnabled
+            staged: settingsRoot.stagedHyprFadeSpeed !== null
+            onValueEdited: value => settingsRoot.stagedHyprFadeSpeed = value
+        }
     }
 
-    SettingsComponents.StepperRow {
-        label: "Border Size"
-        valueText: settingsRoot.shownHyprBorderSize + " px"
-        staged: settingsRoot.stagedHyprBorderSize !== null
-        onMinus: settingsRoot.stagedHyprBorderSize =
-            Math.max(0, settingsRoot.shownHyprBorderSize - 1)
-        onPlus: settingsRoot.stagedHyprBorderSize =
-            Math.min(10, settingsRoot.shownHyprBorderSize + 1)
-    }
+    SettingsComponents.SettingsSectionHeader { title: "Active Border Color" }
+    SettingsComponents.SettingsCard {
+        contentSpacing: Theme.spacingSmall
 
-    SettingsComponents.StepperRow {
-        label: "Rounding"
-        valueText: settingsRoot.shownHyprRounding + " px"
-        staged: settingsRoot.stagedHyprRounding !== null
-        onMinus: settingsRoot.stagedHyprRounding =
-            Math.max(0, settingsRoot.shownHyprRounding - 1)
-        onPlus: settingsRoot.stagedHyprRounding =
-            Math.min(30, settingsRoot.shownHyprRounding + 1)
-    }
+        SettingsComponents.ToggleSettingRow {
+            label: "Use theme color"
+            value: settingsRoot.shownHyprActiveBorderUseThemeColor
+            staged: settingsRoot.stagedHyprActiveBorderUseThemeColor !== null
+            onToggled: settingsRoot.stagedHyprActiveBorderUseThemeColor =
+                !settingsRoot.shownHyprActiveBorderUseThemeColor
+        }
 
+        SettingsComponents.HexColorRow {
+            colorPickerHost: settingsRoot
+            visible: !settingsRoot.shownHyprActiveBorderUseThemeColor
+            shownValue: settingsRoot.shownHyprActiveBorderCustomColor
+            staged: settingsRoot.stagedHyprActiveBorderCustomColor !== null
+            onHexStaged: t => settingsRoot.stagedHyprActiveBorderCustomColor = t
+        }
 
-    Text {
-        text: "Animations"
-        color: Theme.colorForeground
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
-        font.bold: true
-    }
+        Text {
+            visible: !settingsRoot.shownHyprActiveBorderUseThemeColor
+            text: "#RRGGBB (8 digits = Qt #AARRGGBB, alpha first)"
+            color: Theme.colorMuted
+            font.family: Theme.fontFamily
+            font.pixelSize: Math.round(Theme.fontSize * 0.8)
+        }
 
-    SettingsComponents.OptionPickerRow {
-        label: "Overall Feel"
-        options: [
-            { text: "Off", value: "off" },
-            { text: "Snappy", value: "snappy" },
-            { text: "Smooth", value: "smooth" },
-            { text: "Bouncy", value: "bouncy" }
-        ]
-        shownValue: settingsRoot.shownHyprAnimationPreset
-        staged: settingsRoot.stagedHyprAnimationPreset !== null
-        onPicked: value => settingsRoot.stagedHyprAnimationPreset = value
-    }
+        Text {
+            visible: page.setupCheckComplete && !page.setupReady
+            text: page.setupFileMissing
+                ? "Hyprland setup check could not find ~/.config/hypr/user/look.lua."
+                : "One-time setup required: remove the active_border assignment "
+                  + "from user/look.lua (keep inactive_border) so it does not "
+                  + "fight with generated/appearance.lua."
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            color: Theme.colorUrgent
+            font.family: Theme.fontFamily
+            font.pixelSize: Math.round(Theme.fontSize * 0.8)
+        }
 
-    SettingsComponents.OptionPickerRow {
-        label: "Window Style"
-        options: [
-            { text: "Follow Feel", value: "follow" },
-            { text: "Pop In", value: "popin" },
-            { text: "Slide", value: "slide" },
-            { text: "GNOME-like", value: "gnomed" }
-        ]
-        shownValue: settingsRoot.shownHyprWindowAnimationStyle
-        staged: settingsRoot.stagedHyprWindowAnimationStyle !== null
-        onPicked: value => settingsRoot.stagedHyprWindowAnimationStyle = value
-    }
-
-    SettingsComponents.OptionPickerRow {
-        label: "Workspace Style"
-        options: [
-            { text: "Follow Feel", value: "follow" },
-            { text: "Horizontal Slide", value: "slide" },
-            { text: "Vertical Slide", value: "slidevert" },
-            { text: "Fade", value: "fade" },
-            { text: "Slide + Fade", value: "slidefade" },
-            { text: "Vertical + Fade", value: "slidefadevert" }
-        ]
-        shownValue: settingsRoot.shownHyprWorkspaceAnimationStyle
-        staged: settingsRoot.stagedHyprWorkspaceAnimationStyle !== null
-        onPicked: value => settingsRoot.stagedHyprWorkspaceAnimationStyle = value
-    }
-
-    SettingsComponents.OptionPickerRow {
-        label: "Layer Style"
-        options: [
-            { text: "Follow Feel", value: "follow" },
-            { text: "Fade", value: "fade" },
-            { text: "Pop In", value: "popin" },
-            { text: "Slide", value: "slide" }
-        ]
-        shownValue: settingsRoot.shownHyprLayerAnimationStyle
-        staged: settingsRoot.stagedHyprLayerAnimationStyle !== null
-        onPicked: value => settingsRoot.stagedHyprLayerAnimationStyle = value
-    }
-
-    SettingsComponents.OptionPickerRow {
-        label: "Fade Behavior"
-        options: [
-            { text: "Follow Feel", value: "follow" },
-            { text: "Off", value: "off" },
-            { text: "Quick", value: "quick" },
-            { text: "Balanced", value: "balanced" },
-            { text: "Soft", value: "soft" }
-        ]
-        shownValue: settingsRoot.shownHyprFadeAnimationPreset
-        staged: settingsRoot.stagedHyprFadeAnimationPreset !== null
-        onPicked: value => settingsRoot.stagedHyprFadeAnimationPreset = value
-    }
-
-    Text {
-        text: "Overall Feel controls timing and curves. The style rows override "
-            + "only their own animation branch. Follow Feel keeps the built-in "
-            + "choice from Off, Snappy, Smooth, or Bouncy. Timings are tuned for "
-            + "Hyprland 0.56, where speed is duration in deciseconds."
-        Layout.fillWidth: true
-        wrapMode: Text.WordWrap
-        color: Theme.colorMuted
-        font.family: Theme.fontFamily
-        font.pixelSize: Math.round(Theme.fontSize * 0.8)
-    }
-
-    Text {
-        text: "Smooth is the balanced daily-driver preset. Hyprland 0.56 made "
-            + "the old spring-based window timings feel substantially slower, "
-            + "so window entry now uses the quick Bézier. The one-time ownership "
-            + "migration is documented in docs/SETTINGS_ARCHITECTURE.md."
-        Layout.fillWidth: true
-        wrapMode: Text.WordWrap
-        color: Theme.colorMuted
-        font.family: Theme.fontFamily
-        font.pixelSize: Math.round(Theme.fontSize * 0.8)
-    }
-
-    // GPT: Theme color here means the shell accent color. Hyprland does not
-    // know about the shell theme directly; ConfigManager writes the resolved
-    // color into the generated Hyprland appearance file.
-    Text {
-        text: "Active Border Color"
-        color: Theme.colorForeground
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
-        font.bold: true
-    }
-
-    SettingsComponents.ToggleSettingRow {
-        label: "Use theme color"
-        value: settingsRoot.shownHyprActiveBorderUseThemeColor
-        staged: settingsRoot.stagedHyprActiveBorderUseThemeColor !== null
-        onToggled: settingsRoot.stagedHyprActiveBorderUseThemeColor =
-            !settingsRoot.shownHyprActiveBorderUseThemeColor
-    }
-
-    SettingsComponents.HexColorRow {
-        colorPickerHost: settingsRoot
-        visible: !settingsRoot.shownHyprActiveBorderUseThemeColor
-        shownValue: settingsRoot.shownHyprActiveBorderCustomColor
-        staged: settingsRoot.stagedHyprActiveBorderCustomColor !== null
-        onHexStaged: t => settingsRoot.stagedHyprActiveBorderCustomColor = t
-    }
-
-    Text {
-        visible: !settingsRoot.shownHyprActiveBorderUseThemeColor
-        text: "#RRGGBB (8 digits = Qt #AARRGGBB, alpha first)"
-        color: Theme.colorMuted
-        font.family: Theme.fontFamily
-        font.pixelSize: Math.round(Theme.fontSize * 0.8)
-    }
-
-    Text {
-        visible: page.setupCheckComplete && !page.setupReady
-        text: page.setupFileMissing
-            ? "Hyprland setup check could not find ~/.config/hypr/user/look.lua."
-            : "One-time setup required: remove the active_border assignment "
-              + "from user/look.lua (keep inactive_border) so it does not "
-              + "fight with generated/appearance.lua."
-        Layout.fillWidth: true
-        wrapMode: Text.WordWrap
-        color: Theme.colorUrgent
-        font.family: Theme.fontFamily
-        font.pixelSize: Math.round(Theme.fontSize * 0.8)
-    }
-
-    Text {
-        text: "Writes hypr/generated/appearance.lua — Hyprland reloads it live.\n"
-            + "Requires the one-time restructure: docs/history/HYPR_RESTRUCTURE.md"
-        color: Theme.colorMuted
-        font.family: Theme.fontFamily
-        font.pixelSize: Math.round(Theme.fontSize * 0.8)
+        Text {
+            text: "Writes hypr/generated/appearance.lua — Hyprland reloads it live.\n"
+                + "Requires the one-time restructure: docs/history/HYPR_RESTRUCTURE.md"
+            color: Theme.colorMuted
+            font.family: Theme.fontFamily
+            font.pixelSize: Math.round(Theme.fontSize * 0.8)
+        }
     }
 }

@@ -453,6 +453,18 @@ Singleton {
         _stagedApply = null;
         _stagedHyprBorderSnapshot = null;
         let n = 0;
+        // JsonAdapter-backed UserPrefs bindings do not necessarily publish a
+        // newly assigned value before this function reaches the generator.
+        // Resolve this transaction's final values directly from the immutable
+        // staged change list instead of immediately reading the old bindings.
+        // GPT Rev 18
+        function stagedValue(key, fallback) {
+            for (let i = staged.length - 1; i >= 0; i--) {
+                if (staged[i].key === key)
+                    return staged[i].value;
+            }
+            return fallback;
+        }
         for (let i = 0; i < staged.length; i++) {
             const ch = staged[i];
             switch (ch.key) {
@@ -580,6 +592,13 @@ Singleton {
             case "hyprWorkspaceAnimationStyle": UserPrefs.setHyprWorkspaceAnimationStyle(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
             case "hyprLayerAnimationStyle": UserPrefs.setHyprLayerAnimationStyle(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
             case "hyprFadeAnimationPreset": UserPrefs.setHyprFadeAnimationPreset(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
+            case "hyprCustomAnimationSpeedsEnabled": UserPrefs.setHyprCustomAnimationSpeedsEnabled(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
+            case "hyprWindowSpeed": UserPrefs.setHyprWindowSpeed(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
+            case "hyprWindowInSpeed": UserPrefs.setHyprWindowInSpeed(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
+            case "hyprWindowOutSpeed": UserPrefs.setHyprWindowOutSpeed(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
+            case "hyprWorkspaceSpeed": UserPrefs.setHyprWorkspaceSpeed(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
+            case "hyprLayerSpeed": UserPrefs.setHyprLayerSpeed(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
+            case "hyprFadeSpeed": UserPrefs.setHyprFadeSpeed(ch.value); n++; _hyprDirty = true; _hyprAnimationDirty = true; break;
             default:
                 lastError = (lastError ? lastError + "\n" : "") + "unknown key: " + ch.key;
             }
@@ -633,20 +652,27 @@ Singleton {
             _hyprGenNeedsAnimationEval = animationChanged;
             run("hyprgen", hyprGenScript, [
                 hyprGeneratedAppearance,
-                String(UserPrefs.hyprGapsIn),
-                String(UserPrefs.hyprGapsOut),
-                String(UserPrefs.hyprBorderSize),
-                String(UserPrefs.hyprRounding),
+                String(stagedValue("hyprGapsIn", UserPrefs.hyprGapsIn)),
+                String(stagedValue("hyprGapsOut", UserPrefs.hyprGapsOut)),
+                String(stagedValue("hyprBorderSize", UserPrefs.hyprBorderSize)),
+                String(stagedValue("hyprRounding", UserPrefs.hyprRounding)),
                 activeBorderHex,
                 activeBorderHex2,
                 String(activeBorderAngle),
                 hasGradient ? "1" : "0",
                 hyprGeneratedAnimations,
-                UserPrefs.hyprAnimationPreset,
-                UserPrefs.hyprWindowAnimationStyle,
-                UserPrefs.hyprWorkspaceAnimationStyle,
-                UserPrefs.hyprLayerAnimationStyle,
-                UserPrefs.hyprFadeAnimationPreset,
+                String(stagedValue("hyprAnimationPreset", UserPrefs.hyprAnimationPreset)),
+                String(stagedValue("hyprWindowAnimationStyle", UserPrefs.hyprWindowAnimationStyle)),
+                String(stagedValue("hyprWorkspaceAnimationStyle", UserPrefs.hyprWorkspaceAnimationStyle)),
+                String(stagedValue("hyprLayerAnimationStyle", UserPrefs.hyprLayerAnimationStyle)),
+                String(stagedValue("hyprFadeAnimationPreset", UserPrefs.hyprFadeAnimationPreset)),
+                Boolean(stagedValue("hyprCustomAnimationSpeedsEnabled", UserPrefs.hyprCustomAnimationSpeedsEnabled)) ? "1" : "0",
+                String(stagedValue("hyprWindowSpeed", UserPrefs.hyprWindowSpeed)),
+                String(stagedValue("hyprWindowInSpeed", UserPrefs.hyprWindowInSpeed)),
+                String(stagedValue("hyprWindowOutSpeed", UserPrefs.hyprWindowOutSpeed)),
+                String(stagedValue("hyprWorkspaceSpeed", UserPrefs.hyprWorkspaceSpeed)),
+                String(stagedValue("hyprLayerSpeed", UserPrefs.hyprLayerSpeed)),
+                String(stagedValue("hyprFadeSpeed", UserPrefs.hyprFadeSpeed)),
                 animationChanged ? "1" : "0"
             ]);
         }
@@ -690,12 +716,14 @@ Singleton {
 
     // $1 = generated/appearance.lua; $2..$9 appearance values;
     // $10 = generated/animations.lua; $11 = overall preset; $12..$15 = branch overrides;
-    // $16 = normal-reload flag.  // GPT Rev 40
+    // $16 = normal-reload flag.  // GPT Rev 41
     readonly property string hyprGenScript: `
 set -eu
 out="$1"; gin="$2"; gout="$3"; bs="$4"; rnd="$5"; ab="$6"; ab2="$7"; angle="$8"; grad="$9"
 animout="\${10}"; preset="\${11}"; window_style="\${12}"; workspace_style="\${13}"
-layer_style="\${14}"; fade_preset="\${15}"; eval_anim="\${16}"
+layer_style="\${14}"; fade_preset="\${15}"; custom_speeds="\${16}"
+window_speed="\${17}"; window_in_speed="\${18}"; window_out_speed="\${19}"
+workspace_speed="\${20}"; layer_speed="\${21}"; fade_speed="\${22}"; eval_anim="\${23}"
 mkdir -p "$(dirname "$out")"
 if [ "$grad" = 1 ] && [ -n "$ab2" ]; then
 cat > "$out" <<LUAEOF
@@ -785,6 +813,28 @@ hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 5.5, spring = "ru
 hl.animation({ leaf = "workspacesOut", enabled = true, speed = 5.5, spring = "rubber", style = "slidefade 35%" })
 LUAEOF
         ;;
+      custom)
+        # Custom is emitted with the entered values directly. Do not generate
+        # hard-coded defaults and attempt to rewrite them afterward.  // GPT Rev 20
+        cat <<LUAEOF
+
+hl.config({ animations = { enabled = true } })
+hl.animation({ leaf = "global",        enabled = true, speed = $window_speed, bezier = "quick" })
+hl.animation({ leaf = "border",        enabled = true, speed = $window_speed, bezier = "quick" })
+hl.animation({ leaf = "windows",       enabled = true, speed = $window_speed, bezier = "quick", style = "popin 90%" })
+hl.animation({ leaf = "windowsIn",     enabled = true, speed = $window_in_speed, bezier = "quick", style = "popin 90%" })
+hl.animation({ leaf = "windowsOut",    enabled = true, speed = $window_out_speed, bezier = "quick", style = "popin 90%" })
+hl.animation({ leaf = "fade",          enabled = true, speed = $fade_speed, bezier = "quick" })
+hl.animation({ leaf = "fadeIn",        enabled = true, speed = $fade_speed, bezier = "quick" })
+hl.animation({ leaf = "fadeOut",       enabled = true, speed = $fade_speed, bezier = "quick" })
+hl.animation({ leaf = "layers",        enabled = true, speed = $layer_speed, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "layersIn",      enabled = true, speed = $layer_speed, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "layersOut",     enabled = true, speed = $layer_speed, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "workspaces",    enabled = true, speed = $workspace_speed, bezier = "almostLinear", style = "slide" })
+hl.animation({ leaf = "workspacesIn",  enabled = true, speed = $workspace_speed, bezier = "almostLinear", style = "slide" })
+hl.animation({ leaf = "workspacesOut", enabled = true, speed = $workspace_speed, bezier = "almostLinear", style = "slide" })
+LUAEOF
+        ;;
       smooth|*)
         cat <<'LUAEOF'
 
@@ -813,25 +863,25 @@ LUAEOF
     # Optional branch-specific style overrides. These are written after the
     # overall feel so the child leaves intentionally take precedence.  // GPT Rev 40
     case "$window_style" in
-      popin)
-        cat <<'LUAEOF'
-hl.animation({ leaf = "windows",    enabled = true, speed = 2.2, bezier = "quick", style = "popin 88%" })
-hl.animation({ leaf = "windowsIn",  enabled = true, speed = 1.8, bezier = "quick", style = "popin 88%" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.5, bezier = "quick", style = "popin 88%" })
-LUAEOF
-        ;;
-      slide)
-        cat <<'LUAEOF'
-hl.animation({ leaf = "windows",    enabled = true, speed = 2.2, bezier = "quick", style = "slide" })
-hl.animation({ leaf = "windowsIn",  enabled = true, speed = 1.8, bezier = "quick", style = "slide" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.5, bezier = "quick", style = "slide" })
-LUAEOF
-        ;;
-      gnomed)
-        cat <<'LUAEOF'
-hl.animation({ leaf = "windows",    enabled = true, speed = 2.8, bezier = "quick", style = "gnomed" })
-hl.animation({ leaf = "windowsIn",  enabled = true, speed = 2.5, bezier = "quick", style = "gnomed" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.8, bezier = "quick", style = "gnomed" })
+      popin|slide|gnomed)
+        case "$window_style" in
+          popin) window_arg="popin 88%"; preset_window_speed="2.2"; preset_window_in_speed="1.8"; preset_window_out_speed="1.5" ;;
+          slide) window_arg="slide";      preset_window_speed="2.2"; preset_window_in_speed="1.8"; preset_window_out_speed="1.5" ;;
+          gnomed) window_arg="gnomed";    preset_window_speed="2.8"; preset_window_in_speed="2.5"; preset_window_out_speed="1.8" ;;
+        esac
+        if [ "$custom_speeds" = 1 ] || [ "$preset" = custom ]; then
+          active_window_speed="$window_speed"
+          active_window_in_speed="$window_in_speed"
+          active_window_out_speed="$window_out_speed"
+        else
+          active_window_speed="$preset_window_speed"
+          active_window_in_speed="$preset_window_in_speed"
+          active_window_out_speed="$preset_window_out_speed"
+        fi
+        cat <<LUAEOF
+hl.animation({ leaf = "windows",    enabled = true, speed = $active_window_speed, bezier = "quick", style = "$window_arg" })
+hl.animation({ leaf = "windowsIn",  enabled = true, speed = $active_window_in_speed, bezier = "quick", style = "$window_arg" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = $active_window_out_speed, bezier = "quick", style = "$window_arg" })
 LUAEOF
         ;;
     esac
@@ -843,10 +893,19 @@ LUAEOF
         else
           ws_style="$workspace_style"
         fi
+        if [ "$custom_speeds" = 1 ] || [ "$preset" = custom ]; then
+          ws_speed="$workspace_speed"
+          ws_in_speed="$workspace_speed"
+          ws_out_speed="$workspace_speed"
+        else
+          ws_speed="2.4"
+          ws_in_speed="2.2"
+          ws_out_speed="2.4"
+        fi
         cat <<LUAEOF
-hl.animation({ leaf = "workspaces",    enabled = true, speed = 2.4, bezier = "almostLinear", style = "$ws_style" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 2.2, bezier = "almostLinear", style = "$ws_style" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = 2.4, bezier = "almostLinear", style = "$ws_style" })
+hl.animation({ leaf = "workspaces",    enabled = true, speed = $ws_speed, bezier = "almostLinear", style = "$ws_style" })
+hl.animation({ leaf = "workspacesIn",  enabled = true, speed = $ws_in_speed, bezier = "almostLinear", style = "$ws_style" })
+hl.animation({ leaf = "workspacesOut", enabled = true, speed = $ws_out_speed, bezier = "almostLinear", style = "$ws_style" })
 LUAEOF
         ;;
     esac
@@ -891,8 +950,15 @@ hl.animation({ leaf = "fadeOut", enabled = true, speed = 2.4, bezier = "almostLi
 LUAEOF
         ;;
     esac
+
   fi
 } > "$animout"
+
+# Custom timing values are emitted directly in the Custom preset and in
+# branch-specific overrides. This intentionally replaces the former sed
+# post-processing stage, which could silently leave the hard-coded defaults
+# in place even though the staged value had been persisted.  // GPT Rev 20
+
 echo "generated appearance.lua and animations.lua ($preset)"
 # Animation declarations are loaded through the same ordinary Hyprland reload
 # path as gaps, borders, and rounding. A normal reload is sufficient on the

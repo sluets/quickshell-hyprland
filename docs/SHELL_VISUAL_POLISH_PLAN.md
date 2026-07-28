@@ -571,6 +571,34 @@ Then:
 
 ---
 
+## 8.1 Settings implementation checkpoint — 2026-07-28
+
+Settings Phase 4 is implemented and approved through redesign Rev 27. The canonical target is the final Settings/Music mockup stored under `testing/shell-visual-polish-target.png`; Settings uses that image as a structural and visual reference rather than attempting pixel-for-pixel reproduction.
+
+Completed Settings decisions:
+
+- fixed-width, left-anchored content column instead of fullscreen form stretching
+- rounded navigation card and per-section cards on every page
+- joined `− | value | +` steppers on a shared form grid
+- compact dropdowns, aligned toggles, and restrained helper tooltips
+- generic page subtitles and redundant always-visible notes removed
+- permanent pending-changes panel replaced by a compact action bar and Apply review dialog
+- custom Settings titlebar and close button removed; normal compositor shortcut/window controls close the window
+- Hyprland animation styles converted to dropdowns
+- Custom animation mode writes typed window, open, close, workspace, layer, and fade speeds directly into complete Lua declarations
+- the final dropdown wheel fix lives in `SettingsOverlays.qml`, because Theme, Font family, and Wallpaper transition are overlay-owned menus rather than `DropdownSettingRow` instances
+
+The failed dropdown experiments from Revs 22–26 were removed before approval. Do not retain dead modal-popup, parent-walk, or `objectName` scroll-lock plumbing in `DropdownSettingRow.qml`.
+
+Deferred from this checkpoint:
+
+- final SDDM-specific visual review at home
+- full font-scale and built-in-theme sweep
+- Music window implementation
+- remaining shell surfaces in Phase 5
+
+---
+
 ## 9. Regression checklist
 
 ### Settings

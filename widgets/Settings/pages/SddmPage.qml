@@ -251,23 +251,6 @@ ColumnLayout {
         applyProcess.running = true;
     }
 
-    Text {
-        text: "SDDM Login Screen"
-        color: Theme.colorForeground
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
-        font.bold: true
-    }
-
-    Text {
-        Layout.fillWidth: true
-        text: "Copies a deliberate snapshot of the current desktop look to the login screen. Expand only the sections you want to customize."
-        wrapMode: Text.WordWrap
-        color: Theme.colorMuted
-        font.family: Theme.fontFamily
-        font.pixelSize: Math.round(Theme.fontSize * 0.85)
-    }
-
     SettingsComponents.CollapsibleSection {
         title: "Theme & wallpaper"
         summary: (page.includeTheme ? "Current theme" : page.selectedThemeName) + " · " + (page.includeWallpaper ? "Current wallpaper" : page.selectedWallpaperName)

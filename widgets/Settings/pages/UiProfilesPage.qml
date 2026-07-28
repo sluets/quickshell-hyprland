@@ -61,31 +61,13 @@ ColumnLayout {
         restoreProcess.running = true;
     }
 
-    Text {
-        Layout.fillWidth: true
-        text: "UI Profiles"
-        color: Theme.colorForeground
-        font.family: Theme.fontFamily
-        font.pixelSize: Math.round(Theme.fontSize * 1.45)
-        font.bold: true
-    }
-
-    Text {
-        Layout.fillWidth: true
-        text: "Phase 1 is intentionally simple: one known-good snapshot called My Default. It contains the complete persisted UI settings file and the wallpaper currently shown by awww."
-        wrapMode: Text.WordWrap
-        color: Theme.colorMuted
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
-    }
-
     Rectangle {
         Layout.fillWidth: true
         implicitHeight: profileLayout.implicitHeight + Theme.spacingLarge * 2
         radius: Theme.radiusMedium
         color: Theme.colorSurface
         border.width: 1
-        border.color: Theme.colorMuted
+        border.color: Theme.colorDivider
 
         ColumnLayout {
             id: profileLayout

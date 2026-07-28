@@ -287,6 +287,13 @@ Singleton {
     readonly property string hyprWorkspaceAnimationStyle: adapter.hyprWorkspaceAnimationStyle
     readonly property string hyprLayerAnimationStyle: adapter.hyprLayerAnimationStyle
     readonly property string hyprFadeAnimationPreset: adapter.hyprFadeAnimationPreset
+    readonly property bool hyprCustomAnimationSpeedsEnabled: adapter.hyprCustomAnimationSpeedsEnabled
+    readonly property real hyprWindowSpeed: adapter.hyprWindowSpeed
+    readonly property real hyprWindowInSpeed: adapter.hyprWindowInSpeed
+    readonly property real hyprWindowOutSpeed: adapter.hyprWindowOutSpeed
+    readonly property real hyprWorkspaceSpeed: adapter.hyprWorkspaceSpeed
+    readonly property real hyprLayerSpeed: adapter.hyprLayerSpeed
+    readonly property real hyprFadeSpeed: adapter.hyprFadeSpeed
     // Hyprland active-window border color (settings window, Hyprland
     // page, 2026-07-12) — same use-theme-or-custom-hex pattern as
     // barBorderUseThemeColor/barBorderCustomColor. "Theme" here means
@@ -377,7 +384,7 @@ Singleton {
     }
 
     function setHyprAnimationPreset(v: string): void {
-        const allowed = ["off", "snappy", "smooth", "bouncy"];
+        const allowed = ["off", "custom", "snappy", "smooth", "bouncy"];
         adapter.hyprAnimationPreset = allowed.indexOf(v) >= 0 ? v : "smooth";
     }
 
@@ -400,6 +407,15 @@ Singleton {
         const allowed = ["follow", "off", "quick", "balanced", "soft"];
         adapter.hyprFadeAnimationPreset = allowed.indexOf(v) >= 0 ? v : "follow";
     }
+
+    function setHyprCustomAnimationSpeedsEnabled(v: bool): void { adapter.hyprCustomAnimationSpeedsEnabled = v; }
+    function _clampHyprSpeed(v: real): real { return Math.round(Math.min(20, Math.max(0.1, v)) * 100) / 100; }
+    function setHyprWindowSpeed(v: real): void { adapter.hyprWindowSpeed = _clampHyprSpeed(v); }
+    function setHyprWindowInSpeed(v: real): void { adapter.hyprWindowInSpeed = _clampHyprSpeed(v); }
+    function setHyprWindowOutSpeed(v: real): void { adapter.hyprWindowOutSpeed = _clampHyprSpeed(v); }
+    function setHyprWorkspaceSpeed(v: real): void { adapter.hyprWorkspaceSpeed = _clampHyprSpeed(v); }
+    function setHyprLayerSpeed(v: real): void { adapter.hyprLayerSpeed = _clampHyprSpeed(v); }
+    function setHyprFadeSpeed(v: real): void { adapter.hyprFadeSpeed = _clampHyprSpeed(v); }
 
     function setHyprActiveBorderUseThemeColor(v: bool): void {
         adapter.hyprActiveBorderUseThemeColor = v;
@@ -876,6 +892,13 @@ Singleton {
         property string hyprWorkspaceAnimationStyle: "follow"
         property string hyprLayerAnimationStyle: "follow"
         property string hyprFadeAnimationPreset: "follow"
+        property bool hyprCustomAnimationSpeedsEnabled: false
+        property real hyprWindowSpeed: 2.2
+        property real hyprWindowInSpeed: 1.8
+        property real hyprWindowOutSpeed: 1.5
+        property real hyprWorkspaceSpeed: 1.94
+        property real hyprLayerSpeed: 3.81
+        property real hyprFadeSpeed: 3.03
         // Hyprland active border color (Hyprland page, 2026-07-12).
         // Defaults to "follow theme" — true/empty custom means this
         // pref writes nothing different until someone turns it on;

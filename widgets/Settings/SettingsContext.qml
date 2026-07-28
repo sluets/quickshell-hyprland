@@ -134,6 +134,13 @@ Item {
     property alias stagedHyprWorkspaceAnimationStyle: settingsTransaction.stagedHyprWorkspaceAnimationStyle
     property alias stagedHyprLayerAnimationStyle: settingsTransaction.stagedHyprLayerAnimationStyle
     property alias stagedHyprFadeAnimationPreset: settingsTransaction.stagedHyprFadeAnimationPreset
+    property alias stagedHyprCustomAnimationSpeedsEnabled: settingsTransaction.stagedHyprCustomAnimationSpeedsEnabled
+    property alias stagedHyprWindowSpeed: settingsTransaction.stagedHyprWindowSpeed
+    property alias stagedHyprWindowInSpeed: settingsTransaction.stagedHyprWindowInSpeed
+    property alias stagedHyprWindowOutSpeed: settingsTransaction.stagedHyprWindowOutSpeed
+    property alias stagedHyprWorkspaceSpeed: settingsTransaction.stagedHyprWorkspaceSpeed
+    property alias stagedHyprLayerSpeed: settingsTransaction.stagedHyprLayerSpeed
+    property alias stagedHyprFadeSpeed: settingsTransaction.stagedHyprFadeSpeed
     property alias stagedHyprActiveBorderUseThemeColor: settingsTransaction.stagedHyprActiveBorderUseThemeColor
     property alias stagedHyprActiveBorderCustomColor: settingsTransaction.stagedHyprActiveBorderCustomColor
     property alias stagedBarBorderWidthOverride: settingsTransaction.stagedBarBorderWidthOverride
@@ -238,6 +245,13 @@ Item {
     readonly property string shownHyprWorkspaceAnimationStyle: settingsTransaction.shownHyprWorkspaceAnimationStyle
     readonly property string shownHyprLayerAnimationStyle: settingsTransaction.shownHyprLayerAnimationStyle
     readonly property string shownHyprFadeAnimationPreset: settingsTransaction.shownHyprFadeAnimationPreset
+    readonly property bool shownHyprCustomAnimationSpeedsEnabled: settingsTransaction.shownHyprCustomAnimationSpeedsEnabled
+    readonly property real shownHyprWindowSpeed: settingsTransaction.shownHyprWindowSpeed
+    readonly property real shownHyprWindowInSpeed: settingsTransaction.shownHyprWindowInSpeed
+    readonly property real shownHyprWindowOutSpeed: settingsTransaction.shownHyprWindowOutSpeed
+    readonly property real shownHyprWorkspaceSpeed: settingsTransaction.shownHyprWorkspaceSpeed
+    readonly property real shownHyprLayerSpeed: settingsTransaction.shownHyprLayerSpeed
+    readonly property real shownHyprFadeSpeed: settingsTransaction.shownHyprFadeSpeed
     readonly property bool shownHyprActiveBorderUseThemeColor: settingsTransaction.shownHyprActiveBorderUseThemeColor
     readonly property string shownHyprActiveBorderCustomColor: settingsTransaction.shownHyprActiveBorderCustomColor
     readonly property string shownNotifCorner: settingsTransaction.shownNotifCorner

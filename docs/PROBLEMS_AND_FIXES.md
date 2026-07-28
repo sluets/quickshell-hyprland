@@ -1,3 +1,24 @@
+## 2026-07-28 — Settings dropdown wheel fixes were applied to the wrong component
+
+**Trying to do:** Stop long Settings dropdowns from scrolling the page underneath them when the dropdown list reached its top or bottom. The reproducible menus were Appearance → Theme, Appearance → Font family, and Wallpaper → Wallpaper transition.
+
+**What went wrong:** Several revisions changed `DropdownSettingRow.qml` and its `ComboBox.popup` by adding wheel handlers, a modal popup, and an imperative page-scroll lock. Those three menus do not use `DropdownSettingRow` or `ComboBox` at all. They are custom overlay panels rendered by `SettingsOverlays.qml`, anchored to plain button rectangles in `AppearancePage.qml` and `WallpaperPage.qml`. Because the edited component never opened, none of the attempted handlers or popup callbacks could run.
+
+**What fixed it:** Handle the wheel on the actual overlay panel in `SettingsOverlays.qml`, always accept the event even when the overlay `ListView` is already at a bound, and declaratively disable the Settings page `Flickable` while any of the three overlay-open flags is true. The final fix uses the existing `settingsRoot.themeDropdownOpen`, `settingsRoot.fontFamilyDropdownOpen`, and `settingsRoot.wallpaperTransitionTypeDropdownOpen` state rather than parent walking or `objectName` lookup.
+
+**Do not reintroduce:** Before editing a reusable-looking control, trace the concrete page instance to the item that actually renders the failing UI. Search for component usage and follow aliases/open-state bindings into overlay hosts. A correct fix in an unused component is still no fix. Remove abandoned diagnostic plumbing after the real owner is identified.
+
+**Relevant ownership:**
+
+```text
+AppearancePage / WallpaperPage
+  -> anchor Rectangle + open-state property
+  -> SettingsView mounts SettingsOverlays
+  -> SettingsOverlays owns the visible dropdown panel and ListView
+```
+
+---
+
 ## 2026-07-23 — Hyprland 0.56 made the managed window animation feel sluggish
 
 **Trying to do:** Keep the existing Smooth/Slide window animation feeling snappy after the system upgraded from Hyprland 0.55.4 to 0.56.0.
