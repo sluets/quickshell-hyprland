@@ -352,19 +352,12 @@ PanelWindow {
             anchors.left: parent.left
             anchors.leftMargin: Theme.spacingMedium
             anchors.verticalCenter: parent.verticalCenter
-            spacing: Theme.spacingMedium
+            spacing: Theme.spacingLarge
 
             SystemMenu {}
-            Separator {}
             Workspaces {}
-            Separator {
-                visible: nowPlaying.visible || musicIndicator.visible
-            }
             NowPlaying {
                 id: nowPlaying
-            }
-            Separator {
-                visible: nowPlaying.visible && musicIndicator.visible
             }
             MusicIndicator {
                 id: musicIndicator
@@ -424,18 +417,12 @@ PanelWindow {
             anchors.right: parent.right
             anchors.rightMargin: Theme.spacingMedium
             anchors.verticalCenter: parent.verticalCenter
-            spacing: Theme.spacingMedium
+            spacing: Theme.spacingLarge
 
             Volume {}
-            Separator {}
             Wifi {}
-            Separator {}
-            Bluetooth {}
-            Separator {}
             Clipboard {}
-            Separator {}
             Clock {}
-            Separator {}
             SettingsMenu {}
         }
 

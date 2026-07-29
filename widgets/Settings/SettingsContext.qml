@@ -27,7 +27,7 @@ Item {
     property bool wallpaperTransitionTypeDropdownOpen: false
     // Displays remains a future feature. Its disabled prototype was removed
     // in Rev 25; rebuild it around a real services/DisplayManager.qml.
-    readonly property var pages: ["Appearance", "Custom Theme", "Launcher", "Wallpaper", "Notifications", "Desktop", "Music", "Hyprland", "UI Profiles", "SDDM"]
+    readonly property var pages: ["Appearance", "Edit Theme", "Launcher", "Wallpaper", "Notifications", "Desktop", "Music", "Hyprland", "UI Profiles", "SDDM"]
 
     // ---- Shared preset-color-picker overlay state (2026-07-11, Opus) ----
     // The swatch popup can't live inside its HexColorRow: the popup is
@@ -61,6 +61,13 @@ Item {
         colorPickerAnchor = null;
         colorPickerCallback = null;
     }
+
+    readonly property string shownThemeOverridesJson: settingsTransaction.shownThemeOverridesJson
+    function themeOverride(themeName, key, fallback) { return settingsTransaction.themeOverride(themeName, key, fallback); }
+    function stageThemeOverride(themeName, key, value) { settingsTransaction.stageThemeOverride(themeName, key, value); }
+    function resetThemeOverride(themeName, key) { settingsTransaction.resetThemeOverride(themeName, key); }
+    function resetThemeOverrides(themeName) { settingsTransaction.resetThemeOverrides(themeName); }
+    function hasThemeOverride(themeName, key) { return settingsTransaction.hasThemeOverride(themeName, key); }
 
     readonly property string shownCustomThemeBaseName: settingsTransaction.shownCustomThemeBaseName
     readonly property string shownCustomThemeBackground: settingsTransaction.shownCustomThemeBackground
@@ -96,6 +103,7 @@ Item {
 
     property alias stagedTheme: settingsTransaction.stagedTheme
     property alias stagedFontScale: settingsTransaction.stagedFontScale
+    property alias stagedThemeOverridesJson: settingsTransaction.stagedThemeOverridesJson
     property alias stagedCustomThemeBaseName: settingsTransaction.stagedCustomThemeBaseName
     property alias stagedCustomThemeBackground: settingsTransaction.stagedCustomThemeBackground
     property alias stagedCustomThemeForeground: settingsTransaction.stagedCustomThemeForeground

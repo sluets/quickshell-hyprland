@@ -9,6 +9,7 @@ Item {
     // ---- Staged (uncommitted) values. null = not staged. ----
     property var stagedTheme: null
     property var stagedFontScale: null
+    property var stagedThemeOverridesJson: null
     property var stagedCustomThemeBaseName: null
     property var stagedCustomThemeBackground: null
     property var stagedCustomThemeForeground: null
@@ -117,6 +118,52 @@ Item {
     // Effective values the UI highlights: staged if present, else live.
     readonly property string shownTheme: stagedTheme !== null ? stagedTheme : UserPrefs.themeName
     readonly property real shownFontScale: stagedFontScale !== null ? stagedFontScale : UserPrefs.fontScale
+    readonly property string shownThemeOverridesJson: stagedThemeOverridesJson !== null ? stagedThemeOverridesJson : UserPrefs.themeOverridesJson
+
+    function _parseThemeOverrides(jsonText) {
+        try {
+            const parsed = JSON.parse(jsonText);
+            return parsed && typeof parsed === "object" ? parsed : ({});
+        } catch (e) {
+            return ({});
+        }
+    }
+
+    function themeOverride(themeName, key, fallback) {
+        const all = _parseThemeOverrides(shownThemeOverridesJson);
+        const perTheme = all[themeName];
+        return perTheme && perTheme[key] !== undefined ? perTheme[key] : fallback;
+    }
+
+    function stageThemeOverride(themeName, key, value) {
+        const all = _parseThemeOverrides(shownThemeOverridesJson);
+        const copy = JSON.parse(JSON.stringify(all));
+        if (!copy[themeName]) copy[themeName] = ({});
+        copy[themeName][key] = value;
+        stagedThemeOverridesJson = JSON.stringify(copy);
+    }
+
+    function resetThemeOverride(themeName, key) {
+        const all = _parseThemeOverrides(shownThemeOverridesJson);
+        const copy = JSON.parse(JSON.stringify(all));
+        if (copy[themeName]) {
+            delete copy[themeName][key];
+            if (Object.keys(copy[themeName]).length === 0) delete copy[themeName];
+        }
+        stagedThemeOverridesJson = JSON.stringify(copy);
+    }
+
+    function resetThemeOverrides(themeName) {
+        const all = _parseThemeOverrides(shownThemeOverridesJson);
+        const copy = JSON.parse(JSON.stringify(all));
+        delete copy[themeName];
+        stagedThemeOverridesJson = JSON.stringify(copy);
+    }
+
+    function hasThemeOverride(themeName, key) {
+        const all = _parseThemeOverrides(shownThemeOverridesJson);
+        return Boolean(all[themeName] && all[themeName][key] !== undefined);
+    }
     readonly property string shownCustomThemeBaseName: stagedCustomThemeBaseName !== null ? stagedCustomThemeBaseName : UserPrefs.customThemeBaseName
     readonly property string shownCustomThemeBackground: stagedCustomThemeBackground !== null ? stagedCustomThemeBackground : UserPrefs.customThemeBackground
     readonly property string shownCustomThemeForeground: stagedCustomThemeForeground !== null ? stagedCustomThemeForeground : UserPrefs.customThemeForeground
@@ -255,23 +302,27 @@ Item {
             if (staged !== null && staged !== live)
                 c.push({ key: key, label: label, from: format(live), to: format(staged), value: staged });
         }
-        const customPairs = [
-            ["customThemeBaseName", "Custom Base", UserPrefs.customThemeBaseName, stagedCustomThemeBaseName],
-            ["customThemeBackground", "Custom Background", UserPrefs.customThemeBackground, stagedCustomThemeBackground],
-            ["customThemeForeground", "Custom Foreground", UserPrefs.customThemeForeground, stagedCustomThemeForeground],
-            ["customThemeAccent", "Custom Accent", UserPrefs.customThemeAccent, stagedCustomThemeAccent],
-            ["customThemeUrgent", "Custom Urgent", UserPrefs.customThemeUrgent, stagedCustomThemeUrgent],
-            ["customThemeMuted", "Custom Muted", UserPrefs.customThemeMuted, stagedCustomThemeMuted],
-            ["customThemeSurface", "Custom Surface", UserPrefs.customThemeSurface, stagedCustomThemeSurface],
-            ["customThemeHover", "Custom Hover", UserPrefs.customThemeHover, stagedCustomThemeHover],
-            ["customThemeBorder", "Custom Border", UserPrefs.customThemeBorder, stagedCustomThemeBorder],
-            ["customThemeBorder2", "Custom Border 2", UserPrefs.customThemeBorder2, stagedCustomThemeBorder2],
-            ["customThemeBorderAngle", "Custom Border Angle", UserPrefs.customThemeBorderAngle, stagedCustomThemeBorderAngle]
-        ];
-        for (let i = 0; i < customPairs.length; ++i) {
-            const [key, label, live, staged] = customPairs[i];
-            if (staged !== null && staged !== live)
-                c.push({ key: key, label: label, from: String(live), to: String(staged), value: staged });
+        if (stagedThemeOverridesJson !== null && stagedThemeOverridesJson !== UserPrefs.themeOverridesJson) {
+            const liveOverrides = _parseThemeOverrides(UserPrefs.themeOverridesJson);
+            const nextOverrides = _parseThemeOverrides(stagedThemeOverridesJson);
+            const labels = ({ background:"Background", surface:"Surface", hover:"Hover", foreground:"Foreground", muted:"Muted", accent:"Accent", urgent:"Urgent", border:"Border primary", border2:"Border secondary", borderAngle:"Gradient angle" });
+            const summaries = [];
+            const themeNames = Object.keys(Object.assign({}, liveOverrides, nextOverrides));
+            for (let ti = 0; ti < themeNames.length; ++ti) {
+                const themeName = themeNames[ti];
+                const liveTheme = liveOverrides[themeName] || ({});
+                const nextTheme = nextOverrides[themeName] || ({});
+                const keys = Object.keys(Object.assign({}, liveTheme, nextTheme));
+                for (let ki = 0; ki < keys.length; ++ki) {
+                    const key = keys[ki];
+                    const fromValue = liveTheme[key] === undefined ? "theme default" : String(liveTheme[key]);
+                    const toValue = nextTheme[key] === undefined ? "theme default" : String(nextTheme[key]);
+                    if (fromValue !== toValue)
+                        summaries.push(themeName.replace(/Theme$/, "") + " " + (labels[key] || key) + ": " + fromValue + " → " + toValue);
+                }
+            }
+            if (summaries.length > 0)
+                c.push({ key:"themeOverridesJson", label:"Theme edits", from:"saved palette", to:summaries.join("; "), value:stagedThemeOverridesJson });
         }
         if (stagedTheme !== null && stagedTheme !== UserPrefs.themeName)
             c.push({ key: "themeName", label: "Theme",
@@ -460,6 +511,7 @@ Item {
     function discardStaged(): void {
         stagedTheme = null;
         stagedFontScale = null;
+        stagedThemeOverridesJson = null;
         stagedCustomThemeBaseName = null;
         stagedCustomThemeBackground = null;
         stagedCustomThemeForeground = null;
@@ -572,18 +624,16 @@ Item {
     // prevents the Hyprland generator from falling back to the old saved
     // Appearance values during that gap.
     function resolvedHyprBorderForApply(): var {
-        const selectedTheme = Theme.themes[shownTheme] || Theme.active;
+        const selectedName = Theme.themesWithoutCustom[shownTheme] ? shownTheme : Theme.fallbackThemeName;
+        const selectedTheme = Theme.themesWithoutCustom[selectedName] || Theme.active;
         const followsAppearance = shownHyprActiveBorderUseThemeColor;
-        const customSelected = shownTheme === "CustomTheme";
-        const primaryHex = customSelected
-            ? _settingsHexToHyprHex(shownCustomThemeBorder)
-            : _qColorToHyprHex(selectedTheme.barBorderColor);
-        const secondaryEnabled = customSelected
-            ? shownCustomThemeBorder2 !== "transparent"
-            : selectedTheme.barBorderColor2.a > 0.001;
-        const secondaryHex = customSelected
-            ? (secondaryEnabled ? _settingsHexToHyprHex(shownCustomThemeBorder2) : "")
-            : (secondaryEnabled ? _qColorToHyprHex(selectedTheme.barBorderColor2) : "");
+        const primaryValue = themeOverride(selectedName, "border", selectedTheme.barBorderColor.toString());
+        const secondaryValue = themeOverride(selectedName, "border2",
+            selectedTheme.barBorderColor2.a > 0.001 ? selectedTheme.barBorderColor2.toString() : "transparent");
+        const angleValue = Number(themeOverride(selectedName, "borderAngle", selectedTheme.barBorderGradientAngle));
+        const secondaryEnabled = secondaryValue !== "transparent";
+        const primaryHex = _settingsHexToHyprHex(String(primaryValue));
+        const secondaryHex = secondaryEnabled ? _settingsHexToHyprHex(String(secondaryValue)) : "";
         const gradient = followsAppearance && shownBarBorderUseThemeColor && secondaryEnabled;
         return {
             useTheme: followsAppearance,
@@ -591,7 +641,7 @@ Item {
                 ? primaryHex : _settingsHexToHyprHex(shownBarBorderCustomColor),
             secondaryHex: gradient ? secondaryHex : "",
             gradient: gradient,
-            angle: customSelected ? shownCustomThemeBorderAngle : selectedTheme.barBorderGradientAngle,
+            angle: angleValue,
             customHex: shownHyprActiveBorderCustomColor
         };
     }

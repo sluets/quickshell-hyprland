@@ -296,7 +296,7 @@ Singleton {
     })
 
     // What the settings window's theme picker lists.
-    readonly property var themeNames: Object.keys(themes)
+    readonly property var themeNames: Object.keys(themesWithoutCustom)
 
     readonly property string fallbackThemeName: "HoneycombTheme"
 
@@ -304,18 +304,23 @@ Singleton {
     // singleton, no import needed) persists the name; unknown/legacy
     // names (e.g. the pre-Phase-2 stored "Honeycomb") fall back
     // gracefully and self-correct on the next Apply.
-    property var active: themes[UserPrefs.themeName] ?? themes[fallbackThemeName]
+    property var active: themesWithoutCustom[UserPrefs.themeName] ?? themesWithoutCustom[fallbackThemeName]
+    readonly property string activeThemeName: themesWithoutCustom[UserPrefs.themeName] ? UserPrefs.themeName : fallbackThemeName
+
+    function overrideValue(key, fallback) {
+        return UserPrefs.themeOverride(activeThemeName, key, fallback);
+    }
 
     // ---- Forwarded properties — widgets bind to THESE, never to `active` directly ----
     // This extra layer of indirection means if we ever change how themes
     // are loaded (e.g. runtime switching), widget code doesn't change at all.
-    readonly property color colorBackground: active.colorBackground
-    readonly property color colorForeground: active.colorForeground
-    readonly property color colorAccent: active.colorAccent
-    readonly property color colorUrgent: active.colorUrgent
-    readonly property color colorMuted: active.colorMuted
-    readonly property color colorSurface: active.colorSurface
-    readonly property color colorHover: active.colorHover
+    readonly property color colorBackground: overrideValue("background", active.colorBackground)
+    readonly property color colorForeground: overrideValue("foreground", active.colorForeground)
+    readonly property color colorAccent: overrideValue("accent", active.colorAccent)
+    readonly property color colorUrgent: overrideValue("urgent", active.colorUrgent)
+    readonly property color colorMuted: overrideValue("muted", active.colorMuted)
+    readonly property color colorSurface: overrideValue("surface", active.colorSurface)
+    readonly property color colorHover: overrideValue("hover", active.colorHover)
 
     // Shared visual-polish elevation ladder (Settings Rev 0).
     readonly property color colorGround: colorBackground
@@ -387,7 +392,7 @@ Singleton {
                 ? active.barBorderWidth : UserPrefs.hyprBorderSize)
     readonly property color barBorderColor:
         UserPrefs.barBorderUseThemeColor
-            ? active.barBorderColor : UserPrefs.barBorderCustomColor
+            ? overrideValue("border", active.barBorderColor) : UserPrefs.barBorderCustomColor
 
     // Gradient second stop (transparent = solid) and angle — see
     // themes/DefaultTheme.qml for the convention.
@@ -396,8 +401,8 @@ Singleton {
     // is enabled; otherwise it would keep bleeding the theme color into the
     // user's custom primary color and make the override look ineffective.
     readonly property color barBorderColor2:
-        UserPrefs.barBorderUseThemeColor ? active.barBorderColor2 : "transparent"
-    readonly property real barBorderGradientAngle: active.barBorderGradientAngle
+        UserPrefs.barBorderUseThemeColor ? overrideValue("border2", active.barBorderColor2) : "transparent"
+    readonly property real barBorderGradientAngle: Number(overrideValue("borderAngle", active.barBorderGradientAngle))
 
     // Fillet radius where popouts meet the bar. Theme value -1 =
     // follow barRadius so the joint matches the bar's own corners.

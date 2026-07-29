@@ -241,6 +241,7 @@ Singleton {
     readonly property string customThemeBorder: adapter.customThemeBorder
     readonly property string customThemeBorder2: adapter.customThemeBorder2
     readonly property real customThemeBorderAngle: adapter.customThemeBorderAngle
+    readonly property string themeOverridesJson: adapter.themeOverridesJson
     readonly property string notifPresentation: adapter.notifPresentation
     readonly property string notifBarPosition: adapter.notifBarPosition
     readonly property int notifBarOffsetX: adapter.notifBarOffsetX
@@ -711,6 +712,31 @@ Singleton {
     }
     function setCustomThemeBorderAngle(v: real): void { adapter.customThemeBorderAngle = Math.max(0, Math.min(360, v)); }
 
+    function setThemeOverridesJson(v: string): void {
+        try {
+            const parsed = JSON.parse(v);
+            if (parsed && typeof parsed === "object")
+                adapter.themeOverridesJson = JSON.stringify(parsed);
+        } catch (e) {
+            console.warn("Rejected invalid theme override JSON:", e);
+        }
+    }
+
+    function themeOverrides(): var {
+        try {
+            const parsed = JSON.parse(adapter.themeOverridesJson);
+            return parsed && typeof parsed === "object" ? parsed : ({});
+        } catch (e) {
+            return ({});
+        }
+    }
+
+    function themeOverride(themeName: string, key: string, fallback): var {
+        const all = themeOverrides();
+        const perTheme = all[themeName];
+        return perTheme && perTheme[key] !== undefined ? perTheme[key] : fallback;
+    }
+
     function setWallpaperCachingEnabled(enabled: bool): void {
         adapter.wallpaperCachingEnabled = enabled;
     }
@@ -794,6 +820,8 @@ Singleton {
             property string customThemeBorder: "#35e0b4"
             property string customThemeBorder2: "transparent"
             property real customThemeBorderAngle: 0
+            // Per-built-in-theme palette overrides. Empty object = every theme uses defaults.
+            property string themeOverridesJson: "{}"
             property bool musicVisualizerEnabled: true
             property string musicVisualizerSource: "mpd"
             property int musicVisualizerBars: 32

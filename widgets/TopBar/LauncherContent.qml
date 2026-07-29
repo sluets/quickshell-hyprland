@@ -214,6 +214,9 @@ ColumnLayout {
     Rectangle {
         implicitWidth: Settings.launcherWidth
         Layout.fillWidth: true
+        Layout.leftMargin: Theme.spacingMedium
+        Layout.rightMargin: Theme.spacingMedium
+        Layout.topMargin: Theme.spacingMedium
         implicitHeight: searchField.implicitHeight + Theme.spacingSmall * 2
         radius: Theme.radiusMedium
         color: Theme.colorSurface
@@ -263,6 +266,10 @@ ColumnLayout {
             required property var modelData
             required property int index
             Layout.fillWidth: true
+            Layout.leftMargin: Theme.spacingMedium
+            Layout.rightMargin: Theme.spacingMedium
+            Layout.bottomMargin: index === root.results.length - 1
+                ? Theme.spacingMedium : 0
             implicitHeight: rowContent.implicitHeight + Theme.spacingSmall * 2
             radius: Theme.radiusMedium
             color: index === root.selectedIndex ? Theme.colorHover : "transparent"

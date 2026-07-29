@@ -87,8 +87,8 @@ Rectangle {
     property real signalStrength: 0
     signal clicked()
 
-    implicitWidth: content.implicitWidth + Theme.spacingMedium * 2
-    implicitHeight: content.implicitHeight + Theme.spacingSmall * 2
+    implicitWidth: content.implicitWidth + Theme.spacingLarge * 2
+    implicitHeight: content.implicitHeight + Theme.spacingMedium * 2
     radius: Theme.radiusMedium
     color: mouseArea.containsMouse ? Theme.colorHover : "transparent"
     scale: mouseArea.pressed ? 0.98 : 1.0
@@ -110,10 +110,10 @@ Rectangle {
         id: content
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.leftMargin: Theme.spacingSmall
-        anchors.rightMargin: Theme.spacingSmall
+        anchors.leftMargin: Theme.spacingMedium
+        anchors.rightMargin: Theme.spacingMedium
         anchors.verticalCenter: parent.verticalCenter
-        spacing: Theme.spacingSmall
+        spacing: Theme.spacingMedium
 
         // ---- Leading status dot ----
         Rectangle {

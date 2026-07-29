@@ -1,74 +1,5 @@
-//=============================================================================
-// FILE
-//=============================================================================
-//
-// widgets/TopBar/Volume.qml
-//
-//=============================================================================
-// PURPOSE
-//=============================================================================
-//
-// Volume in the bar — now interactive:
-//
-//   • Scroll on the bar text/icon  -> volume up/down (Settings.volumeStep)
-//   • Middle-click                 -> toggle mute
-//   • Left-click                   -> popout with a slider, a mute
-//                                     button, and an output-device picker
-//
-// Bar display stays value-then-icon ("42% <icon>") — a deliberate
-// layout choice (see docs/REVISION_HISTORY.md 2026-07-02).
-//
-//=============================================================================
-// DEPENDENCIES
-//=============================================================================
-//
-// QtQuick / QtQuick.Layouts
-// core/Theme.qml, core/Settings.qml  (singletons via `import qs.core`)
-// services/Audio.qml                 (singleton via `import qs.services`)
-// widgets/TopBar/BarPopout.qml       (neighboring file)
-// widgets/TopBar/MenuButton.qml      (neighboring file)
-// widgets/TopBar/MenuDivider.qml     (neighboring file)
-//
-//=============================================================================
-// USED BY
-//=============================================================================
-//
-// widgets/TopBar/TopBar.qml
-//
-//=============================================================================
-// IF REMOVED
-//=============================================================================
-//
-// TopBar loses the volume indicator and all volume control. Nothing else
-// depends on this file.
-//
-//=============================================================================
-// DESIGN NOTES
-//=============================================================================
-//
-// THE SLIDER IS HAND-ROLLED (track + fill + drag MouseArea) instead of
-// QtQuick.Controls Slider — a Controls Slider drags in its platform
-// style's look, which fights the theme, and restyling one takes more
-// code than this does. The whole thing is ~30 lines and every color
-// comes from Theme.
-//
-// DEVICE LIST shows Audio.sinks with the active one accented; clicking
-// one calls Audio.setSink(). Descriptions come from PipeWire
-// (node.description — e.g. "Navi 31 HDMI/DP Audio" / "Family 17h..."),
-// with node.name as fallback since some nodes ship empty descriptions.
-//
-//=============================================================================
-// REVISION HISTORY
-//=============================================================================
-//
-// 2026-07-03  Interactive rewrite: scroll-to-adjust, middle-click mute,
-//             click-for-popout (slider + mute + output device picker).
-//             Was display-only before.
-// 2026-07-02  Reordered to value-then-icon; NaN fix landed in the
-//             service, not here.
-// 2026-07-01  Initial display-only widget.
-//
-//=============================================================================
+// Redesigned Audio popout with output, device, application-stream, and input
+// controls. PipeWire ownership remains in services/Audio.qml. // GPT Rev 30
 
 import QtQuick
 import QtQuick.Layouts
@@ -91,14 +22,6 @@ Item {
         spacing: Theme.spacingSmall
 
         Text {
-            visible: !Audio.muted
-            text: Math.round(Audio.volume * 100) + "%"
-            color: Theme.colorForeground
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
-        }
-
-        Text {
             text: root.iconGlyph()
             color: (popout.open || barMouse.containsMouse) ? Theme.colorAccent : Theme.colorForeground
             font.family: Theme.fontFamily
@@ -113,9 +36,12 @@ Item {
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         onClicked: mouse => {
-            if (mouse.button === Qt.LeftButton)
-                popout.open = !popout.open;
-            else if (mouse.button === Qt.MiddleButton)
+            if (mouse.button === Qt.LeftButton) {
+                const opening = !popout.open;
+                popout.open = opening;
+                if (opening)
+                    Audio.rebuildNodes();
+            } else if (mouse.button === Qt.MiddleButton)
                 Audio.toggleMute();
         }
         onWheel: wheel => {
@@ -123,6 +49,7 @@ Item {
                 Audio.incrementVolume();
             else if (wheel.angleDelta.y < 0)
                 Audio.decrementVolume();
+            wheel.accepted = true;
         }
     }
 
@@ -131,95 +58,246 @@ Item {
         anchorItem: root
         alignment: "right"
 
-        // ---- Volume readout + slider ----
-        Text {
-            text: "Volume — " + (Audio.muted ? "Muted" : Math.round(Audio.volume * 100) + "%")
-            color: Theme.colorForeground
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
-            font.bold: true
+        // Give the audio controls and application sliders more breathing room.
+        Item { Layout.minimumWidth: 470; implicitHeight: 0 }
+
+        SectionLabel { text: "OUTPUT VOLUME" }
+        AudioSectionCard {
+            AudioSliderRow {
+                label: "Master volume"
+                fallbackIcon: root.iconGlyph()
+                value: Audio.volume
+                muted: Audio.muted
+                onValueEdited: value => Audio.setVolume(value)
+                onMuteClicked: Audio.toggleMute()
+            }
         }
 
-        // Hand-rolled slider — see DESIGN NOTES.
-        Item {
-            id: slider
-            Layout.fillWidth: true
-            Layout.minimumWidth: 220
-            implicitHeight: Theme.fontSize
+        SectionLabel { text: "OUTPUT DEVICE" }
+        AudioSectionCard {
+            id: outputDeviceCard
+            contentSpacing: 0
+            z: deviceListOpen ? 50 : 0
 
             Rectangle {
-                id: track
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width
-                height: 4
-                radius: 2
-                color: Theme.colorMuted
-            }
-
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: track.width * Audio.volume
-                height: track.height
-                radius: track.radius
-                color: Audio.muted ? Theme.colorMuted : Theme.colorAccent
-            }
-
-            Rectangle {
-                x: track.width * Audio.volume - width / 2
-                anchors.verticalCenter: parent.verticalCenter
-                width: Theme.fontSize * 0.85
-                height: width
-                radius: width / 2
-                color: Audio.muted ? Theme.colorForeground : Theme.colorAccent
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onPressed: mouse => Audio.setVolume(mouse.x / width)
-                onPositionChanged: mouse => {
-                    if (pressed)
-                        Audio.setVolume(Math.max(0, Math.min(1, mouse.x / width)));
-                }
-                onWheel: wheel => {
-                    if (wheel.angleDelta.y > 0)
-                        Audio.incrementVolume();
-                    else if (wheel.angleDelta.y < 0)
-                        Audio.decrementVolume();
-                }
-            }
-        }
-
-        MenuButton {
-            Layout.fillWidth: true
-            icon: Audio.muted ? "\uf026" : "\uf028"
-            text: Audio.muted ? "Unmute" : "Mute"
-            onClicked: Audio.toggleMute()
-        }
-
-        MenuDivider { Layout.fillWidth: true }
-
-        // ---- Output device picker ----
-        Text {
-            text: "Output Device"
-            color: Theme.colorForeground
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
-            font.bold: true
-        }
-
-        Repeater {
-            model: Audio.sinks
-
-            MenuButton {
-                required property var modelData
-                readonly property bool isActive: Audio.sink?.id === modelData.id
-
+                id: deviceButton
                 Layout.fillWidth: true
-                icon: isActive ? "●" : "○"
-                text: modelData.description || modelData.name
-                onClicked: Audio.setSink(modelData)
+                implicitHeight: 42
+                radius: Theme.radiusMedium
+                color: deviceMouse.containsMouse ? Theme.colorHover : Theme.colorControl
+                border.width: 1
+                border.color: Theme.colorDivider
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.spacingMedium
+                    anchors.rightMargin: Theme.spacingMedium
+                    spacing: Theme.spacingSmall
+
+                    Text {
+                        text: "\uf025"
+                        color: Theme.colorAccent
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: Audio.sink?.description || Audio.sink?.nickname || Audio.sink?.name || "No output device"
+                        color: Theme.colorForeground
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        text: deviceListOpen ? "\uf077" : "\uf078"
+                        color: Theme.colorMuted
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Math.round(Theme.fontSize * 0.75)
+                    }
+                }
+
+                MouseArea {
+                    id: deviceMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: deviceListOpen = !deviceListOpen
+                }
+            }
+
+            overlayContent: Rectangle {
+                id: deviceDropdown
+                visible: deviceListOpen
+                x: Theme.spacingMedium
+                y: deviceButton.y + deviceButton.height + Theme.spacingSmall
+                width: outputDeviceCard.width - Theme.spacingMedium * 2
+                implicitHeight: Math.min(deviceRows.implicitHeight + Theme.spacingSmall * 2, 220)
+                height: implicitHeight
+                radius: Theme.radiusMedium
+                color: Theme.colorCard
+                border.width: 1
+                border.color: Theme.colorDivider
+                z: 200
+                clip: true
+
+                Flickable {
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingSmall
+                    contentWidth: width
+                    contentHeight: deviceRows.implicitHeight
+                    boundsBehavior: Flickable.StopAtBounds
+                    interactive: contentHeight > height
+                    clip: true
+
+                    ColumnLayout {
+                        id: deviceRows
+                        width: parent.width
+                        spacing: 2
+
+                        Repeater {
+                            model: Audio.sinks
+
+                            Rectangle {
+                                required property var modelData
+                                readonly property bool activeDevice: Audio.sink?.id === modelData.id
+                                Layout.fillWidth: true
+                                implicitHeight: 38
+                                radius: Theme.radiusMedium
+                                color: activeDevice ? Theme.colorSelected
+                                                    : (sinkMouse.containsMouse ? Theme.colorHover : "transparent")
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Theme.spacingMedium
+                                    anchors.rightMargin: Theme.spacingMedium
+                                    spacing: Theme.spacingSmall
+
+                                    Text {
+                                        text: parent.parent.activeDevice ? "●" : "○"
+                                        color: parent.parent.activeDevice ? Theme.colorAccent : Theme.colorMuted
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Math.round(Theme.fontSize * 0.72)
+                                    }
+
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: parent.parent.modelData.description
+                                              || parent.parent.modelData.nickname
+                                              || parent.parent.modelData.name
+                                        color: Theme.colorForeground
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Math.round(Theme.fontSize * 0.88)
+                                        elide: Text.ElideRight
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: sinkMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        Audio.setSink(parent.modelData);
+                                        deviceListOpen = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    WheelHandler {
+                        target: null
+                        onWheel: event => {
+                            const delta = event.pixelDelta.y !== 0
+                                ? event.pixelDelta.y
+                                : event.angleDelta.y / 2;
+                            const maximum = Math.max(0, parent.contentHeight - parent.height);
+                            parent.contentY = Math.max(0, Math.min(maximum, parent.contentY - delta));
+                            event.accepted = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        SectionLabel { text: "APPLICATIONS" }
+        AudioSectionCard {
+            visible: Audio.playbackGroups.length > 0
+
+            Flickable {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.min(appRows.implicitHeight, 230)
+                contentWidth: width
+                contentHeight: appRows.implicitHeight
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                interactive: contentHeight > height
+
+                ColumnLayout {
+                    id: appRows
+                    width: parent.width
+                    spacing: Theme.spacingSmall
+
+                    Repeater {
+                        model: Audio.playbackGroups
+
+                        AudioSliderRow {
+                            required property var modelData
+                            label: modelData.name
+                            subtitle: Audio.groupDescription(modelData)
+                            iconName: modelData.iconName
+                            fallbackIcon: "\uf1c7"
+                            value: Audio.groupVolume(modelData)
+                            muted: Audio.groupMuted(modelData)
+                            onValueEdited: value => Audio.setGroupVolume(modelData, value)
+                            onMuteClicked: Audio.toggleGroupMute(modelData)
+                        }
+                    }
+                }
+
+                WheelHandler {
+                    target: null
+                    onWheel: event => {
+                        const delta = event.pixelDelta.y !== 0
+                            ? event.pixelDelta.y
+                            : event.angleDelta.y / 2;
+                        const maximum = Math.max(0, parent.contentHeight - parent.height);
+                        parent.contentY = Math.max(0, Math.min(maximum, parent.contentY - delta));
+                        event.accepted = true;
+                    }
+                }
+            }
+        }
+
+        AudioSectionCard {
+            visible: Audio.playbackGroups.length === 0
+
+            Text {
+                Layout.fillWidth: true
+                text: "Active applications will appear here when they start playing audio."
+                color: Theme.colorMuted
+                font.family: Theme.fontFamily
+                font.pixelSize: Math.round(Theme.fontSize * 0.82)
+                wrapMode: Text.WordWrap
+            }
+        }
+
+        SectionLabel { text: "INPUT" }
+        AudioSectionCard {
+            AudioSliderRow {
+                label: "Microphone"
+                subtitle: Audio.source?.description || Audio.source?.nickname || Audio.source?.name || "No input device"
+                fallbackIcon: "\uf130"
+                value: Audio.sourceVolume
+                muted: Audio.sourceMuted
+                enabled: Audio.source !== null
+                onValueEdited: value => Audio.setSourceVolume(value)
+                onMuteClicked: Audio.toggleSourceMute()
             }
         }
     }
+
+    property bool deviceListOpen: false
 }

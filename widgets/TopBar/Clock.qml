@@ -85,349 +85,532 @@ Item {
 
     RowLayout {
         id: barRow
-        spacing: Theme.spacingSmall
+        spacing: Theme.spacingMedium
 
-        Item {
-            id: dateHit
-            implicitWidth: dateText.implicitWidth
-            implicitHeight: dateText.implicitHeight
-            Text {
-                id: dateText
-                anchors.centerIn: parent
-                text: Qt.formatDateTime(sysClock.date, "ddd, MMM d")
-                color: (calendarPopout.open || dateMouse.containsMouse) ? Theme.colorAccent : Theme.colorForeground
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
-            }
-            MouseArea {
-                id: dateMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    toolsPopout.open = false;
-                    if (!calendarPopout.open) calendarPopout.resetToToday();
-                    calendarPopout.open = !calendarPopout.open;
-                }
-            }
+        Text {
+            text: Qt.formatDateTime(sysClock.date, "ddd, MMM d")
+            color: (clockPopout.open || barMouse.containsMouse)
+                ? Theme.colorAccent
+                : Theme.colorForeground
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
         }
 
-        Separator {}
+        Text {
+            text: Qt.formatDateTime(sysClock.date, root.timeFormat())
+            color: (clockPopout.open || barMouse.containsMouse)
+                ? Theme.colorAccent
+                : Theme.colorForeground
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+        }
 
-        Item {
-            id: timeHit
-            implicitWidth: timeRow.implicitWidth
-            implicitHeight: timeRow.implicitHeight
-            RowLayout {
-                id: timeRow
-                anchors.centerIn: parent
-                spacing: Theme.spacingSmall
-                Text {
-                    text: Qt.formatDateTime(sysClock.date, root.timeFormat())
-                    color: (toolsPopout.open || timeMouse.containsMouse) ? Theme.colorAccent : Theme.colorForeground
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                }
-                Text {
-                    visible: ClockTools.timerRunning || ClockTools.timerPaused
-                    text: "· " + ClockTools.formatDuration(ClockTools.timerRemainingMs, false)
-                    color: Theme.colorAccent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                }
-                Text {
-                    visible: !ClockTools.timerRunning && !ClockTools.timerPaused && ClockTools.stopwatchRunning
-                    text: "· " + ClockTools.formatDuration(ClockTools.stopwatchElapsedMs, false)
-                    color: Theme.colorAccent
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                }
-            }
-            MouseArea {
-                id: timeMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    calendarPopout.open = false;
-                    toolsPopout.open = !toolsPopout.open;
-                }
-            }
+        Text {
+            visible: ClockTools.timerRunning || ClockTools.timerPaused
+            text: "· " + ClockTools.formatDuration(ClockTools.timerRemainingMs, false)
+            color: Theme.colorAccent
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+        }
+
+        Text {
+            visible: !ClockTools.timerRunning
+                && !ClockTools.timerPaused
+                && ClockTools.stopwatchRunning
+            text: "· " + ClockTools.formatDuration(ClockTools.stopwatchElapsedMs, false)
+            color: Theme.colorAccent
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+        }
+    }
+
+    MouseArea {
+        id: barMouse
+        anchors.fill: barRow
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: {
+            if (!clockPopout.open)
+                clockPopout.resetToToday();
+            clockPopout.open = !clockPopout.open;
         }
     }
 
     BarPopout {
-        id: calendarPopout
-        anchorItem: dateHit
+        id: clockPopout
+        anchorItem: root
         alignment: "right"
+
         property int displayedMonth: sysClock.date.getMonth()
         property int displayedYear: sysClock.date.getFullYear()
+
         function resetToToday() {
             displayedMonth = sysClock.date.getMonth();
             displayedYear = sysClock.date.getFullYear();
         }
+
         function stepMonth(delta) {
-            let m = displayedMonth + delta;
-            let y = displayedYear;
-            if (m < 0) { m = 11; y--; }
-            if (m > 11) { m = 0; y++; }
-            displayedMonth = m; displayedYear = y;
-        }
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.minimumWidth: 340
-            spacing: Theme.spacingSmall
-            MenuButton { text: "‹"; onClicked: calendarPopout.stepMonth(-1) }
-            Text {
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-                text: Qt.formatDateTime(new Date(calendarPopout.displayedYear, calendarPopout.displayedMonth, 1), "MMMM yyyy")
-                color: Theme.colorForeground
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
-                font.bold: true
-                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: calendarPopout.resetToToday() }
-            }
-            MenuButton { text: "›"; onClicked: calendarPopout.stepMonth(1) }
-        }
-        DayOfWeekRow {
-            Layout.fillWidth: true
-            spacing: 0
-            delegate: Text {
-                required property var model
-                text: model.shortName
-                horizontalAlignment: Text.AlignHCenter
-                color: Theme.colorMuted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
-                font.bold: true
-            }
-        }
-        MonthGrid {
-            id: grid
-            Layout.fillWidth: true
-            month: calendarPopout.displayedMonth
-            year: calendarPopout.displayedYear
-            spacing: 0
-            delegate: Item {
-                required property var model
-                implicitWidth: dayText.implicitWidth + Theme.spacingMedium
-                implicitHeight: dayText.implicitHeight + Theme.spacingSmall
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: Math.max(parent.width, parent.height)
-                    height: width
-                    radius: width / 2
-                    visible: model.today
-                    color: Theme.colorAccent
-                }
-                Text {
-                    id: dayText
-                    anchors.centerIn: parent
-                    text: model.day
-                    color: model.today ? Theme.colorBackground : (model.month === grid.month ? Theme.colorForeground : Theme.colorMuted)
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                    font.bold: model.today
-                }
-            }
-        }
-    }
+            let month = displayedMonth + delta;
+            let year = displayedYear;
 
-    BarPopout {
-        id: toolsPopout
-        anchorItem: timeHit
-        alignment: "right"
+            if (month < 0) {
+                month = 11;
+                year--;
+            } else if (month > 11) {
+                month = 0;
+                year++;
+            }
+
+            displayedMonth = month;
+            displayedYear = year;
+        }
+
+        Item {
+            Layout.minimumWidth: 790
+            implicitHeight: 0
+        }
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.minimumWidth: 390
-            spacing: Theme.spacingSmall
-            TabButton { label: "Timer"; selected: root.toolsTab === 0; onClicked: root.toolsTab = 0 }
-            TabButton { label: "Stopwatch"; selected: root.toolsTab === 1; onClicked: root.toolsTab = 1 }
-            TabButton { label: "Alarm"; selected: root.toolsTab === 2; onClicked: root.toolsTab = 2 }
-            Item { Layout.fillWidth: true }
-        }
+            spacing: Theme.spacingLarge
 
-        MenuDivider { Layout.fillWidth: true }
+            // Calendar and clock tools now share one menu. // GPT Rev 41
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 360
+                Layout.alignment: Qt.AlignTop
+                implicitHeight: calendarColumn.implicitHeight + Theme.spacingLarge * 2
+                radius: Theme.radiusMedium
+                color: Theme.colorCard
+                border.width: Theme.colorCardBorder.a > 0 ? 1 : 0
+                border.color: Theme.colorCardBorder
 
-        ColumnLayout {
-            visible: root.toolsTab === 0
-            Layout.fillWidth: true
-            spacing: Theme.spacingMedium
-            Text {
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-                text: ClockTools.formatDuration(ClockTools.timerRemainingMs > 0 ? ClockTools.timerRemainingMs : ClockTools.timerDurationMs, false)
-                color: Theme.colorForeground
-                font.family: Theme.fontFamily
-                font.pixelSize: Math.round(Theme.fontSize * 2.2)
-                font.bold: true
-            }
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: Theme.spacingSmall
-                Repeater {
-                    model: [1, 5, 10, 15, 30, 60]
-                    SmallButton {
-                        required property var modelData
-                        label: modelData + "m"
-                        onClicked: {
-                            root.timerMinutes = modelData;
-                            ClockTools.setTimerMinutes(modelData);
-                        }
-                    }
-                }
-            }
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: Theme.spacingSmall
-                SmallButton {
-                    label: ClockTools.timerRunning ? "Pause" : (ClockTools.timerPaused ? "Resume" : "Start")
-                    onClicked: ClockTools.timerRunning ? ClockTools.pauseTimer() : ClockTools.startTimer()
-                }
-                SmallButton { label: "Reset"; onClicked: ClockTools.resetTimer() }
-            }
-            Text {
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-                text: "Notifies at 1 minute remaining and when finished."
-                color: Theme.colorMuted
-                font.family: Theme.fontFamily
-                font.pixelSize: Math.round(Theme.fontSize * 0.82)
-            }
-        }
+                ColumnLayout {
+                    id: calendarColumn
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingLarge
+                    spacing: Theme.spacingMedium
 
-        ColumnLayout {
-            visible: root.toolsTab === 1
-            Layout.fillWidth: true
-            spacing: Theme.spacingMedium
-            Text {
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-                text: ClockTools.formatDuration(ClockTools.stopwatchElapsedMs, true)
-                color: Theme.colorForeground
-                font.family: Theme.fontFamily
-                font.pixelSize: Math.round(Theme.fontSize * 2.2)
-                font.bold: true
-            }
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: Theme.spacingSmall
-                SmallButton { label: ClockTools.stopwatchRunning ? "Pause" : "Start"; onClicked: ClockTools.toggleStopwatch() }
-                SmallButton { label: "Lap"; onClicked: ClockTools.addLap() }
-                SmallButton { label: "Reset"; onClicked: ClockTools.resetStopwatch() }
-            }
-            Text {
-                text: "Interval alerts"
-                color: Theme.colorMuted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
-            }
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: Theme.spacingSmall
-                Repeater {
-                    model: [0, 1, 5, 10, 15, 30]
-                    SmallButton {
-                        required property var modelData
-                        label: modelData === 0 ? "Off" : modelData + "m"
-                        border.color: ClockTools.stopwatchIntervalMinutes === modelData ? Theme.colorAccent : Theme.colorMuted
-                        onClicked: {
-                            ClockTools.stopwatchIntervalMinutes = modelData;
-                            ClockTools.stopwatchLastInterval = modelData > 0 ? Math.floor(ClockTools.stopwatchElapsedMs / (modelData * 60000)) : 0;
-                        }
-                    }
-                }
-            }
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: ClockTools.laps.length > 0
-                spacing: Theme.spacingSmall
-                Text { text: "Laps"; color: Theme.colorMuted; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSize }
-                Repeater {
-                    model: ClockTools.laps.slice(0, 6)
-                    Text {
-                        required property int index
-                        required property var modelData
+                    RowLayout {
                         Layout.fillWidth: true
-                        text: "Lap " + (ClockTools.laps.length - index) + "    " + ClockTools.formatDuration(modelData, true)
-                        color: Theme.colorForeground
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
+                        spacing: Theme.spacingSmall
+
+                        MenuButton {
+                            text: "‹"
+                            onClicked: clockPopout.stepMonth(-1)
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                            text: Qt.formatDateTime(
+                                new Date(clockPopout.displayedYear,
+                                         clockPopout.displayedMonth, 1),
+                                "MMMM yyyy")
+                            color: Theme.colorForeground
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Math.round(Theme.fontSize * 1.08)
+                            font.bold: true
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: clockPopout.resetToToday()
+                            }
+                        }
+
+                        MenuButton {
+                            text: "›"
+                            onClicked: clockPopout.stepMonth(1)
+                        }
+                    }
+
+                    DayOfWeekRow {
+                        Layout.fillWidth: true
+                        spacing: 0
+
+                        delegate: Text {
+                            required property var model
+                            text: model.shortName
+                            horizontalAlignment: Text.AlignHCenter
+                            color: Theme.colorMuted
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                            font.bold: true
+                        }
+                    }
+
+                    MonthGrid {
+                        id: monthGrid
+                        Layout.fillWidth: true
+                        month: clockPopout.displayedMonth
+                        year: clockPopout.displayedYear
+                        spacing: 0
+
+                        delegate: Item {
+                            required property var model
+                            implicitWidth: dayText.implicitWidth + Theme.spacingMedium
+                            implicitHeight: dayText.implicitHeight + Theme.spacingMedium
+
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: Math.max(parent.width, parent.height)
+                                height: width
+                                radius: width / 2
+                                visible: model.today
+                                color: Theme.colorAccent
+                            }
+
+                            Text {
+                                id: dayText
+                                anchors.centerIn: parent
+                                text: model.day
+                                color: model.today
+                                    ? Theme.colorBackground
+                                    : (model.month === monthGrid.month
+                                        ? Theme.colorForeground
+                                        : Theme.colorMuted)
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize
+                                font.bold: model.today
+                            }
+                        }
                     }
                 }
             }
-        }
 
-        ColumnLayout {
-            visible: root.toolsTab === 2
-            Layout.fillWidth: true
-            spacing: Theme.spacingMedium
-            Text {
+            Rectangle {
                 Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-                text: ClockTools.two(ClockTools.alarmHour) + ":" + ClockTools.two(ClockTools.alarmMinute)
-                color: Theme.colorForeground
-                font.family: Theme.fontFamily
-                font.pixelSize: Math.round(Theme.fontSize * 2.2)
-                font.bold: true
-            }
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: Theme.spacingSmall
-                SmallButton { label: "Hour −"; onClicked: ClockTools.alarmHour = (ClockTools.alarmHour + 23) % 24 }
-                SmallButton { label: "Hour +"; onClicked: ClockTools.alarmHour = (ClockTools.alarmHour + 1) % 24 }
-                SmallButton { label: "Min −"; onClicked: ClockTools.alarmMinute = (ClockTools.alarmMinute + 55) % 60 }
-                SmallButton { label: "Min +"; onClicked: ClockTools.alarmMinute = (ClockTools.alarmMinute + 5) % 60 }
-            }
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: Theme.spacingSmall
-                SmallButton {
-                    label: ClockTools.alarmEnabled ? "Disable" : "Set alarm"
-                    onClicked: ClockTools.alarmEnabled ? ClockTools.disableAlarm() : ClockTools.enableAlarm()
-                }
-                Text {
-                    text: ClockTools.alarmLabel()
-                    color: Theme.colorMuted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                }
-            }
-        }
+                Layout.preferredWidth: 390
+                Layout.alignment: Qt.AlignTop
+                implicitHeight: toolsColumn.implicitHeight + Theme.spacingLarge * 2
+                radius: Theme.radiusMedium
+                color: Theme.colorCard
+                border.width: Theme.colorCardBorder.a > 0 ? 1 : 0
+                border.color: Theme.colorCardBorder
 
-        MenuDivider { Layout.fillWidth: true }
+                ColumnLayout {
+                    id: toolsColumn
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingLarge
+                    spacing: Theme.spacingMedium
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Theme.spacingSmall
-            Text {
-                text: "Alert sound"
-                color: Theme.colorMuted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
-            }
-            Item { Layout.fillWidth: true }
-            SmallButton {
-                label: ClockTools.alertSoundEnabled ? "Sound on" : "Sound off"
-                border.color: ClockTools.alertSoundEnabled ? Theme.colorAccent : Theme.colorMuted
-                onClicked: ClockTools.alertSoundEnabled = !ClockTools.alertSoundEnabled
-            }
-            Repeater {
-                model: ClockTools.soundChoices
-                SmallButton {
-                    required property var modelData
-                    label: modelData.charAt(0).toUpperCase() + modelData.slice(1)
-                    border.color: ClockTools.alertSoundEnabled && ClockTools.alertSound === modelData
-                        ? Theme.colorAccent : Theme.colorMuted
-                    onClicked: {
-                        ClockTools.alertSound = modelData;
-                        ClockTools.alertSoundEnabled = true;
-                        ClockTools.playAlert(true);
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingSmall
+
+                        TabButton {
+                            label: "Timer"
+                            selected: root.toolsTab === 0
+                            onClicked: root.toolsTab = 0
+                        }
+
+                        TabButton {
+                            label: "Stopwatch"
+                            selected: root.toolsTab === 1
+                            onClicked: root.toolsTab = 1
+                        }
+
+                        TabButton {
+                            label: "Alarm"
+                            selected: root.toolsTab === 2
+                            onClicked: root.toolsTab = 2
+                        }
+
+                        Item { Layout.fillWidth: true }
+                    }
+
+                    ColumnLayout {
+                        visible: root.toolsTab === 0
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
+
+                        Text {
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                            text: ClockTools.formatDuration(
+                                ClockTools.timerRemainingMs > 0
+                                    ? ClockTools.timerRemainingMs
+                                    : ClockTools.timerDurationMs,
+                                false)
+                            color: Theme.colorForeground
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Math.round(Theme.fontSize * 2.2)
+                            font.bold: true
+                        }
+
+                        GridLayout {
+                            Layout.alignment: Qt.AlignHCenter
+                            columns: 3
+                            rowSpacing: Theme.spacingSmall
+                            columnSpacing: Theme.spacingSmall
+
+                            Repeater {
+                                model: [1, 5, 10, 15, 30, 60]
+
+                                SmallButton {
+                                    required property var modelData
+                                    label: modelData + "m"
+                                    onClicked: {
+                                        root.timerMinutes = modelData;
+                                        ClockTools.setTimerMinutes(modelData);
+                                    }
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.alignment: Qt.AlignHCenter
+                            spacing: Theme.spacingSmall
+
+                            SmallButton {
+                                label: ClockTools.timerRunning
+                                    ? "Pause"
+                                    : (ClockTools.timerPaused ? "Resume" : "Start")
+                                onClicked: ClockTools.timerRunning
+                                    ? ClockTools.pauseTimer()
+                                    : ClockTools.startTimer()
+                            }
+
+                            SmallButton {
+                                label: "Reset"
+                                onClicked: ClockTools.resetTimer()
+                            }
+                        }
+                    }
+
+                    ColumnLayout {
+                        visible: root.toolsTab === 1
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
+
+                        Text {
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                            text: ClockTools.formatDuration(
+                                ClockTools.stopwatchElapsedMs, true)
+                            color: Theme.colorForeground
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Math.round(Theme.fontSize * 2.2)
+                            font.bold: true
+                        }
+
+                        RowLayout {
+                            Layout.alignment: Qt.AlignHCenter
+                            spacing: Theme.spacingSmall
+
+                            SmallButton {
+                                label: ClockTools.stopwatchRunning
+                                    ? "Pause" : "Start"
+                                onClicked: ClockTools.toggleStopwatch()
+                            }
+
+                            SmallButton {
+                                label: "Lap"
+                                onClicked: ClockTools.addLap()
+                            }
+
+                            SmallButton {
+                                label: "Reset"
+                                onClicked: ClockTools.resetStopwatch()
+                            }
+                        }
+
+                        Text {
+                            text: "Interval alerts"
+                            color: Theme.colorMuted
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                        }
+
+                        GridLayout {
+                            Layout.alignment: Qt.AlignHCenter
+                            columns: 3
+                            rowSpacing: Theme.spacingSmall
+                            columnSpacing: Theme.spacingSmall
+
+                            Repeater {
+                                model: [0, 1, 5, 10, 15, 30]
+
+                                SmallButton {
+                                    required property var modelData
+                                    label: modelData === 0 ? "Off" : modelData + "m"
+                                    border.color:
+                                        ClockTools.stopwatchIntervalMinutes
+                                            === modelData
+                                        ? Theme.colorAccent
+                                        : Theme.colorMuted
+                                    onClicked: {
+                                        ClockTools.stopwatchIntervalMinutes =
+                                            modelData;
+                                        ClockTools.stopwatchLastInterval =
+                                            modelData > 0
+                                            ? Math.floor(
+                                                ClockTools.stopwatchElapsedMs
+                                                / (modelData * 60000))
+                                            : 0;
+                                    }
+                                }
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            visible: ClockTools.laps.length > 0
+                            spacing: Theme.spacingSmall
+
+                            Text {
+                                text: "Laps"
+                                color: Theme.colorMuted
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize
+                            }
+
+                            Repeater {
+                                model: ClockTools.laps.slice(0, 6)
+
+                                Text {
+                                    required property int index
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    text: "Lap "
+                                        + (ClockTools.laps.length - index)
+                                        + "    "
+                                        + ClockTools.formatDuration(
+                                            modelData, true)
+                                    color: Theme.colorForeground
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSize
+                                }
+                            }
+                        }
+                    }
+
+                    ColumnLayout {
+                        visible: root.toolsTab === 2
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
+
+                        Text {
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                            text: ClockTools.two(ClockTools.alarmHour)
+                                + ":"
+                                + ClockTools.two(ClockTools.alarmMinute)
+                            color: Theme.colorForeground
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Math.round(Theme.fontSize * 2.2)
+                            font.bold: true
+                        }
+
+                        GridLayout {
+                            Layout.alignment: Qt.AlignHCenter
+                            columns: 2
+                            rowSpacing: Theme.spacingSmall
+                            columnSpacing: Theme.spacingSmall
+
+                            SmallButton {
+                                label: "Hour −"
+                                onClicked: ClockTools.alarmHour =
+                                    (ClockTools.alarmHour + 23) % 24
+                            }
+
+                            SmallButton {
+                                label: "Hour +"
+                                onClicked: ClockTools.alarmHour =
+                                    (ClockTools.alarmHour + 1) % 24
+                            }
+
+                            SmallButton {
+                                label: "Min −"
+                                onClicked: ClockTools.alarmMinute =
+                                    (ClockTools.alarmMinute + 55) % 60
+                            }
+
+                            SmallButton {
+                                label: "Min +"
+                                onClicked: ClockTools.alarmMinute =
+                                    (ClockTools.alarmMinute + 5) % 60
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.alignment: Qt.AlignHCenter
+                            spacing: Theme.spacingSmall
+
+                            SmallButton {
+                                label: ClockTools.alarmEnabled
+                                    ? "Disable" : "Set alarm"
+                                onClicked: ClockTools.alarmEnabled
+                                    ? ClockTools.disableAlarm()
+                                    : ClockTools.enableAlarm()
+                            }
+
+                            Text {
+                                text: ClockTools.alarmLabel()
+                                color: Theme.colorMuted
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSize
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: 1
+                        color: Theme.colorDivider
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingSmall
+
+                        Text {
+                            text: "Alert sound"
+                            color: Theme.colorMuted
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        SmallButton {
+                            label: ClockTools.alertSoundEnabled
+                                ? "Sound on" : "Sound off"
+                            border.color: ClockTools.alertSoundEnabled
+                                ? Theme.colorAccent : Theme.colorMuted
+                            onClicked: ClockTools.alertSoundEnabled =
+                                !ClockTools.alertSoundEnabled
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.alignment: Qt.AlignRight
+                        spacing: Theme.spacingSmall
+
+                        Repeater {
+                            model: ClockTools.soundChoices
+
+                            SmallButton {
+                                required property var modelData
+                                label: modelData.charAt(0).toUpperCase()
+                                    + modelData.slice(1)
+                                border.color:
+                                    ClockTools.alertSoundEnabled
+                                    && ClockTools.alertSound === modelData
+                                    ? Theme.colorAccent
+                                    : Theme.colorMuted
+                                onClicked: {
+                                    ClockTools.alertSound = modelData;
+                                    ClockTools.alertSoundEnabled = true;
+                                    ClockTools.playAlert(true);
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
+
 }

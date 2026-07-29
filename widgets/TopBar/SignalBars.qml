@@ -75,9 +75,9 @@ Row {
     property real strength: 0
 
     readonly property int barCount: 4
-    readonly property real barWidth: 3
-    readonly property real barMaxHeight: Theme.fontSize
-    readonly property real barSpacing: 2
+    readonly property real barWidth: 4
+    readonly property real barMaxHeight: Math.round(Theme.fontSize * 1.2)
+    readonly property real barSpacing: 3
 
     spacing: barSpacing
     height: barMaxHeight

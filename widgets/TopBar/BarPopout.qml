@@ -409,11 +409,11 @@ PopupWindow {
     }
 
     implicitWidth: Math.ceil(contentColumn.implicitWidth
-                             + Theme.spacingMedium * 2 + _fL + _fR)
+                             + Theme.spacingLarge * 2 + _fL + _fR)
     // + one border width for the overlap strip at the top (see the
     // anchor comment) — the panel itself is unchanged in size.
     implicitHeight: Math.ceil(contentColumn.implicitHeight
-                              + Theme.spacingMedium * 2
+                              + Theme.spacingLarge * 2
                               + Theme.barBorderWidth)
     color: "transparent"
 
@@ -499,7 +499,9 @@ PopupWindow {
             ColumnLayout {
                 id: contentColumn
                 anchors.fill: parent
-                anchors.margins: Theme.spacingMedium
+                // Extra breathing room between the outer panel border
+                // and the inner cards/rows in every redesigned dropdown. // GPT Rev 38
+                anchors.margins: Theme.spacingLarge
                 spacing: Theme.spacingSmall
             }
         }

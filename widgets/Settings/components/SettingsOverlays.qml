@@ -152,6 +152,10 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
+                    // Unsaved palette edits belong to the theme that was being
+                    // edited. Changing themes discards those staged edits and
+                    // loads the selected theme from its saved defaults/overrides.
+                    settingsRoot.stagedThemeOverridesJson = UserPrefs.themeOverridesJson;
                     settingsRoot.stagedTheme = themeRow.modelData;
                     settingsRoot.themeDropdownOpen = false;
                 }

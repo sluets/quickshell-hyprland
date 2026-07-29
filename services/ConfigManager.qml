@@ -483,6 +483,11 @@ Singleton {
                     _hyprDirty = true;
                 break;
             case "fontScale": UserPrefs.setFontScale(ch.value); n++; break;
+            case "themeOverridesJson":
+                UserPrefs.setThemeOverridesJson(ch.value); n++;
+                if (UserPrefs.hyprActiveBorderUseThemeColor)
+                    _hyprDirty = true;
+                break;
             case "customThemeBaseName": UserPrefs.setCustomThemeBaseName(ch.value); n++; break;
             case "customThemeBackground": UserPrefs.setCustomThemeBackground(ch.value); n++; break;
             case "customThemeForeground": UserPrefs.setCustomThemeForeground(ch.value); n++; break;

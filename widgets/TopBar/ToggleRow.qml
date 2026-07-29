@@ -84,6 +84,7 @@ Rectangle {
     property string icon: ""
     property string text: ""
     property bool checked: false
+    property int iconTextSpacing: Theme.spacingMedium
     signal toggled(bool value)
 
     implicitWidth: content.implicitWidth + Theme.spacingMedium * 2
@@ -102,10 +103,10 @@ Rectangle {
         id: content
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.leftMargin: Theme.spacingSmall
-        anchors.rightMargin: Theme.spacingSmall
+        anchors.leftMargin: Theme.spacingMedium
+        anchors.rightMargin: Theme.spacingMedium
         anchors.verticalCenter: parent.verticalCenter
-        spacing: Theme.spacingSmall
+        spacing: root.iconTextSpacing
 
         Text {
             text: root.icon
