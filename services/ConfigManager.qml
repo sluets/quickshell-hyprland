@@ -179,6 +179,17 @@
 //             generated/monitors.lua added to managedPaths. Built for
 //             the Displays page (services/DisplayManager.qml is the
 //             caller); pattern doc in docs/DISPLAYS.md.
+// 2026-07-29  (Claude Fable 5) hyprGenScript rewritten: every preset now
+//             emits every animation leaf (partial coverage let presets
+//             bleed into each other and let unrelated reloads re-derive
+//             the uncovered leaves from user/look.lua — the reported
+//             "my animations reset by themselves"), and custom speeds
+//             are applied AFTER the style/fade overrides instead of
+//             only inside them, so the speed boxes work with every
+//             style on Follow Feel. Same 23-argument interface, no QML
+//             call-site changes. Verified by sweeping all 4800 dropdown
+//             combinations for duplicate/missing leaves and malformed
+//             output. See docs/HYPRLAND_SETTINGS_AUDIT.md.
 // 2026-07-09  (Fable 5) Phase 3: hypr generated-config machinery —
 //             generated/appearance.lua joins managedPaths (snapshot-
 //             skipped until the restructure exists), and applyChanges
@@ -763,206 +774,218 @@ hl.config({
 LUAEOF
 fi
 
-write_curves() {
-cat <<'LUAEOF'
+# ---------------------------------------------------------------------------
+# animations.lua
+#
+# EVERY preset emits EVERY leaf. Hyprland has no "unset", and this file is
+# not the only thing that declares animations (user/look.lua does too, and
+# loads first), so a leaf this file omits keeps whatever the previous
+# declaration left there. Partial coverage is what made presets bleed into
+# each other and made unrelated reloads look like "my animations reset".
+#
+# The pipeline is: base preset table -> style/fade overrides (they own the
+# STYLE and CURVE) -> custom speeds (they own the NUMBERS) -> render. One
+# record per leaf goes in, one Lua line comes out, so a leaf can never be
+# declared twice with different values.
+#
+# Record format:  leaf|enabled|speed|curve_kind|curve|style
+# ---------------------------------------------------------------------------
+
+base_table() {
+  case "$preset" in
+    snappy)
+      cat <<'T'
+global|1|1.8|bezier|quick|
+border|1|1.2|bezier|quick|
+windows|1|1.8|bezier|quick|popin 94%
+windowsIn|1|1.6|bezier|quick|popin 94%
+windowsOut|1|1.2|bezier|quick|popin 94%
+windowsMove|1|1.4|bezier|quick|
+layers|1|1.5|bezier|quick|fade
+layersIn|1|1.5|bezier|quick|fade
+layersOut|1|1.2|bezier|quick|fade
+fade|1|1.2|bezier|quick|
+fadeIn|1|1.2|bezier|quick|
+fadeOut|1|1.0|bezier|quick|
+fadeLayersIn|1|1.2|bezier|quick|
+fadeLayersOut|1|1.0|bezier|quick|
+workspaces|1|1.6|bezier|quick|slidefade 12%
+workspacesIn|1|1.6|bezier|quick|slidefade 12%
+workspacesOut|1|1.6|bezier|quick|slidefade 12%
+zoomFactor|1|1.8|bezier|quick|
+T
+      ;;
+    bouncy)
+      cat <<'T'
+global|1|6.0|spring|rubber|
+border|1|4.0|bezier|easeOutQuint|
+windows|1|6.0|spring|rubber|popin 80%
+windowsIn|1|6.5|spring|rubber|popin 80%
+windowsOut|1|3.0|bezier|easeOutQuint|popin 80%
+windowsMove|1|5.0|spring|rubber|
+layers|1|5.0|spring|rubber|popin 85%
+layersIn|1|5.0|spring|rubber|popin 85%
+layersOut|1|3.0|bezier|easeOutQuint|popin 85%
+fade|1|3.5|bezier|easeOutQuint|
+fadeIn|1|3.5|bezier|easeOutQuint|
+fadeOut|1|3.0|bezier|easeOutQuint|
+fadeLayersIn|1|3.5|bezier|easeOutQuint|
+fadeLayersOut|1|3.0|bezier|easeOutQuint|
+workspaces|1|5.5|spring|rubber|slidefade 35%
+workspacesIn|1|5.5|spring|rubber|slidefade 35%
+workspacesOut|1|5.5|spring|rubber|slidefade 35%
+zoomFactor|1|5.0|bezier|easeOutQuint|
+T
+      ;;
+    custom)
+      # Entered values are the base here; the override stages below keep
+      # them (custom speeds are implicitly enabled for this preset).
+      cat <<T
+global|1|$window_speed|bezier|quick|
+border|1|$window_speed|bezier|quick|
+windows|1|$window_speed|bezier|quick|popin 90%
+windowsIn|1|$window_in_speed|bezier|quick|popin 90%
+windowsOut|1|$window_out_speed|bezier|quick|popin 90%
+windowsMove|1|$window_speed|bezier|quick|
+layers|1|$layer_speed|bezier|easeOutQuint|fade
+layersIn|1|$layer_speed|bezier|easeOutQuint|fade
+layersOut|1|$layer_speed|bezier|easeOutQuint|fade
+fade|1|$fade_speed|bezier|quick|
+fadeIn|1|$fade_speed|bezier|quick|
+fadeOut|1|$fade_speed|bezier|quick|
+fadeLayersIn|1|$fade_speed|bezier|quick|
+fadeLayersOut|1|$fade_speed|bezier|quick|
+workspaces|1|$workspace_speed|bezier|almostLinear|slide
+workspacesIn|1|$workspace_speed|bezier|almostLinear|slide
+workspacesOut|1|$workspace_speed|bezier|almostLinear|slide
+zoomFactor|1|$window_speed|bezier|quick|
+T
+      ;;
+    smooth|*)
+      cat <<'T'
+global|1|10|bezier|default|
+border|1|5.39|bezier|easeOutQuint|
+windows|1|2.2|bezier|quick|
+windowsIn|1|1.8|bezier|quick|popin 90%
+windowsOut|1|1.5|bezier|quick|popin 90%
+windowsMove|1|2.2|bezier|quick|
+layers|1|3.81|bezier|easeOutQuint|
+layersIn|1|4|bezier|easeOutQuint|fade
+layersOut|1|1.5|bezier|linear|fade
+fade|1|3.03|bezier|quick|
+fadeIn|1|1.73|bezier|almostLinear|
+fadeOut|1|1.46|bezier|almostLinear|
+fadeLayersIn|1|1.79|bezier|almostLinear|
+fadeLayersOut|1|1.39|bezier|almostLinear|
+workspaces|1|1.94|bezier|almostLinear|fade
+workspacesIn|1|1.21|bezier|almostLinear|slide
+workspacesOut|1|1.94|bezier|almostLinear|slide
+zoomFactor|1|7|bezier|quick|
+T
+      ;;
+  esac
+}
+
+{
+  echo '-- GENERATED by Quickshell ConfigManager. DO NOT EDIT.'
+  echo "-- preset=$preset window=$window_style workspace=$workspace_style layer=$layer_style fade=$fade_preset custom_speeds=$custom_speeds"
+  if [ "$preset" = off ]; then
+    echo 'hl.config({ animations = { enabled = false } })'
+    echo 'hl.animation({ leaf = "global", enabled = false })'
+    # Every leaf disabled explicitly: user/look.lua declares its own leaves
+    # and loads BEFORE this file, so relying on the global switch alone
+    # leaves those declarations live in the compositor's state.
+    base_table_off=$(preset=smooth; base_table)
+    echo "$base_table_off" | while IFS='|' read -r leaf en sp ck cv st; do
+      [ -n "$leaf" ] || continue
+      [ "$leaf" = global ] && continue
+      echo "hl.animation({ leaf = \\"$leaf\\", enabled = false })"
+    done
+  else
+    cat <<'LUAEOF'
 hl.curve("easeOutQuint",   { type = "bezier", points = { {0.23, 1},    {0.32, 1}    } })
+hl.curve("easeInOutCubic", { type = "bezier", points = { {0.65, 0.05}, {0.36, 1}    } })
 hl.curve("linear",         { type = "bezier", points = { {0, 0},       {1, 1}       } })
 hl.curve("almostLinear",   { type = "bezier", points = { {0.5, 0.5},   {0.75, 1}    } })
 hl.curve("quick",          { type = "bezier", points = { {0.15, 0},    {0.1, 1}     } })
 hl.curve("easy",           { type = "spring", mass = 1, stiffness = 71.2633, dampening = 15.8273644 })
 hl.curve("rubber",         { type = "spring", mass = 1, stiffness = 70, dampening = 8 })
 LUAEOF
-}
+    echo 'hl.config({ animations = { enabled = true } })'
 
-{
-  echo '-- GENERATED by Quickshell ConfigManager. DO NOT EDIT.'
-  if [ "$preset" = off ]; then
-    cat <<'LUAEOF'
-hl.config({ animations = { enabled = false } })
-hl.animation({ leaf = "global", enabled = false })
-LUAEOF
-  else
-    write_curves
-    case "$preset" in
-      snappy)
-        cat <<'LUAEOF'
+    # Custom speeds are authoritative for TIMING whenever the toggle is on,
+    # or always in the Custom preset. Styles/curves still come from the
+    # dropdowns — that is exactly what the settings page promises.
+    use_custom=0
+    if [ "$custom_speeds" = 1 ] || [ "$preset" = custom ]; then use_custom=1; fi
 
-hl.config({ animations = { enabled = true } })
-hl.animation({ leaf = "global",        enabled = true, speed = 1.8, bezier = "quick" })
-hl.animation({ leaf = "border",        enabled = true, speed = 1.2, bezier = "quick" })
-hl.animation({ leaf = "windows",       enabled = true, speed = 1.8, bezier = "quick", style = "popin 94%" })
-hl.animation({ leaf = "windowsIn",     enabled = true, speed = 1.6, bezier = "quick", style = "popin 94%" })
-hl.animation({ leaf = "windowsOut",    enabled = true, speed = 1.2, bezier = "quick", style = "popin 94%" })
-hl.animation({ leaf = "windowsMove",   enabled = true, speed = 1.4, bezier = "quick" })
-hl.animation({ leaf = "fade",          enabled = true, speed = 1.2, bezier = "quick" })
-hl.animation({ leaf = "layers",        enabled = true, speed = 1.5, bezier = "quick", style = "fade" })
-hl.animation({ leaf = "workspaces",    enabled = true, speed = 1.6, bezier = "quick", style = "slidefade 12%" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 1.6, bezier = "quick", style = "slidefade 12%" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = 1.6, bezier = "quick", style = "slidefade 12%" })
-LUAEOF
-        ;;
-      bouncy)
-        cat <<'LUAEOF'
+    base_table | awk -F'|' -v OFS='|' \\
+      -v ws="$window_style" -v wss="$workspace_style" -v ls="$layer_style" \\
+      -v fp="$fade_preset" -v uc="$use_custom" \\
+      -v w_sp="$window_speed" -v w_in="$window_in_speed" -v w_out="$window_out_speed" \\
+      -v ws_sp="$workspace_speed" -v l_sp="$layer_speed" -v f_sp="$fade_speed" '
+    function is_window(l) { return l=="windows" || l=="windowsIn" || l=="windowsOut" }
+    function is_ws(l)     { return l=="workspaces" || l=="workspacesIn" || l=="workspacesOut" }
+    function is_layer(l)  { return l=="layers" || l=="layersIn" || l=="layersOut" }
+    function is_fade(l)   { return l=="fade" || l=="fadeIn" || l=="fadeOut" }
+    NF < 6 { next }
+    {
+      leaf=$1; en=$2; sp=$3; ck=$4; cv=$5; st=$6
 
-hl.config({ animations = { enabled = true } })
-hl.animation({ leaf = "global",        enabled = true, speed = 6.0, spring = "rubber" })
-hl.animation({ leaf = "border",        enabled = true, speed = 4.0, bezier = "easeOutQuint" })
-hl.animation({ leaf = "windows",       enabled = true, speed = 6.0, spring = "rubber", style = "popin 80%" })
-hl.animation({ leaf = "windowsIn",     enabled = true, speed = 6.5, spring = "rubber", style = "popin 80%" })
-hl.animation({ leaf = "windowsOut",    enabled = true, speed = 3.0, bezier = "easeOutQuint", style = "popin 80%" })
-hl.animation({ leaf = "windowsMove",   enabled = true, speed = 5.0, spring = "rubber" })
-hl.animation({ leaf = "fade",          enabled = true, speed = 3.5, bezier = "easeOutQuint" })
-hl.animation({ leaf = "layers",        enabled = true, speed = 5.0, spring = "rubber", style = "popin 85%" })
-hl.animation({ leaf = "workspaces",    enabled = true, speed = 5.5, spring = "rubber", style = "slidefade 35%" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 5.5, spring = "rubber", style = "slidefade 35%" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = 5.5, spring = "rubber", style = "slidefade 35%" })
-LUAEOF
-        ;;
-      custom)
-        # Custom is emitted with the entered values directly. Do not generate
-        # hard-coded defaults and attempt to rewrite them afterward.  // GPT Rev 20
-        cat <<LUAEOF
+      # ---- stage 1: style dropdowns own STYLE + CURVE (and preset speeds) ----
+      if (is_window(leaf) && ws != "follow") {
+        if (ws == "popin")       { st="popin 88%"; ps="2.2"; pi="1.8"; po="1.5" }
+        else if (ws == "slide")  { st="slide";     ps="2.2"; pi="1.8"; po="1.5" }
+        else if (ws == "gnomed") { st="gnomed";    ps="2.8"; pi="2.5"; po="1.8" }
+        ck="bezier"; cv="quick"
+        if (leaf=="windows")    sp=ps
+        if (leaf=="windowsIn")  sp=pi
+        if (leaf=="windowsOut") sp=po
+      }
+      if (is_ws(leaf) && wss != "follow") {
+        st = (wss=="slidefade" || wss=="slidefadevert") ? wss " 35%" : wss
+        ck="bezier"; cv="almostLinear"
+        sp = (leaf=="workspacesIn") ? "2.2" : "2.4"
+      }
+      if (is_layer(leaf) && ls != "follow") {
+        st = (ls=="popin") ? "popin 85%" : ls
+        ck="bezier"
+        if (leaf=="layersOut") { cv="quick"; sp="1.5" }
+        else { cv="easeOutQuint"; sp=(leaf=="layers") ? "2.2" : "2.0" }
+      }
+      if (is_fade(leaf) && fp != "follow") {
+        if (fp == "off") { en=0 }
+        else if (fp == "quick")    { ck="bezier"; cv="quick";        sp=(leaf=="fadeOut")?"1.0":"1.2" }
+        else if (fp == "balanced") { ck="bezier"; cv="almostLinear";
+                                     sp=(leaf=="fade")?"2.0":((leaf=="fadeIn")?"1.8":"1.5") }
+        else if (fp == "soft")     { ck="bezier"; cv="easeOutQuint";
+                                     sp=(leaf=="fade")?"3.4":((leaf=="fadeIn")?"3.0":"2.4");
+                                     if (leaf=="fadeOut") cv="almostLinear" }
+      }
 
-hl.config({ animations = { enabled = true } })
-hl.animation({ leaf = "global",        enabled = true, speed = $window_speed, bezier = "quick" })
-hl.animation({ leaf = "border",        enabled = true, speed = $window_speed, bezier = "quick" })
-hl.animation({ leaf = "windows",       enabled = true, speed = $window_speed, bezier = "quick", style = "popin 90%" })
-hl.animation({ leaf = "windowsIn",     enabled = true, speed = $window_in_speed, bezier = "quick", style = "popin 90%" })
-hl.animation({ leaf = "windowsOut",    enabled = true, speed = $window_out_speed, bezier = "quick", style = "popin 90%" })
-hl.animation({ leaf = "fade",          enabled = true, speed = $fade_speed, bezier = "quick" })
-hl.animation({ leaf = "fadeIn",        enabled = true, speed = $fade_speed, bezier = "quick" })
-hl.animation({ leaf = "fadeOut",       enabled = true, speed = $fade_speed, bezier = "quick" })
-hl.animation({ leaf = "layers",        enabled = true, speed = $layer_speed, bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "layersIn",      enabled = true, speed = $layer_speed, bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "layersOut",     enabled = true, speed = $layer_speed, bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "workspaces",    enabled = true, speed = $workspace_speed, bezier = "almostLinear", style = "slide" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = $workspace_speed, bezier = "almostLinear", style = "slide" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = $workspace_speed, bezier = "almostLinear", style = "slide" })
-LUAEOF
-        ;;
-      smooth|*)
-        cat <<'LUAEOF'
+      # ---- stage 2: custom speeds own the NUMBERS, whatever the style ----
+      # This is the fix for "the speed boxes do nothing": they used to be
+      # consulted only inside the style-override branches, so with every
+      # style on Follow Feel they were silently discarded.
+      if (uc == 1) {
+        if (leaf=="windows" || leaf=="windowsMove" || leaf=="global" || leaf=="border" || leaf=="zoomFactor") sp=w_sp
+        if (leaf=="windowsIn")  sp=w_in
+        if (leaf=="windowsOut") sp=w_out
+        if (is_ws(leaf))    sp=ws_sp
+        if (is_layer(leaf) || leaf=="fadeLayersIn" || leaf=="fadeLayersOut") sp=l_sp
+        if (is_fade(leaf))  sp=f_sp
+      }
 
-hl.config({ animations = { enabled = true } })
-hl.animation({ leaf = "global",        enabled = true, speed = 10,   bezier = "default" })
-hl.animation({ leaf = "border",        enabled = true, speed = 5.39, bezier = "easeOutQuint" })
-hl.animation({ leaf = "windows",       enabled = true, speed = 2.2, bezier = "quick" })
-hl.animation({ leaf = "windowsIn",     enabled = true, speed = 1.8, bezier = "quick", style = "popin 90%" })
-hl.animation({ leaf = "windowsOut",    enabled = true, speed = 1.5, bezier = "quick", style = "popin 90%" })
-hl.animation({ leaf = "fadeIn",        enabled = true, speed = 1.73, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeOut",       enabled = true, speed = 1.46, bezier = "almostLinear" })
-hl.animation({ leaf = "fade",          enabled = true, speed = 3.03, bezier = "quick" })
-hl.animation({ leaf = "layers",        enabled = true, speed = 3.81, bezier = "easeOutQuint" })
-hl.animation({ leaf = "layersIn",      enabled = true, speed = 4,    bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "layersOut",     enabled = true, speed = 1.5,  bezier = "linear",       style = "fade" })
-hl.animation({ leaf = "fadeLayersIn",  enabled = true, speed = 1.79, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = 1.39, bezier = "almostLinear" })
-hl.animation({ leaf = "workspaces",    enabled = true, speed = 1.94, bezier = "almostLinear", style = "fade" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 1.21, bezier = "almostLinear", style = "slide" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = 1.94, bezier = "almostLinear", style = "slide" })
-hl.animation({ leaf = "zoomFactor",    enabled = true, speed = 7,    bezier = "quick" })
-LUAEOF
-        ;;
-    esac
-
-    # Optional branch-specific style overrides. These are written after the
-    # overall feel so the child leaves intentionally take precedence.  // GPT Rev 40
-    case "$window_style" in
-      popin|slide|gnomed)
-        case "$window_style" in
-          popin) window_arg="popin 88%"; preset_window_speed="2.2"; preset_window_in_speed="1.8"; preset_window_out_speed="1.5" ;;
-          slide) window_arg="slide";      preset_window_speed="2.2"; preset_window_in_speed="1.8"; preset_window_out_speed="1.5" ;;
-          gnomed) window_arg="gnomed";    preset_window_speed="2.8"; preset_window_in_speed="2.5"; preset_window_out_speed="1.8" ;;
-        esac
-        if [ "$custom_speeds" = 1 ] || [ "$preset" = custom ]; then
-          active_window_speed="$window_speed"
-          active_window_in_speed="$window_in_speed"
-          active_window_out_speed="$window_out_speed"
-        else
-          active_window_speed="$preset_window_speed"
-          active_window_in_speed="$preset_window_in_speed"
-          active_window_out_speed="$preset_window_out_speed"
-        fi
-        cat <<LUAEOF
-hl.animation({ leaf = "windows",    enabled = true, speed = $active_window_speed, bezier = "quick", style = "$window_arg" })
-hl.animation({ leaf = "windowsIn",  enabled = true, speed = $active_window_in_speed, bezier = "quick", style = "$window_arg" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = $active_window_out_speed, bezier = "quick", style = "$window_arg" })
-LUAEOF
-        ;;
-    esac
-
-    case "$workspace_style" in
-      slide|slidevert|fade|slidefade|slidefadevert)
-        if [ "$workspace_style" = slidefade ] || [ "$workspace_style" = slidefadevert ]; then
-          ws_style="$workspace_style 35%"
-        else
-          ws_style="$workspace_style"
-        fi
-        if [ "$custom_speeds" = 1 ] || [ "$preset" = custom ]; then
-          ws_speed="$workspace_speed"
-          ws_in_speed="$workspace_speed"
-          ws_out_speed="$workspace_speed"
-        else
-          ws_speed="2.4"
-          ws_in_speed="2.2"
-          ws_out_speed="2.4"
-        fi
-        cat <<LUAEOF
-hl.animation({ leaf = "workspaces",    enabled = true, speed = $ws_speed, bezier = "almostLinear", style = "$ws_style" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = $ws_in_speed, bezier = "almostLinear", style = "$ws_style" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = $ws_out_speed, bezier = "almostLinear", style = "$ws_style" })
-LUAEOF
-        ;;
-    esac
-
-    case "$layer_style" in
-      fade|popin|slide)
-        layer_arg="$layer_style"
-        [ "$layer_style" = popin ] && layer_arg="popin 85%"
-        cat <<LUAEOF
-hl.animation({ leaf = "layers",    enabled = true, speed = 2.2, bezier = "easeOutQuint", style = "$layer_arg" })
-hl.animation({ leaf = "layersIn",  enabled = true, speed = 2.0, bezier = "easeOutQuint", style = "$layer_arg" })
-hl.animation({ leaf = "layersOut", enabled = true, speed = 1.5, bezier = "quick", style = "$layer_arg" })
-LUAEOF
-        ;;
-    esac
-
-    case "$fade_preset" in
-      off)
-        cat <<'LUAEOF'
-hl.animation({ leaf = "fade", enabled = false })
-LUAEOF
-        ;;
-      quick)
-        cat <<'LUAEOF'
-hl.animation({ leaf = "fade", enabled = true, speed = 1.2, bezier = "quick" })
-hl.animation({ leaf = "fadeIn", enabled = true, speed = 1.2, bezier = "quick" })
-hl.animation({ leaf = "fadeOut", enabled = true, speed = 1.0, bezier = "quick" })
-LUAEOF
-        ;;
-      balanced)
-        cat <<'LUAEOF'
-hl.animation({ leaf = "fade", enabled = true, speed = 2.0, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeIn", enabled = true, speed = 1.8, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeOut", enabled = true, speed = 1.5, bezier = "almostLinear" })
-LUAEOF
-        ;;
-      soft)
-        cat <<'LUAEOF'
-hl.animation({ leaf = "fade", enabled = true, speed = 3.4, bezier = "easeOutQuint" })
-hl.animation({ leaf = "fadeIn", enabled = true, speed = 3.0, bezier = "easeOutQuint" })
-hl.animation({ leaf = "fadeOut", enabled = true, speed = 2.4, bezier = "almostLinear" })
-LUAEOF
-        ;;
-    esac
-
+      # ---- render ----
+      line = "hl.animation({ leaf = \\"" leaf "\\", enabled = " (en==1 ? "true" : "false")
+      if (en == 1) {
+        line = line ", speed = " sp ", " ck " = \\"" cv "\\""
+        if (st != "") line = line ", style = \\"" st "\\""
+      }
+      print line " })"
+    }'
   fi
 } > "$animout"
-
-# Custom timing values are emitted directly in the Custom preset and in
-# branch-specific overrides. This intentionally replaces the former sed
-# post-processing stage, which could silently leave the hard-coded defaults
-# in place even though the staged value had been persisted.  // GPT Rev 20
 
 echo "generated appearance.lua and animations.lua ($preset)"
 # Animation declarations are loaded through the same ordinary Hyprland reload
