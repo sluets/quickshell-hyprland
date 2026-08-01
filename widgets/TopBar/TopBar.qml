@@ -196,10 +196,15 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 import qs.core
 
 PanelWindow {
     id: topBar
+
+    // Stable layer-shell namespace used by the selective Hyprland blur rule.
+    // PopupWindow children are included when the rule enables blur_popups.
+    WlrLayershell.namespace: "qs-bar"
 
     // Attachment points for the optional connected notification surface. // GPT Rev 54
     readonly property alias notificationLeftAnchorItem: notificationLeftAnchor
@@ -337,7 +342,8 @@ PanelWindow {
         Rectangle {
             anchors.fill: parent
             radius: Theme.barRadius
-            color: Theme.colorBackground
+            antialiasing: true
+            color: Qt.alpha(Theme.colorBackground, Theme.barOpacity)
         }
 
         // ---- Modules ----
