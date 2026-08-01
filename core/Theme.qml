@@ -346,10 +346,21 @@ Singleton {
     // import statement.
     readonly property int fontSize: Math.round(active.fontSize * UserPrefs.fontScale)
 
-    readonly property int barHeight: active.barHeight
+    // User geometry overrides are documented exceptions to the normal direct
+    // forwarding contract. A negative value means follow the active theme.
+    readonly property int barHeight:
+        UserPrefs.barHeightOverride >= 0 ? UserPrefs.barHeightOverride : active.barHeight
     readonly property int radiusMedium: active.radiusMedium
     readonly property int barMargin: active.barMargin
-    readonly property int barRadius: active.barRadius
+    readonly property int barRadius:
+        UserPrefs.barRadiusOverride >= 0 ? UserPrefs.barRadiusOverride : active.barRadius
+
+    // Fill alpha is resolved separately for the bar and attached popouts so
+    // their elevation remains readable where the two surfaces overlap.
+    readonly property real barOpacity:
+        UserPrefs.barOpacityOverride >= 0 ? UserPrefs.barOpacityOverride : active.barOpacity
+    readonly property real popoutOpacity:
+        UserPrefs.popoutOpacityOverride >= 0 ? UserPrefs.popoutOpacityOverride : active.popoutOpacity
 
     // Per-edge bar padding (settings window, Appearance page,
     // 2026-07-12). Same precedence rule as barBorderWidth: a user

@@ -1,3 +1,29 @@
+## 2026-08-01 — Bar geometry, translucency, blur integration, and menu presentation completed (GPT-5.6 Thinking)
+
+**Context:** The complete bar appearance and popout-presentation plan was implemented one phase at a time and live-tested on the maintainer's Arch/Hyprland system. The work intentionally kept geometry, translucency, compositor blur, and presentation mode separate so failures could be isolated.
+
+**What changed:**
+
+- Added staged custom bar-height (`24–64 px`) and corner-radius (`0–24 px`) overrides that can continue following the active theme through the existing `-1` sentinel convention.
+- Added independent bar and popout opacity controls. Notification cards share the popout-opacity value so elevated shell surfaces stay visually matched.
+- Applied translucency only to background paint, preserving solid text, icons, controls, and borders.
+- Added stable `qs-bar` and `qs-notif` layer namespaces plus documented Hyprland blur rules. Attached menus inherit popup blur from the bar rule; detached notifications use their own layer rule.
+- Added a global **Menus** presentation setting with `Attached` and `Detached` choices. Detached menus remain anchored beneath their module but use a positive gap, four rounded corners, a closed border, and no connected-bar notch.
+- Updated direct `BarPopout` consumers so Volume, connectivity controls, Bluetooth, Clock, Clipboard, Music, and System Menu follow the global setting.
+- Fixed translucent attached-menu backgrounds that previously double-painted the squared top section, producing a dark horizontal band.
+- Fixed the custom bar-border canvas at large radii by clamping the drawn path radius to half the available dimensions; the saved radius range remains unchanged.
+- Renamed the Settings row from “Popout presentation” to **Menus** to preserve form-column alignment.
+
+**Live results:**
+
+- Bar height, radius, opacity, matching notification opacity, attached menus, and detached menus were accepted visually.
+- Hyprland blur works on the bar and popup surfaces. A thin line can remain at the attached bar/popup overlap when popup blur is enabled; disabling the blur rule removes it. This is documented as a known compositor/surface seam and is not currently considered release-blocking.
+- Radius values above approximately half the bar height no longer create a vertical stroke at the bar's right edge.
+
+**Documentation:** Added `BAR_APPEARANCE_AND_POPOUT_PLAN.md`, added `HYPRLAND_BLUR_SETUP.md`, updated the README feature summary, and recorded the remaining attached-popup blur seam in `PROBLEMS_AND_FIXES.md`.
+
+---
+
 ## 2026-07-28 — Settings visual redesign approved through Rev 27 (GPT-5.6 Thinking)
 
 **Context:** The Settings window was visually rebuilt against the approved canonical mockup while preserving the split architecture and staged Apply transaction. The work was delivered cumulatively so the newest archive could be dropped over the project at home.

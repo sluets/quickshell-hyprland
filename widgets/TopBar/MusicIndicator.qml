@@ -69,6 +69,7 @@ Item {
      * if a compact bar popout is wanted again later. // GPT 2026-07-25
      *
     BarPopout {
+        detached: UserPrefs.popoutPresentation === "detached"
         id: popout
         anchorItem: root
         alignment: "left"

@@ -26,7 +26,7 @@ than a demonstration config.
 
 ### Desktop shell
 
-- Floating multi-monitor top bar
+- Floating multi-monitor top bar with configurable height, corner radius, opacity, and Hyprland blur integration
 - Hyprland workspace controls
 - Application launcher with attached or centered presentation, offsets, favorites, usage ordering, and hidden-app controls
 - Power and session menu
@@ -38,7 +38,7 @@ than a demonstration config.
 - Quickshell-native calculator opened from the launcher, with favorites, usage ranking, keyboard input, and session history
 - Timer, stopwatch, alarm, interval notifications, and selectable alert sounds
 - Clipboard persistence/history with bounded entries, delete/clear actions, and image thumbnails
-- Native Quickshell notification daemon with detached or bar-attached stacked cards
+- Native Quickshell notification daemon with detached or bar-attached stacked cards and opacity matched to elevated menus
 - Desktop clock, date, weather, and temperature display
 - Per-monitor behavior where appropriate
 
@@ -50,7 +50,7 @@ than a demonstration config.
 - Shared wallpaper-library directory
 - Wallpaper picker with attached or centered presentation and cached `.thumbs` previews
 - Wallpaper transitions through `awww`
-- Configurable bar spacing, borders, sizing, and related appearance options
+- Configurable bar spacing, borders, height, corner radius, independent bar/menu opacity, and attached or detached module menus
 - Persisted Settings window dimensions for different displays and workspaces
 
 ### Settings and configuration
@@ -138,6 +138,7 @@ For a fresh installation, read these first:
 
 - `docs/SETUP_GUIDE.md`
 - `docs/HYPRLAND_WINDOW_RULES.md`
+- `docs/HYPRLAND_BLUR_SETUP.md`
 - `docs/PROBLEMS_AND_FIXES.md`
 - `sddm-project/README.md`
 

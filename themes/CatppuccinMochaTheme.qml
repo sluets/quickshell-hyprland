@@ -62,6 +62,8 @@ QtObject {
 
     // ---- Sizing ----
     property int barHeight: 32
+    property real barOpacity: 1.0
+    property real popoutOpacity: 1.0
     property int radiusMedium: 6
 
     // ---- Bar framing ----

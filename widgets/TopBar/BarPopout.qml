@@ -212,6 +212,9 @@ PopupWindow {
     property bool open: false
     // Notifications open unsolicited and should not disappear on an unrelated click. // GPT Rev 52
     property bool dismissOnOutsideClick: true
+    // Detached popouts keep the same anchor but float below it with a full
+    // rounded outline instead of sharing the bar border/fillet geometry.
+    property bool detached: false
     // Children declared inside a BarPopout land in the inner column.
     default property alias content: contentColumn.data
 
@@ -220,6 +223,17 @@ PopupWindow {
     // zero. Hiding `visible` immediately would destroy the surface before a
     // closing animation could be shown — that was the old limitation, not a
     // QML limitation. Reopening mid-close simply reverses the same animation.
+    onDetachedChanged: {
+        // Do not morph a mapped popup between two geometries. Closing first
+        // avoids one-frame overlap/notch artifacts during Settings Apply.
+        if (open || visible) {
+            open = false;
+            visible = false;
+            revealProgress = 0;
+            _updateGap();
+        }
+    }
+
     onOpenChanged: {
         if (open) {
             visible = true;
@@ -311,9 +325,9 @@ PopupWindow {
     // the flanks: two f-wide strips beside an open menu that receive
     // clicks and do nothing (input-mask polish item if it annoys).
     readonly property int _fL:
-        (flushToBarEdge && alignment === "left") ? 0 : Theme.barBorderFillet
+        detached ? 0 : ((flushToBarEdge && alignment === "left") ? 0 : Theme.barBorderFillet)
     readonly property int _fR:
-        (flushToBarEdge && alignment === "right") ? 0 : Theme.barBorderFillet
+        detached ? 0 : ((flushToBarEdge && alignment === "right") ? 0 : Theme.barBorderFillet)
 
     // Bar geometry captured at open, for the gradient's coordinate
     // shift (the popout's gradient CONTINUES the bar's — same line,
@@ -338,6 +352,10 @@ PopupWindow {
         const bar = _findBarHost();
         if (!bar)
             return;
+        if (detached) {
+            bar.clearPopoutGap(_gapKey);
+            return;
+        }
         // Keep the gap open during the closing animation. It is cleared only
         // when the popup surface is finally hidden at revealProgress == 0.
         if (!visible) {
@@ -399,7 +417,8 @@ PopupWindow {
                 + (root.flushToBarEdge ? Theme.spacingMedium : 0)
                 + (root.alignment === "right" ? root._fR : 0))),
             Math.max(1, root._pixel(
-                root.anchorItem.height - Theme.barBorderWidth)))
+                root.anchorItem.height
+                + (root.detached ? Theme.spacingMedium : -Theme.barBorderWidth))))
         edges: root.alignment === "right" ? (Edges.Bottom | Edges.Right)
         : root.alignment === "center" ? Edges.Bottom
         : (Edges.Bottom | Edges.Left)
@@ -414,7 +433,7 @@ PopupWindow {
     // anchor comment) — the panel itself is unchanged in size.
     implicitHeight: Math.ceil(contentColumn.implicitHeight
                               + Theme.spacingLarge * 2
-                              + Theme.barBorderWidth)
+                              + (detached ? 0 : Theme.barBorderWidth))
     color: "transparent"
 
     // ---- Dismiss-on-outside-click (see 2026-07-05 REVISION HISTORY) ----
@@ -467,33 +486,64 @@ PopupWindow {
         anchors.top: parent.top
         clip: true
 
-        Rectangle {
+        Item {
             id: panel
             x: root._fL
             // Starts below the bw-tall overlap strip (transparent —
             // the bar's own bottom edge shows through it), i.e. at the
             // bar's true bottom edge, exactly where it always was.
-            y: Theme.barBorderWidth
+            y: root.detached ? 0 : Theme.barBorderWidth
             width: parent.width - root._fL - root._fR
-            height: root.implicitHeight - Theme.barBorderWidth
-            // Same color as the bar and rounded on the BOTTOM corners
-            // only — the panel reads as a piece of the bar sliding out,
-            // not a separate floating window. Its border (when the
-            // theme enables one) is the Canvas below, drawn to
-            // CONTINUE the bar's border rather than outline this panel
-            // separately — same "one shape" principle. The window is
-            // wider than the panel by the fillet flanks (root._fL/_fR
-            // — see up top); the flanks are transparent, holding only
-            // the border Canvas's fillet arcs.
-            color: Theme.colorBackground
-            radius: Theme.radiusMedium
+            height: root.implicitHeight - (root.detached ? 0 : Theme.barBorderWidth)
+            property real radius: Theme.radiusMedium
 
-            // Squares off the top two corners (radius applies to all
-            // four, so this covers the top ones with the same color).
-            Rectangle {
-                width: parent.width
-                height: parent.radius
-                color: parent.color
+            // Draw the attached panel as ONE path with square top corners and
+            // rounded bottom corners. The old implementation stacked a second
+            // same-color Rectangle over the rounded panel to square its top
+            // corners. That was invisible while opaque, but with translucency
+            // the overlap composited twice and appeared as a dark horizontal
+            // band across every open popout. One fill path applies alpha once. // GPT
+            Canvas {
+                id: panelBackground
+                anchors.fill: parent
+                property color fillColor:
+                    Qt.alpha(Theme.colorBackground, Theme.popoutOpacity)
+                property real cornerRadius: panel.radius
+
+                onFillColorChanged: requestPaint()
+                onCornerRadiusChanged: requestPaint()
+                onWidthChanged: requestPaint()
+                onHeightChanged: requestPaint()
+
+                onPaint: {
+                    const ctx = getContext("2d");
+                    ctx.reset();
+
+                    const w = width;
+                    const h = height;
+                    const r = Math.max(0, Math.min(cornerRadius, w / 2, h));
+
+                    ctx.fillStyle = fillColor;
+                    ctx.beginPath();
+                    if (root.detached) {
+                        ctx.moveTo(r, 0);
+                        ctx.lineTo(w - r, 0);
+                        ctx.quadraticCurveTo(w, 0, w, r);
+                    } else {
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(w, 0);
+                    }
+                    ctx.lineTo(w, h - r);
+                    ctx.quadraticCurveTo(w, h, w - r, h);
+                    ctx.lineTo(r, h);
+                    ctx.quadraticCurveTo(0, h, 0, h - r);
+                    if (root.detached) {
+                        ctx.lineTo(0, r);
+                        ctx.quadraticCurveTo(0, 0, r, 0);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
             }
 
             ColumnLayout {
@@ -531,11 +581,15 @@ PopupWindow {
             property color bc2: Theme.barBorderColor2
             property real bgAng: Theme.barBorderGradientAngle
             property color pbg: Theme.colorBackground
+            property real radiusT: Theme.barRadius
+            property real filletT: Theme.barBorderFillet
             onBwTChanged: requestPaint()
             onBcChanged: requestPaint()
             onBc2Changed: requestPaint()
             onBgAngChanged: requestPaint()
             onPbgChanged: requestPaint()
+            onRadiusTChanged: requestPaint()
+            onFilletTChanged: requestPaint()
 
             onPaint: {
                 const ctx = getContext("2d");
@@ -573,6 +627,25 @@ PopupWindow {
                 }
                 ctx.lineWidth = bwv;
 
+                if (root.detached) {
+                    const x = inset, y = inset;
+                    const rw = Math.max(0, w - bwv), rh = Math.max(0, h - bwv);
+                    const rr = Math.max(0, Math.min(ar, rw / 2, rh / 2));
+                    ctx.beginPath();
+                    ctx.moveTo(x + rr, y);
+                    ctx.lineTo(x + rw - rr, y);
+                    ctx.quadraticCurveTo(x + rw, y, x + rw, y + rr);
+                    ctx.lineTo(x + rw, y + rh - rr);
+                    ctx.quadraticCurveTo(x + rw, y + rh, x + rw - rr, y + rh);
+                    ctx.lineTo(x + rr, y + rh);
+                    ctx.quadraticCurveTo(x, y + rh, x, y + rh - rr);
+                    ctx.lineTo(x, y + rr);
+                    ctx.quadraticCurveTo(x, y, x + rr, y);
+                    ctx.closePath();
+                    ctx.stroke();
+                    return;
+                }
+
                 // Fillet tangent geometry: the arcs meet the bar's
                 // border CENTERLINE, which — thanks to the bw overlap
                 // (see the anchor comment) — sits at window y = inset,
@@ -585,7 +658,7 @@ PopupWindow {
                 // FILLED with the background color so bar + panel +
                 // fillet read as one solid silhouette (the maintainer's
                 // mockup), not a curve floating over wallpaper.
-                ctx.fillStyle = Theme.colorBackground;
+                ctx.fillStyle = Qt.alpha(Theme.colorBackground, Theme.popoutOpacity);
                 if (fL > 0) {
                     ctx.beginPath();
                     ctx.moveTo(inset, inset);

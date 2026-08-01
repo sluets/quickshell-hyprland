@@ -459,7 +459,12 @@ PanelWindow {
                     return;
                 const w = width, h = height;
                 const inset = bwv / 2;      // stroke centerline inset
-                const cr = Math.max(br, inset); // corner center offset
+                // Rectangle.radius is visually capped at half of the
+                // rectangle's shortest side. Mirror that cap here so a
+                // user radius larger than half the bar height cannot make
+                // the two corner arcs overlap and leave a vertical stroke.
+                const radiusCap = Math.max(inset, Math.min(w, h) / 2);
+                const cr = Math.min(Math.max(br, inset), radiusCap);
                 const ar = Math.max(0, cr - inset); // arc radius on centerline
                 // Solid color, or a linear gradient across the bar's
                 // box (angle convention: 0° = left→right, 90° =

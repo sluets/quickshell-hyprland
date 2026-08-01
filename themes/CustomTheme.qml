@@ -23,6 +23,8 @@ QtObject {
     property string fontFamily: baseTheme.fontFamily
     property int fontSize: baseTheme.fontSize
     property int barHeight: baseTheme.barHeight
+    property real barOpacity: 1.0
+    property real popoutOpacity: 1.0
     property int radiusMedium: baseTheme.radiusMedium
     property int barMargin: baseTheme.barMargin
     property int barRadius: baseTheme.barRadius

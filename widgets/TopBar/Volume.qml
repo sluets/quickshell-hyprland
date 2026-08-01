@@ -126,6 +126,7 @@ Item {
     }
 
     BarPopout {
+        detached: UserPrefs.popoutPresentation === "detached"
         id: popout
         anchorItem: root
         alignment: "right"

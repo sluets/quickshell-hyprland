@@ -75,6 +75,9 @@ Item {
     // Stack the name above a full-width slider instead of putting it in
     // a fixed column to the left. See DESIGN NOTES.
     property bool labelAbove: false
+    // Application rows can place the icon and text together above the
+    // controls, leaving the full card width available for descriptions.
+    property bool detailsAbove: false
 
     signal valueEdited(real value)
     signal muteClicked()
@@ -105,34 +108,62 @@ Item {
         anchors.rightMargin: Theme.spacingSmall
         spacing: Theme.spacingSmall
 
-        // Stacked label (labelAbove only).
-        ColumnLayout {
+        // Stacked details. Master/microphone use a plain text block;
+        // application rows include their icon beside that block.
+        RowLayout {
             Layout.fillWidth: true
-            visible: root.labelAbove
-            spacing: 0
+            visible: root.labelAbove || root.detailsAbove
+            spacing: Theme.spacingSmall
 
-            Text {
-                // preferredWidth 0: an elided Text still reports its FULL
-                // single-line implicitWidth to the layout, which would let
-                // one long device description set the whole popout's width.
-                Layout.fillWidth: true
-                Layout.preferredWidth: 0
-                text: root.label
-                color: Theme.colorForeground
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
-                elide: Text.ElideRight
+            Item {
+                visible: root.detailsAbove
+                Layout.preferredWidth: Math.max(20, Math.round(Theme.fontSize * 1.6))
+                Layout.preferredHeight: Layout.preferredWidth
+                Layout.alignment: Qt.AlignTop
+
+                IconImage {
+                    anchors.fill: parent
+                    visible: root.iconName !== ""
+                    source: root.iconName === ""
+                        ? ""
+                        : Quickshell.iconPath(root.iconName, "audio-volume-high-symbolic")
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: root.iconName === ""
+                    text: root.fallbackIcon
+                    color: root.muted ? Theme.colorMuted : Theme.colorForeground
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+                }
             }
 
-            Text {
+            ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 0
-                visible: root.subtitle !== ""
-                text: root.subtitle
-                color: Theme.colorMuted
-                font.family: Theme.fontFamily
-                font.pixelSize: Math.round(Theme.fontSize * 0.78)
-                elide: Text.ElideRight
+                spacing: 0
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+                    text: root.label
+                    color: Theme.colorForeground
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+                    visible: root.subtitle !== ""
+                    text: root.subtitle
+                    color: Theme.colorMuted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Math.round(Theme.fontSize * 0.78)
+                    elide: Text.ElideRight
+                }
             }
         }
 
@@ -142,6 +173,7 @@ Item {
             spacing: Theme.spacingMedium
 
             Item {
+                visible: !root.detailsAbove
                 Layout.preferredWidth: Math.max(20, Math.round(Theme.fontSize * 1.6))
                 Layout.preferredHeight: Layout.preferredWidth
                 Layout.alignment: Qt.AlignVCenter
@@ -167,7 +199,7 @@ Item {
             // Inline label column — preferred + minimum, NO maximum, so
             // it grows with the font instead of eliding at 112 px.
             ColumnLayout {
-                visible: !root.labelAbove
+                visible: !root.labelAbove && !root.detailsAbove
                 Layout.preferredWidth: Math.round(Theme.fontSize * 8.5)
                 Layout.minimumWidth: Math.round(Theme.fontSize * 5.5)
                 spacing: 1

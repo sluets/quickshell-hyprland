@@ -568,6 +568,7 @@ Singleton {
             case "notifBodyLines": UserPrefs.setNotifBodyLines(ch.value); n++; break;
             case "notifFontScale": UserPrefs.setNotifFontScale(ch.value); n++; break;
             case "notifPresentation": UserPrefs.setNotifPresentation(ch.value); n++; break;
+            case "popoutPresentation": UserPrefs.setPopoutPresentation(ch.value); n++; break;
             case "notifBarPosition": UserPrefs.setNotifBarPosition(ch.value); n++; break;
             case "notifBarOffsetX": UserPrefs.setNotifBarOffsetX(ch.value); n++; break;
             case "notifBarShowCardBorders": UserPrefs.setNotifBarShowCardBorders(ch.value); n++; break;
@@ -590,6 +591,10 @@ Singleton {
             case "desktopClockShadowStrength": UserPrefs.setDesktopClockShadowStrength(ch.value); n++; break;
             case "desktopClockShadowOffsetX": UserPrefs.setDesktopClockShadowOffsetX(ch.value); n++; break;
             case "desktopClockShadowOffsetY": UserPrefs.setDesktopClockShadowOffsetY(ch.value); n++; break;
+            case "barHeightOverride": UserPrefs.setBarHeightOverride(ch.value); n++; break;
+            case "barRadiusOverride": UserPrefs.setBarRadiusOverride(ch.value); n++; break;
+            case "barOpacityOverride": UserPrefs.setBarOpacityOverride(ch.value); n++; break;
+            case "popoutOpacityOverride": UserPrefs.setPopoutOpacityOverride(ch.value); n++; break;
             case "barBorderWidthOverride": UserPrefs.setBarBorderWidthOverride(ch.value); n++; break;
             case "barBorderUseThemeColor": UserPrefs.setBarBorderUseThemeColor(ch.value); n++; break;
             case "barBorderCustomColor": UserPrefs.setBarBorderCustomColor(ch.value); n++; break;

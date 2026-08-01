@@ -1,12 +1,17 @@
 // Historical detached notification window, preserved as the default. // GPT Rev 52
 import QtQuick
 import Quickshell
+import Quickshell.Wayland
 import qs.core
 import qs.services
 import "." as NotificationComponents
 
 PanelWindow {
     id: root
+
+    // Detached notifications are their own layer surface, so they need a
+    // namespace separate from the bar-attached PopupWindow presentation.
+    WlrLayershell.namespace: "qs-notif"
 
     property bool presentationActive: false
 

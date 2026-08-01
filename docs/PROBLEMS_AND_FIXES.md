@@ -1,3 +1,25 @@
+## 2026-08-01 — Attached translucent popouts exposed two different horizontal seams
+
+**Symptoms:** After adding popout translucency, attached menus showed a broad darker horizontal band near the top. After that paint issue was fixed, enabling Hyprland popup blur could still leave a much thinner line at the bar-to-popup joint.
+
+**Diagnosis:** These were separate problems. The broad band came from QML painting the same translucent background twice: the rounded panel and the small rectangle used to square its top corners overlapped. Semi-transparent paint accumulates, so the overlap became visibly darker. The remaining thin line appears only with Hyprland popup blur and follows the intentional one-border-width overlap between two separate surfaces: the `qs-bar` layer surface and its attached `PopupWindow`. It is therefore a compositor/surface boundary, not another duplicate QML fill.
+
+**Fix:** The attached popup background is composited as one visual background before opacity is applied, eliminating the broad double-painted band. The popup's connected fillets and geometry remain intact. No reliable mask or alpha-threshold workaround removed the thin blur seam without damaging fillets, so those experiments were reverted.
+
+**Current status:** The thin line is accepted as a known issue in attached mode when `blur_popups = true`. Detached menus do not share the bar-overlap geometry and are the clean presentation when the seam is objectionable. Do not reintroduce `HyprlandWindow.visibleMask` as a speculative fix; it clipped the fillet canvas and did not remove the seam.
+
+---
+
+## 2026-08-01 — Large custom bar radius produced a vertical stroke at the right edge
+
+**Symptoms:** At bar-radius values above roughly 18 px on a 32 px bar, a short vertical border appeared beside the rightmost module.
+
+**Diagnosis:** QML `Rectangle` automatically clamps its effective radius to half its size, but the custom border `Canvas` path used the full requested theme radius. Once the requested radius exceeded half the bar height, the top and bottom arc geometry overlapped.
+
+**Fix:** Clamp only the border path's drawn radius to half the available width/height. Keep the persisted `0–24 px` setting and Theme value unchanged because other geometry, including popout fillets, legitimately consumes the requested value.
+
+---
+
 ## 2026-07-28 — Settings dropdown wheel fixes were applied to the wrong component
 
 **Trying to do:** Stop long Settings dropdowns from scrolling the page underneath them when the dropdown list reached its top or bottom. The reproducible menus were Appearance → Theme, Appearance → Font family, and Wallpaper → Wallpaper transition.

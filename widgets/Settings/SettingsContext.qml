@@ -151,6 +151,11 @@ Item {
     property alias stagedHyprFadeSpeed: settingsTransaction.stagedHyprFadeSpeed
     property alias stagedHyprActiveBorderUseThemeColor: settingsTransaction.stagedHyprActiveBorderUseThemeColor
     property alias stagedHyprActiveBorderCustomColor: settingsTransaction.stagedHyprActiveBorderCustomColor
+    property alias stagedBarHeightOverride: settingsTransaction.stagedBarHeightOverride
+    property alias stagedBarRadiusOverride: settingsTransaction.stagedBarRadiusOverride
+    property alias stagedBarOpacityOverride: settingsTransaction.stagedBarOpacityOverride
+    property alias stagedPopoutOpacityOverride: settingsTransaction.stagedPopoutOpacityOverride
+    property alias stagedPopoutPresentation: settingsTransaction.stagedPopoutPresentation
     property alias stagedBarBorderWidthOverride: settingsTransaction.stagedBarBorderWidthOverride
     property alias stagedBarBorderUseThemeColor: settingsTransaction.stagedBarBorderUseThemeColor
     property alias stagedBarBorderCustomColor: settingsTransaction.stagedBarBorderCustomColor
@@ -221,6 +226,11 @@ Item {
     readonly property bool shownWallpaperCachingEnabled: settingsTransaction.shownWallpaperCachingEnabled
     readonly property bool shownClockUse24Hour: settingsTransaction.shownClockUse24Hour
     readonly property bool shownClockShowSeconds: settingsTransaction.shownClockShowSeconds
+    readonly property int shownBarHeightOverride: settingsTransaction.shownBarHeightOverride
+    readonly property int shownBarRadiusOverride: settingsTransaction.shownBarRadiusOverride
+    readonly property real shownBarOpacityOverride: settingsTransaction.shownBarOpacityOverride
+    readonly property real shownPopoutOpacityOverride: settingsTransaction.shownPopoutOpacityOverride
+    readonly property string shownPopoutPresentation: settingsTransaction.shownPopoutPresentation
     readonly property int shownBarBorderWidthOverride: settingsTransaction.shownBarBorderWidthOverride
     readonly property bool shownBarBorderUseThemeColor: settingsTransaction.shownBarBorderUseThemeColor
     readonly property string shownBarBorderCustomColor: settingsTransaction.shownBarBorderCustomColor
@@ -325,6 +335,10 @@ Item {
     readonly property var launcherPlacementOptions: [
         { value: "attached", text: "Attached" },
         { value: "centered", text: "Centered" }
+    ]
+    readonly property var popoutPresentationOptions: [
+        { value: "attached", text: "Attached" },
+        { value: "detached", text: "Detached" }
     ]
     readonly property var notifPresentationOptions: [
         { value: "detached", text: "Detached" },

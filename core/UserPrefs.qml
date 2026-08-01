@@ -243,6 +243,7 @@ Singleton {
     readonly property real customThemeBorderAngle: adapter.customThemeBorderAngle
     readonly property string themeOverridesJson: adapter.themeOverridesJson
     readonly property string notifPresentation: adapter.notifPresentation
+    readonly property string popoutPresentation: adapter.popoutPresentation
     readonly property string notifBarPosition: adapter.notifBarPosition
     readonly property int notifBarOffsetX: adapter.notifBarOffsetX
     readonly property bool notifBarShowCardBorders: adapter.notifBarShowCardBorders
@@ -307,6 +308,10 @@ Singleton {
     // DESIGN NOTES — it does nothing until that's done.
     readonly property bool hyprActiveBorderUseThemeColor: adapter.hyprActiveBorderUseThemeColor
     readonly property string hyprActiveBorderCustomColor: adapter.hyprActiveBorderCustomColor
+    readonly property int barHeightOverride: adapter.barHeightOverride
+    readonly property int barRadiusOverride: adapter.barRadiusOverride
+    readonly property real barOpacityOverride: adapter.barOpacityOverride
+    readonly property real popoutOpacityOverride: adapter.popoutOpacityOverride
     readonly property int barBorderWidthOverride: adapter.barBorderWidthOverride
     readonly property bool barBorderUseThemeColor: adapter.barBorderUseThemeColor
     readonly property string barBorderCustomColor: adapter.barBorderCustomColor
@@ -425,6 +430,24 @@ Singleton {
     function setHyprActiveBorderCustomColor(v: string): void {
         if (_validHex(v))
             adapter.hyprActiveBorderCustomColor = v;
+    }
+
+    // Bar geometry overrides (Appearance page, 2026-08-01). -1 follows
+    // the active theme. Height is kept above the minimum usable text height.
+    function setBarHeightOverride(v: int): void {
+        adapter.barHeightOverride = v < 0 ? -1 : Math.min(64, Math.max(24, v));
+    }
+
+    function setBarRadiusOverride(v: int): void {
+        adapter.barRadiusOverride = Math.min(24, Math.max(-1, v));
+    }
+
+    function setBarOpacityOverride(v: real): void {
+        adapter.barOpacityOverride = v < 0 ? -1 : Math.min(1, Math.max(0, v));
+    }
+
+    function setPopoutOpacityOverride(v: real): void {
+        adapter.popoutOpacityOverride = v < 0 ? -1 : Math.min(1, Math.max(0, v));
     }
 
     // Bar border overrides (settings window, Appearance page,
@@ -564,6 +587,11 @@ Singleton {
     function clearLauncherUsage(): void { adapter.launcherUsage = {}; }
     function clearLauncherHidden(): void { adapter.launcherHiddenIds = []; }
     function clearLauncherFavorites(): void { adapter.launcherFavoriteIds = []; }
+
+    function setPopoutPresentation(v: string): void {
+        if (["attached", "detached"].indexOf(v) !== -1)
+            adapter.popoutPresentation = v;
+    }
 
     function setNotifPresentation(v: string): void {
         if (["detached", "bar"].indexOf(v) !== -1)
@@ -851,6 +879,7 @@ Singleton {
         // shared the summary's row and truncated long song titles).
         // Other defaults match the previously hardcoded card values.
         property string notifPresentation: "detached"
+        property string popoutPresentation: "attached"
         property string notifBarPosition: "right"
         property int notifBarOffsetX: 0
         property bool notifBarShowCardBorders: false
@@ -937,6 +966,10 @@ Singleton {
         // Bar border overrides (Appearance page, 2026-07-10) — these
         // sit ABOVE the theme's barBorder tokens; see core/Theme.qml
         // for the precedence chain. Width -1 = follow theme.
+        property int barHeightOverride: -1
+        property int barRadiusOverride: -1
+        property real barOpacityOverride: -1
+        property real popoutOpacityOverride: -1
         property int barBorderWidthOverride: -1
         property bool barBorderUseThemeColor: true
         property string barBorderCustomColor: "#35e0b4"

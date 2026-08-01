@@ -22,6 +22,7 @@ Item {
     property var stagedCustomThemeBorder2: null
     property var stagedCustomThemeBorderAngle: null
     property var stagedNotifPresentation: null
+    property var stagedPopoutPresentation: null
     property var stagedNotifBarPosition: null
     property var stagedNotifBarOffsetX: null
     property var stagedNotifBarShowCardBorders: null
@@ -57,6 +58,10 @@ Item {
     property var stagedHyprFadeSpeed: null
     property var stagedHyprActiveBorderUseThemeColor: null
     property var stagedHyprActiveBorderCustomColor: null
+    property var stagedBarHeightOverride: null
+    property var stagedBarRadiusOverride: null
+    property var stagedBarOpacityOverride: null
+    property var stagedPopoutOpacityOverride: null
     property var stagedBarBorderWidthOverride: null
     property var stagedBarBorderUseThemeColor: null
     property var stagedBarBorderCustomColor: null
@@ -175,6 +180,11 @@ Item {
     readonly property string shownCustomThemeBorder: stagedCustomThemeBorder !== null ? stagedCustomThemeBorder : UserPrefs.customThemeBorder
     readonly property string shownCustomThemeBorder2: stagedCustomThemeBorder2 !== null ? stagedCustomThemeBorder2 : UserPrefs.customThemeBorder2
     readonly property real shownCustomThemeBorderAngle: stagedCustomThemeBorderAngle !== null ? stagedCustomThemeBorderAngle : UserPrefs.customThemeBorderAngle
+    readonly property int shownBarHeightOverride: stagedBarHeightOverride !== null ? stagedBarHeightOverride : UserPrefs.barHeightOverride
+    readonly property int shownBarRadiusOverride: stagedBarRadiusOverride !== null ? stagedBarRadiusOverride : UserPrefs.barRadiusOverride
+    readonly property real shownBarOpacityOverride: stagedBarOpacityOverride !== null ? stagedBarOpacityOverride : UserPrefs.barOpacityOverride
+    readonly property real shownPopoutOpacityOverride: stagedPopoutOpacityOverride !== null ? stagedPopoutOpacityOverride : UserPrefs.popoutOpacityOverride
+    readonly property string shownPopoutPresentation: stagedPopoutPresentation !== null ? stagedPopoutPresentation : UserPrefs.popoutPresentation
     readonly property int shownBarBorderWidthOverride: stagedBarBorderWidthOverride !== null ? stagedBarBorderWidthOverride : UserPrefs.barBorderWidthOverride
     readonly property bool shownBarBorderUseThemeColor: stagedBarBorderUseThemeColor !== null ? stagedBarBorderUseThemeColor : UserPrefs.barBorderUseThemeColor
     readonly property string shownBarBorderCustomColor: stagedBarBorderCustomColor !== null ? stagedBarBorderCustomColor : UserPrefs.barBorderCustomColor
@@ -334,6 +344,33 @@ Item {
                      from: UserPrefs.fontScale.toFixed(1),
                      to: stagedFontScale.toFixed(1),
                      value: stagedFontScale });
+        if (stagedBarHeightOverride !== null
+                && stagedBarHeightOverride !== UserPrefs.barHeightOverride)
+            c.push({ key: "barHeightOverride", label: "Bar Height",
+                     from: UserPrefs.barHeightOverride < 0 ? "theme" : UserPrefs.barHeightOverride + " px",
+                     to: stagedBarHeightOverride < 0 ? "theme" : stagedBarHeightOverride + " px",
+                     value: stagedBarHeightOverride });
+        if (stagedBarRadiusOverride !== null
+                && stagedBarRadiusOverride !== UserPrefs.barRadiusOverride)
+            c.push({ key: "barRadiusOverride", label: "Bar Corner Radius",
+                     from: UserPrefs.barRadiusOverride < 0 ? "theme" : UserPrefs.barRadiusOverride + " px",
+                     to: stagedBarRadiusOverride < 0 ? "theme" : stagedBarRadiusOverride + " px",
+                     value: stagedBarRadiusOverride });
+        if (stagedBarOpacityOverride !== null
+                && stagedBarOpacityOverride !== UserPrefs.barOpacityOverride)
+            c.push({ key: "barOpacityOverride", label: "Bar Opacity",
+                     from: UserPrefs.barOpacityOverride < 0 ? "theme" : Math.round(UserPrefs.barOpacityOverride * 100) + "%",
+                     to: stagedBarOpacityOverride < 0 ? "theme" : Math.round(stagedBarOpacityOverride * 100) + "%",
+                     value: stagedBarOpacityOverride });
+        if (stagedPopoutOpacityOverride !== null
+                && stagedPopoutOpacityOverride !== UserPrefs.popoutOpacityOverride)
+            c.push({ key: "popoutOpacityOverride", label: "Popout Opacity",
+                     from: UserPrefs.popoutOpacityOverride < 0 ? "theme" : Math.round(UserPrefs.popoutOpacityOverride * 100) + "%",
+                     to: stagedPopoutOpacityOverride < 0 ? "theme" : Math.round(stagedPopoutOpacityOverride * 100) + "%",
+                     value: stagedPopoutOpacityOverride });
+        if (stagedPopoutPresentation !== null
+                && stagedPopoutPresentation !== UserPrefs.popoutPresentation)
+            c.push({ key: "popoutPresentation", label: "Popout Presentation", from: UserPrefs.popoutPresentation, to: stagedPopoutPresentation, value: stagedPopoutPresentation });
         if (stagedBarBorderWidthOverride !== null
                 && stagedBarBorderWidthOverride !== UserPrefs.barBorderWidthOverride)
             c.push({ key: "barBorderWidthOverride", label: "Bar Border Width",
@@ -528,6 +565,7 @@ Item {
         stagedBarPaddingBottomOverride = null;
         stagedFontFamilyOverride = null;
         stagedNotifPresentation = null;
+        stagedPopoutPresentation = null;
         stagedNotifBarPosition = null;
         stagedNotifBarOffsetX = null;
         stagedNotifBarShowCardBorders = null;
@@ -563,6 +601,10 @@ Item {
         stagedHyprFadeSpeed = null;
         stagedHyprActiveBorderUseThemeColor = null;
         stagedHyprActiveBorderCustomColor = null;
+        stagedBarHeightOverride = null;
+        stagedBarRadiusOverride = null;
+        stagedBarOpacityOverride = null;
+        stagedPopoutOpacityOverride = null;
         stagedBarBorderWidthOverride = null;
         stagedBarBorderUseThemeColor = null;
         stagedBarBorderCustomColor = null;

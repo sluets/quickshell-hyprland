@@ -1,4 +1,6 @@
 // Shared notification-card stack for detached and bar-attached hosts. // GPT Rev 52
+// Notification fills follow Theme.popoutOpacity so every elevated shell surface
+// shares one translucency setting; content and borders remain fully opaque. // GPT
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -71,7 +73,9 @@ Column {
             implicitHeight: height
             clip: true
             radius: Theme.radiusMedium
-            color: root.attached ? Theme.colorSurface : Theme.colorBackground
+            color: Qt.alpha(
+                root.attached ? Theme.colorSurface : Theme.colorBackground,
+                Theme.popoutOpacity)
             // The shell-wide border tokens (2026-07-10, same
             // width/color chain as the bar — see core/Theme.qml).
             // CRITICAL cards keep their urgent-red border and

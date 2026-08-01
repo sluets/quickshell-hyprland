@@ -263,6 +263,7 @@ Item {
     // ---- Popout ------------------------------------------------------------
 
     BarPopout {
+        detached: UserPrefs.popoutPresentation === "detached"
         id: clockPopout
         anchorItem: root
         alignment: "right"
